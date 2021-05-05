@@ -1,0 +1,34 @@
+
+{
+	"emulators": {
+		"default": {
+			"port": 3569,
+			"serviceAccount": "emulator-account"
+		}
+	},
+	"contracts": {
+        "ASMR": "./contracts/ASMR.cdc", 
+		"NonFungibleToken": "./contracts/NonFungibleToken.cdc"  
+    },
+	"networks": {
+		"emulator": {
+			"host": "127.0.0.1:3569",
+			"chain": "flow-emulator"
+		}
+	},
+	"accounts": {
+		"emulator-account": {
+			"address": "f8d6e0586b0a20c7",
+			"keys": "fba7b4a0fae33c4c27e46a00b50107a05a72abc3220e203e65d1d26db2758c6f"
+		}, 
+		"second-account": {
+			"address": "01cf0e2f2f715450", 
+			"keys": "6441442458044928e0b5d14c8297fbe041b6334bc3b4abdab05cfe512026d96e"
+		}
+	},
+	"deployments": {
+		"emulator": {
+		"emulator-account": ["NonFungibleToken", "ASMR"]
+		}
+	}
+}
