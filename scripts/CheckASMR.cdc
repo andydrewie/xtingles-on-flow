@@ -1,6 +1,7 @@
 
 //emulator
-import NonFungibleToken, ASMR from 0xf8d6e0586b0a20c7
+import NonFungibleToken from 0x631e88ae7f1d7c20
+import ASMR from  0x9cd9bd78a3826840
 
 /*
   This script will check an address and print out its ASMR resources

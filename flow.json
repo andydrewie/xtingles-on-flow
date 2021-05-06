@@ -6,28 +6,40 @@
 		}
 	},
 	"contracts": {
-        "ASMR": "./contracts/ASMR.cdc", 
-		"NonFungibleToken": "./contracts/NonFungibleToken.cdc"  
-    },
+		"ASMR": "./contracts/ASMR.cdc",
+		"FixPrice": "./contracts/FixPrice.cdc"
+
+	},
 	"networks": {
-		"emulator": {
-			"host": "127.0.0.1:3569",
-			"chain": "flow-emulator"
-		}
+		"emulator": "127.0.0.1:3569",
+		"mainnet": "access.mainnet.nodes.onflow.org:9000",
+		"testnet": "access.devnet.nodes.onflow.org:9000"
 	},
 	"accounts": {
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
-			"keys": "fba7b4a0fae33c4c27e46a00b50107a05a72abc3220e203e65d1d26db2758c6f"
-		}, 
-		"second-account": {
-			"address": "01cf0e2f2f715450", 
-			"keys": "6441442458044928e0b5d14c8297fbe041b6334bc3b4abdab05cfe512026d96e"
+			"keys": "f8e188e8af0b8b414be59c4a1a15cc666c898fb34d94156e9b51e18bfde754a5"
+		},
+		"testnet-account": {
+			"address": "0x9cd9bd78a3826840",
+			"keys": "4e091244bee5c0356d49563133e715c01bf60d2c9bd89d4f2ea81aa018201b10"
 		}
 	},
 	"deployments": {
+		"testnet": {
+			"testnet-account": [
+				"ASMR",
+				"FixPrice"
+				
+			]
+		},
 		"emulator": {
-		"emulator-account": ["NonFungibleToken", "ASMR"]
+			"emulator-account": [
+				"Kibble",
+				"KittyItems",
+				"KittyItemsMarket",
+				"NonFungibleToken"
+			]
 		}
 	}
 }
