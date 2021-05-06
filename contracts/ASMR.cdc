@@ -1,4 +1,3 @@
-
 import NonFungibleToken from 0xf8d6e0586b0a20c7
 
 pub contract ASMR: NonFungibleToken {
@@ -16,7 +15,7 @@ pub contract ASMR: NonFungibleToken {
     pub event Created(id: UInt64, metadata: Metadata)
 
     // totalSupply
-    // The total number of KittyItems that have been minted
+    // The total number of NFTs that have been minted
     //
     pub var totalSupply: UInt64
 
@@ -79,7 +78,7 @@ pub contract ASMR: NonFungibleToken {
         pub fun deposit(token: @NonFungibleToken.NFT)
         pub fun getIDs(): [UInt64]
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT  
-        pub fun borrowCollectible(id: UInt64): &ASMR.NFT? {
+        pub fun borrowASMR(id: UInt64): &ASMR.NFT? {
             // If the result isn't nil, the id of the returned reference
             // should be the same as the argument to the function
             post {
@@ -90,7 +89,7 @@ pub contract ASMR: NonFungibleToken {
     }
 
     // Collection
-    // A collection of KittyItem NFTs owned by an account
+    // A collection of NFTs owned by an account
     //
     pub resource Collection: CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
         // dictionary of NFT conforming tokens
@@ -138,11 +137,10 @@ pub contract ASMR: NonFungibleToken {
         // so that the caller can read its metadata and call its methods
         //
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
-            let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
-            return ref as! &ASMR.NFT
+            return &self.ownedNFTs[id] as &NonFungibleToken.NFT
         }
 
-        pub fun borrowCollectible(id: UInt64): &ASMR.NFT? {
+        pub fun borrowASMR(id: UInt64): &ASMR.NFT? {
             if self.ownedNFTs[id] != nil {
                 let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
                 return ref as! &ASMR.NFT
@@ -170,7 +168,62 @@ pub contract ASMR: NonFungibleToken {
         return <- create Collection()
     }
 
-    access(account) fun mint(metadata: Metadata, edition: UInt64, maxEdition:UInt64) : @ASMR.NFT {
+    // mint NFTs for test purposes
+    pub resource NFTMinter {
+  
+        pub fun mintNFT(metadata: Metadata): @NFT {
+            var newNFT <- create NFT(
+                initID: ASMR.totalSupply,
+                metadata: Metadata(
+                    url: metadata.url,
+                    picturePreview: metadata.picturePreview,
+                    animation: metadata.animation,
+                    name: metadata.name, 
+                    artist: metadata.artist,
+                    artistAddress: metadata.artistAddress, 
+                    description: metadata.description,        
+                    edition: metadata.edition,
+                    maxEdition: metadata.maxEdition
+                )
+            )
+            emit Created(id: ASMR.totalSupply, metadata: newNFT.metadata)
+
+            ASMR.totalSupply = ASMR.totalSupply + UInt64(1)
+
+            return <-newNFT
+        }
+    }
+
+    // structure for display NFTs data
+    pub struct ASMRData {
+        pub let metadata: ASMR.Metadata
+        pub let id: UInt64
+        init(metadata: ASMR.Metadata, id: UInt64) {
+            self.metadata= metadata
+            self.id=id
+        }
+    }
+
+    // get info for NFT including metadata
+    pub fun getASMR(address:Address) : [ASMRData] {
+
+        var asmrData: [ASMRData] = []
+        let account = getAccount(address)
+
+        if let asmrCollection= account.getCapability(self.CollectionPublicPath).borrow<&{ASMR.CollectionPublic}>()  {
+            for id in asmrCollection.getIDs() {
+                var asmr = asmrCollection.borrowASMR(id: id) 
+                asmrData.append(ASMRData(
+                    metadata: asmr!.metadata,
+                    id: id
+                ))
+            }
+        }
+        return asmrData
+    } 
+
+    // mint NFT from other contract (auction or fix price)
+    access(account) fun mint(metadata: Metadata) : @ASMR.NFT {
         var newNFT <- create NFT(
             initID: ASMR.totalSupply,
             metadata: Metadata(
@@ -194,13 +247,15 @@ pub contract ASMR: NonFungibleToken {
     init() {
         // Initialize the total supply
         self.totalSupply = 0
-        self.CollectionPublicPath=/public/ASMRCollection
-        self.CollectionStoragePath=/storage/ASRMCollection
-        self.MinterStoragePath = /storage/kittyItemsMinter
-
+        self.CollectionPublicPath = /public/ASMRCollection
+        self.CollectionStoragePath = /storage/ASRMCollection
+        self.MinterStoragePath = /storage/ASMRMinter
 
         self.account.save<@NonFungibleToken.Collection>(<- ASMR.createEmptyCollection(), to: ASMR.CollectionStoragePath)
         self.account.link<&{ASMR.CollectionPublic}>(ASMR.CollectionPublicPath, target: ASMR.CollectionStoragePath)
+ 
+        let minter <- create NFTMinter()         
+        self.account.save(<-minter, to: self.MinterStoragePath)
 
         emit ContractInitialized()
 	}
