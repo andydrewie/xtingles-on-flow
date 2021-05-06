@@ -5,7 +5,7 @@
 5. you can execute previous command several times and replace arguments of this command for your desirable values
 6. check NFTs on account
 
-check NFTs on account: flow scripts execute ./scripts/CheckASMR.cdc --arg Address:"0xf8d6e0586b0a20c7"
+check NFTs on account: flow scripts execute ./scripts/CheckASMR.cdc --arg Address:"0x9cd9bd78a3826840"
 
 mint NFT: flow transactions send --code ./transactions/MintASMR.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"},{"type": "UInt64","value": "1"}]' --signer emulator-account
 

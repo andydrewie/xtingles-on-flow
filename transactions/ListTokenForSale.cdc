@@ -9,10 +9,11 @@ transaction(tokenId: UInt64, price: UFix64) {
 
         let sale <- FixPrice.createSaleCollection(ownerVault: receiver)
 
-        let collectionRef = acct.borrow<&ASMR.Collection>(from: /storage/ASMRCollection)
-            ?? panic("Could not borrow owner's nft collection reference")
+        let collectionRef = acct.getCapability<&{ASMR.CollectionPublic}>(/public/ASMRCollection)
+            .borrow()
+            ?? panic("Could not borrow receiver reference")  
 
-        let token <- collectionRef.withdraw(withdrawID: tokenId) 
+        let token <- collectionRef.withdraw(withdrawID: tokenId) as! @ASMR.NFT
 
         sale.listForSale(token: <-token, price: price)
 
