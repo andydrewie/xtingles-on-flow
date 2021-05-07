@@ -1,11 +1,11 @@
-import FixPrice from 0x9cd9bd78a3826840
+import MarketPlace from 0x175e958cf586f54c
 
 pub fun main(address:Address): [UInt64] {
     let account = getAccount(address)
 
-    let acct1saleRef = account.getCapability<&AnyResource{FixPrice.SalePublic}>(/public/NFTSale)
+    let acctsaleRef = account.getCapability<&AnyResource{MarketPlace.SalePublic}>(/public/ASMRSale)
         .borrow()
         ?? panic("Could not borrow acct2 nft sale reference")
 
-    return acct1saleRef.getIDs()
+    return acctsaleRef.getIDs()
 }

@@ -1,26 +1,38 @@
-import ASMR from 0x9cd9bd78a3826840
+import ASMR from 0x175e958cf586f54c
 import FungibleToken from 0x9a0766d93b6608b7
-import FixPrice from 0x9cd9bd78a3826840
+import MarketPlace from 0x175e958cf586f54c
 
 transaction(tokenId: UInt64, price: UFix64) {
 
+    let collectionRef: &{ASMR.CollectionPublic}
+    let saleRef: &MarketPlace.SaleCollection
+
     prepare(acct: AuthAccount) {
-        let receiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
 
-        let sale <- FixPrice.createSaleCollection(ownerVault: receiver)
+        let marketplaceCap = acct.getCapability<&{MarketPlace.SalePublic}>(/public/ASMRSale)
 
-        let collectionRef = acct.getCapability<&{ASMR.CollectionPublic}>(/public/ASMRCollection)
+        if !marketplaceCap.check() {
+            let receiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+            let sale <- MarketPlace.createSaleCollection(ownerVault: receiver)
+            acct.save(<-sale, to: /storage/ASMRSale)
+            acct.link<&MarketPlace.SaleCollection{MarketPlace.SalePublic}>(/public/ASMRSale, target: /storage/ASMRSale)
+            log("Sale Created for account")
+
+        }  
+
+        self.collectionRef = acct.getCapability<&{ASMR.CollectionPublic}>(/public/ASMRCollection)
             .borrow()
             ?? panic("Could not borrow receiver reference")  
 
-        let token <- collectionRef.withdraw(withdrawID: tokenId) as! @ASMR.NFT
+        self.saleRef = acct.borrow<&MarketPlace.SaleCollection>(from: /storage/ASMRSale)
+            ?? panic("could not borrow minter reference")     
+    }
 
-        sale.listForSale(token: <-token, price: price)
+    execute {    
 
-        acct.save(<-sale, to: /storage/NFTSale)
+        let token <- self.collectionRef.withdraw(withdrawID: tokenId) as! @ASMR.NFT
 
-        acct.link<&FixPrice.SaleCollection{FixPrice.SalePublic}>(/public/NFTSale, target: /storage/NFTSale)
+        self.saleRef.listForSale(token: <-token, price: price)
 
-        log("Sale Created for account")
     }
 }

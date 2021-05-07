@@ -1,13 +1,13 @@
 import FungibleToken from 0x9a0766d93b6608b7
 import FlowToken from 0x7e60df042a9c0868
-import ASMR from 0x9cd9bd78a3826840
+import ASMR from 0x175e958cf586f54c
 import NonFungibleToken from 0x631e88ae7f1d7c20
 
-pub contract FixPrice {
+pub contract MarketPlace {
 
     pub init() {
-        self.CollectionPublicPath= /public/ASMRFixPrice
-        self.CollectionStoragePath= /storage/ASMRFixPrice
+        self.CollectionPublicPath= /public/ASMRMarketPlace
+        self.CollectionStoragePath= /storage/ASMRMarketPlace
     }
 
     pub let CollectionStoragePath: StoragePath
@@ -29,6 +29,14 @@ pub contract FixPrice {
         pub fun purchase(tokenID: UInt64, recipientCap: Capability<&{ASMR.CollectionPublic}>, buyTokens: @FungibleToken.Vault)
         pub fun idPrice(tokenID: UInt64): UFix64?
         pub fun getIDs(): [UInt64]
+        pub fun borrowASMR(id: UInt64): &ASMR.NFT? {
+            // If the result isn't nil, the id of the returned reference
+            // should be the same as the argument to the function
+            post {
+                (result == nil) || (result?.id == id):
+                    "Cannot borrow collectible reference: The id of the returned reference is incorrect."
+            }
+        }
     }
 
     // SaleCollection
@@ -126,10 +134,54 @@ pub contract FixPrice {
             return self.forSale.keys
         }
 
+        pub fun borrowASMR(id: UInt64): &ASMR.NFT? {
+            if self.forSale[id] != nil {
+                let ref = &self.forSale[id] as auth &NonFungibleToken.NFT
+                return ref as! &ASMR.NFT
+            } else {
+                return nil
+            }
+        }       
+
         destroy() {
             destroy self.forSale
         }
     }
+
+    // structure for display NFTs data
+    pub struct SaleData {
+        pub let metadata: ASMR.Metadata
+        pub let id: UInt64  
+        pub let price: UFix64?
+        init(metadata: ASMR.Metadata, id: UInt64, price: UFix64?) {
+            self.metadata = metadata
+            self.id = id 
+            self.price = price
+        }
+    }
+
+    // get info for NFT including metadata
+    pub fun getASMR(address:Address) : [SaleData] {
+
+        var saleData: [SaleData] = []
+        let account = getAccount(address)
+
+        let asmrCollection = account.getCapability<&AnyResource{MarketPlace.SalePublic}>(/public/ASMRSale)
+            .borrow()
+            ?? panic("Could not borrow acct2 nft sale reference")
+     
+            for id in asmrCollection.getIDs() {
+                var asmr = asmrCollection.borrowASMR(id: id) 
+                var price = asmrCollection.idPrice(tokenID: id)
+                saleData.append(SaleData(
+                    metadata: asmr!.metadata,
+                    id: id,
+                    price: price             
+                ))
+            }        
+        return saleData
+    } 
+        
 
     // createCollection returns a new collection resource to the caller
     pub fun createSaleCollection(ownerVault: Capability<&{FungibleToken.Receiver}>): @SaleCollection {
