@@ -1,6 +1,6 @@
-import ASMR from 0x175e958cf586f54c
-import FungibleToken from 0x9a0766d93b6608b7
-import MarketPlace from 0x175e958cf586f54c
+import ASMR from 0xf8d6e0586b0a20c7
+import FungibleToken from 0xee82856bf20e2aa6
+import MarketPlace from 0xf8d6e0586b0a20c7
 
 transaction(tokenId: UInt64, price: UFix64) {
 
@@ -17,7 +17,6 @@ transaction(tokenId: UInt64, price: UFix64) {
             acct.save(<-sale, to: /storage/ASMRSale)
             acct.link<&MarketPlace.SaleCollection{MarketPlace.SalePublic}>(/public/ASMRSale, target: /storage/ASMRSale)
             log("Sale Created for account")
-
         }  
 
         self.collectionRef = acct.getCapability<&{ASMR.CollectionPublic}>(/public/ASMRCollection)

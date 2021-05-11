@@ -6,9 +6,28 @@
 		}
 	},
 	"contracts": {
+		"NonFungibleToken": {
+			"source": "./contracts/NonFungibleToken.cdc",
+			"aliases": {
+				"testnet": "0x631e88ae7f1d7c20"		
+			}
+		},
+		"FungibleToken": {
+			"source": "./contracts/FungibleToken.cdc",
+			"aliases": {
+				"testnet": "0x9a0766d93b6608b7",
+				"emulator": "0xee82856bf20e2aa6"
+			}
+		},
+		"FlowToken": {
+			"source": "./contracts/FlowToken.cdc",
+			"aliases": {
+				"testnet": "0x7e60df042a9c0868",
+				"emulator": "0x0ae53cb6e3f42a79"
+			}
+		},
 		"ASMR": "./contracts/ASMR.cdc",
 		"MarketPlace": "./contracts/MarketPlace.cdc"
-
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -19,6 +38,10 @@
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
 			"keys": "f8e188e8af0b8b414be59c4a1a15cc666c898fb34d94156e9b51e18bfde754a5"
+		},
+		"second-account": {
+			"address": "01cf0e2f2f715450",
+			"keys": "521cac87a4705c06ef3d2481ccd7b9615b35c1135eec259158061f7641f9f068"
 		},
 		"testnet-account": {
 			"address": "0x175e958cf586f54c",
@@ -34,6 +57,7 @@
 		},
 		"emulator": {
 			"emulator-account": [
+				"NonFungibleToken",
 				"ASMR",
 				"MarketPlace"
 			]

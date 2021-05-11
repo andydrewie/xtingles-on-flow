@@ -1,13 +1,13 @@
-import FungibleToken from 0x9a0766d93b6608b7
-import FlowToken from 0x7e60df042a9c0868
-import ASMR from 0x175e958cf586f54c
-import NonFungibleToken from 0x631e88ae7f1d7c20
+import FungibleToken from "./FungibleToken.cdc"
+import FlowToken from "./FlowToken.cdc"
+import ASMR from "./ASMR.cdc"
+import NonFungibleToken from "./NonFungibleToken.cdc"
 
 pub contract MarketPlace {
 
     pub init() {
-        self.CollectionPublicPath= /public/ASMRMarketPlace
-        self.CollectionStoragePath= /storage/ASMRMarketPlace
+        self.CollectionPublicPath = /public/ASMRSale
+        self.CollectionStoragePath = /storage/ASMRSale
     }
 
     pub let CollectionStoragePath: StoragePath
@@ -103,7 +103,7 @@ pub contract MarketPlace {
                     "Not enough tokens to by the NFT!"
             }
 
-            let recipient=recipientCap.borrow()!
+            let recipient = recipientCap.borrow()!
 
             // get the value out of the optional
             let price = self.prices[tokenID]!
@@ -113,7 +113,7 @@ pub contract MarketPlace {
             let vaultRef = self.ownerVault.borrow()
                 ?? panic("Could not borrow reference to owner token vault")
             
-            let token <-self.withdraw(tokenID: tokenID)
+            let token <- self.withdraw(tokenID: tokenID)
 
             // deposit the purchasing tokens into the owners vault
             vaultRef.deposit(from: <-buyTokens)

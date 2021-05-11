@@ -1,6 +1,6 @@
-import ASMR from 0x175e958cf586f54c
-import FungibleToken from 0x9a0766d93b6608b7
-import MarketPlace from 0x175e958cf586f54c
+import ASMR from 0xf8d6e0586b0a20c7
+import FungibleToken from 0xee82856bf20e2aa6
+import MarketPlace from 0xf8d6e0586b0a20c7
 
 transaction(tokenId: UInt64) {
 
@@ -10,10 +10,10 @@ transaction(tokenId: UInt64) {
     prepare(acct: AuthAccount) {
         self.receiverRef = acct.getCapability<&{ASMR.CollectionPublic}>(/public/ASMRCollection)
             .borrow()
-            ?? panic("Could not borrow receiver reference")     
+            ?? panic("could not borrow receiver reference")     
             
         self.saleRef = acct.borrow<&MarketPlace.SaleCollection>(from: /storage/ASMRSale)
-            ?? panic("could not borrow minter reference")     
+            ?? panic("could not borrow marketplace reference")     
     }
 
     execute {    
@@ -22,7 +22,7 @@ transaction(tokenId: UInt64) {
 
         self.receiverRef.deposit(token: <- token)
 
-        log("NFT Minted and deposited to Account 2's Collection")
+        log("NFT was moved from sale storage to NFT's storage")
 
     }
 }

@@ -1,17 +1,28 @@
 1. install flow cli https://docs.onflow.org/flow-cli/install
 2. launch flow emulator in the separate console in the root of this project (flow emulator start)
-3. deploy contracts for emulator-account: flow project deploy --update (possibly in case of error you have to regenerate your keys by (flow keys generate) and replace emulator-account keys in flow.json by new generated private key)
-4. execute command in cli: mint NFT
-5. you can execute previous command several times and replace arguments of this command for your desirable values
-6. check NFTs on account
-
-check NFTs on account: flow scripts execute ./scripts/CheckASMR.cdc --arg Address:"0x175e958cf586f54c"
-
-mint NFT: flow transactions send --code ./transactions/MintASMR.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"},{"type": "UInt64","value": "1"}]' --signer emulator-account
-
-flow transactions send --code ./transactions/ListTokenForSale.cdc --args-json '[{"type": "UInt64","value": "0"}, {"type": "UFix64","value": "10.0"}]' --signer testnet-account  --network=testnet
-
-
- flow transactions send --code ./transactions/MintASMR.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"},{"type": "UInt64","value": "1"}]' --signer testnet-account --network=testnet
-
-flow scripts execute ./scripts/CheckASMR.cdc --arg Address:"0x175e958cf586f54c" --network=testnet
+3. create the second account: 
+flow accounts create --key a6ef4cce7ee66d34909966a403388ca72b5134f644bc6de0911abd2d1ce524ab8955bfbb22b6182f83ee8c30db621e2cb10417216cce35b902af0e4670ebe5f4 --signer emulator-account
+4. deploy contracts for emulator-account: flow project deploy --update (possibly in case of error you have to regenerate your keys by (flow keys generate) and replace emulator-account keys in flow.json by new generated private key)
+5. execute command in cli mint NFT: 
+flow transactions send --code ./transactions/MintASMR.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"},{"type": "UInt64","value": "1"}]' --signer emulator-account
+6. check NFTs on emulator account: flow scripts execute ./scripts/CheckASMR.cdc --arg Address:"0xf8d6e0586b0a20c7"
+7. check balance on emulator account: flow scripts execute ./scripts/GetBalance.cdc --arg Address:"0xf8d6e0586b0a20c7"
+8. check balance on the second account: flow scripts execute ./scripts/GetBalance.cdc --arg Address:"0x01cf0e2f2f715450"
+9. transfer money from emulator account to the second account: 
+flow transactions send --code ./transactions/TransferTokens.cdc --args-json '[{"type": "UFix64","value": "1000.00"}, {"type": "Address","value": "0x01cf0e2f2f715450"}]' --signer emulator-account
+10. repeat steps 7 and 8
+11. move NFT to sale storage for emulator account: flow transactions send --code ./transactions/SaleNFT.cdc --args-json '[{"type": "UInt64","value": "0"}, {"type": "UFix64","value": "897.0"}]' --signer emulator-account
+12. check NFTs on emulator account: flow scripts execute ./scripts/CheckASMR.cdc --arg Address:"0xf8d6e0586b0a20c7"
+13. check NFT's sale storage on emulator account: flow scripts execute ./scripts/CheckSale.cdc --arg Address:"0xf8d6e0586b0a20c7"
+14. buy NFT from the second account: flow transactions send --code ./transactions/BuyNFTFromSale.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UInt64","value": "0"}]' --signer second-account
+			"keys": "521cac87a4705c06ef3d2481ccd7b9615b35c1135eec259158061f7641f9f068"
+			"keys": "521cac87a4705c06ef3d2481ccd7b9615b35c1135eec259158061f7641f9f068"
+15. check NFT on the second account: flow scripts execute ./scripts/CheckASMR.cdc --arg Address:"0x01cf0e2f2f715450"
+16. check balance on the second account: flow scripts execute ./scripts/GetBalance.cdc --arg Address:"0x01cf0e2f2f715450"
+17. check balance on emulator account: flow scripts execute ./scripts/GetBalance.cdc --arg Address:"0xf8d6e0586b0a20c7"
+18. move NFT to sale storage for second account: flow transactions send --code ./transactions/SaleNFT.cdc --args-json '[{"type": "UInt64","value": "0"}, {"type": "UFix64","value": "897.0"}]' --signer second-account
+19. check NFT on the second account: flow scripts execute ./scripts/CheckASMR.cdc --arg Address:"0x01cf0e2f2f715450"
+20. check NFT's sale storage on the second account: flow scripts execute ./scripts/CheckSale.cdc --arg Address:"0x01cf0e2f2f715450"
+21. cancel sale. move NFT from sale storage to NFT account storage: 
+  flow transactions send --code ./transactions/CancelSale.cdc --args-json '[{"type": "UInt64","value": "0"}]' --signer second-account
+22. repeat steps 19 and 20

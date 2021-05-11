@@ -1,15 +1,13 @@
 //emulator
-import NonFungibleToken from 0x631e88ae7f1d7c20
-import MarketPlace from  0x175e958cf586f54c
+import NonFungibleToken from 0xf8d6e0586b0a20c7
+import ASMR from 0xf8d6e0586b0a20c7
 
 /*
   This script will check an address and print out its ASMR resources
  */
-pub fun main(address:Address) : [MarketPlace.SaleData] {
-    // get the accounts' public address objects
-    let account = getAccount(address)
+pub fun main(address:Address) : [ASMR.ASMRData] {
 
-    let status = MarketPlace.getASMR(address: address)
+    let asmr = ASMR.getASMR(address: address)
     
-    return status
+    return asmr
 }
