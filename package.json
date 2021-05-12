@@ -1,13 +1,13 @@
 {
   "name": "smartcontracts",
   "version": "1.0.0",
-  "description": "tests for flow smartcontracts ",
+  "description": "tests for cadence smartcontracts",
   "main": "index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "npm run test"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
     "@babel/preset-env": "^7.14.1",
     "@onflow/types": "0.0.4",
     "babel-jest": "^26.6.3",
-    "flow-js-testing": "^0.1.8-beta.0",
+    "flow-js-testing": "0.1.8-beta.0",
     "jest": "^26.6.3"
   }
 }
