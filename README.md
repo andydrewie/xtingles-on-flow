@@ -9,7 +9,7 @@ flow transactions send --code ./transactions/MintASMR.cdc --args-json '[{"type":
 7. check balance on emulator account: flow scripts execute ./scripts/GetBalance.cdc --arg Address:"0xf8d6e0586b0a20c7"
 8. check balance on the second account: flow scripts execute ./scripts/GetBalance.cdc --arg Address:"0x01cf0e2f2f715450"
 9. transfer money from emulator account to the second account: 
-flow transactions send --code ./transactions/TransferTokens.cdc --args-json '[{"type": "UFix64","value": "1000.00"}, {"type": "Address","value": "0x01cf0e2f2f715450"}]' --signer emulator-account
+flow transactions send --code ./transactions/TransferTokens.cdc --args-json '[{"type": "UFix64","value": "5000.00"}, {"type": "Address","value": "0x01cf0e2f2f715450"}]' --signer emulator-account
 10. repeat steps 7 and 8
 11. move NFT to sale storage for emulator account: flow transactions send --code ./transactions/SaleNFT.cdc --args-json '[{"type": "UInt64","value": "0"}, {"type": "UFix64","value": "897.0"}]' --signer emulator-account
 12. check NFTs on emulator account: flow scripts execute ./scripts/CheckASMR.cdc --arg Address:"0xf8d6e0586b0a20c7"
@@ -35,3 +35,13 @@ You can execute test inside this project:
 4. npm run test
 
 The other way to execute tests is inside Docker.
+
+
+flow transactions send --code ./transactions/CreateAuction.cdc --args-json '[{"type": "UInt64","value": "0"}, {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "3600.00"}, {"type": "UFix64","value": "1620918561.00"},{"type": "UFix64","value": "1000.0"}]' --signer emulator-account
+
+flow scripts execute ./scripts/CheckAuctionStatuses.cdc --arg Address:"0xf8d6e0586b0a20c7"
+
+flow scripts execute ./scripts/CheckAuctionTime.cdc --arg Address:"0xf8d6e0586b0a20c7" --arg UInt64:"1"
+
+flow transactions send --code ./transactions/Bid.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, 
+{"type": "UInt64","value": "1"}, {"type": "UFix64","value": "1000.0"}]' --signer emulator-account
