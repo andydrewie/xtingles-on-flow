@@ -5,6 +5,7 @@ RUN apk update && \
 ENV PATH="/root/.local/bin:${PATH}"
 WORKDIR '/app'
 COPY . ./
+RUN chmod +x ./start.sh
 RUN npm install
-CMD ["sh", "-c", "flow emulator -v && flow project deploy && npm run test"]
+CMD ["./start.sh"]
 EXPOSE 3000/tcp

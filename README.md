@@ -26,3 +26,12 @@ flow transactions send --code ./transactions/TransferTokens.cdc --args-json '[{"
 21. cancel sale. move NFT from sale storage to NFT account storage: 
   flow transactions send --code ./transactions/CancelSale.cdc --args-json '[{"type": "UInt64","value": "0"}]' --signer second-account
 22. repeat steps 19 and 20
+
+
+You can execute test inside this project:
+1. "flow emulator -v" in separate console
+2. npm install
+3. flow project deploy --update
+4. npm run test
+
+The other way to execute tests is inside Docker.
