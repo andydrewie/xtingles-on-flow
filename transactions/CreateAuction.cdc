@@ -67,6 +67,6 @@ transaction(
             authorVaultCap: authorVaultCap,
             platformCommission: platformCommission,
             authorCommission: authorCommission
-            )
+        )
     }
 }

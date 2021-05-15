@@ -28,7 +28,8 @@
 		},
 		"ASMR": "./contracts/ASMR.cdc",
 		"MarketPlace": "./contracts/MarketPlace.cdc",
-		"Auction": "./contracts/Auction.cdc"
+		"Auction": "./contracts/Auction.cdc",
+		"Royalty": "./contracts/Royalty.cdc"
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -58,7 +59,8 @@
 			"testnet-account": [
 				"ASMR",
 				"MarketPlace",
-				"Auction"	
+				"Auction",
+				"Royalty"
 			]
 		},
 		"emulator": {
@@ -66,7 +68,8 @@
 				"NonFungibleToken",
 				"ASMR",
 				"MarketPlace", 
-				"Auction"
+				"Auction",
+				"Royalty"
 			]
 		}
 	}

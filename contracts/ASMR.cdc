@@ -23,6 +23,8 @@ pub contract ASMR: NonFungibleToken {
     pub resource interface Public {
         pub let id: UInt64
         pub let metadata: Metadata
+
+        pub fun getEditionNumber(): UInt64
     }
 
     pub struct Metadata {
@@ -66,11 +68,18 @@ pub contract ASMR: NonFungibleToken {
 
         pub let metadata: Metadata
 
+        pub let editionNumber: UInt64
+
         // initializer
         //
-        init(initID: UInt64, metadata: Metadata) {
+        init(initID: UInt64, metadata: Metadata, editionNumber: UInt64) {
             self.id = initID   
             self.metadata = metadata     
+            self.editionNumber = editionNumber
+        }
+
+        pub fun getEditionNumber(): UInt64 {
+            return self.editionNumber;
         }
     }
 
@@ -88,6 +97,7 @@ pub contract ASMR: NonFungibleToken {
                     "Cannot borrow collectible reference: The id of the returned reference is incorrect."
             }
         }
+        pub fun getEditionNumber(id: UInt64): UInt64
     }
 
     // Collection
@@ -134,6 +144,17 @@ pub contract ASMR: NonFungibleToken {
             return self.ownedNFTs.keys
         }
 
+        pub fun getNFT(id: UInt64): &ASMR.NFT {
+            let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+            return ref as! &ASMR.NFT     
+        }
+  
+        pub fun getEditionNumber(id: UInt64): UInt64 {
+            let ref = self.getNFT(id: id)
+
+            return ref.getEditionNumber()
+        }
+
         // borrowNFT
         // Gets a reference to an NFT in the collection
         // so that the caller can read its metadata and call its methods
@@ -173,7 +194,7 @@ pub contract ASMR: NonFungibleToken {
     // mint NFTs for test purposes
     pub resource NFTMinter {
   
-        pub fun mintNFT(metadata: Metadata): @NFT {
+        pub fun mintNFT(metadata: Metadata, editionNumber: UInt64): @NFT {
             var newNFT <- create NFT(
                 initID: ASMR.totalSupply,
                 metadata: Metadata(
@@ -186,7 +207,8 @@ pub contract ASMR: NonFungibleToken {
                     description: metadata.description,        
                     edition: metadata.edition,
                     maxEdition: metadata.maxEdition
-                )
+                ),
+                editionNumber: editionNumber
             )
             emit Created(id: ASMR.totalSupply, metadata: newNFT.metadata)
 
@@ -225,7 +247,7 @@ pub contract ASMR: NonFungibleToken {
     } 
 
     // mint NFT from other contract (auction or fix price)
-    access(account) fun mint(metadata: Metadata) : @ASMR.NFT {
+    access(account) fun mint(metadata: Metadata, editionNumber: UInt64) : @ASMR.NFT {
         var newNFT <- create NFT(
             initID: ASMR.totalSupply,
             metadata: Metadata(
@@ -237,8 +259,9 @@ pub contract ASMR: NonFungibleToken {
                 artistAddress: metadata.artistAddress, 
                 description: metadata.description,        
                 edition: metadata.edition,
-                maxEdition: metadata.maxEdition
-            )
+                maxEdition: metadata.maxEdition                
+            ),
+            editionNumber: editionNumber
         )
         emit Created(id: ASMR.totalSupply, metadata: newNFT.metadata)
         

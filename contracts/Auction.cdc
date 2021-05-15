@@ -22,6 +22,8 @@ pub contract Auction {
         pub let completed: Bool
         pub let expired: Bool
         pub let cancelled: Bool
+        pub let currentLenght: UFix64
+        pub let maxLenght: UFix64
      
         init(
             id:UInt64, 
@@ -39,7 +41,9 @@ pub contract Auction {
             minNextBid:UFix64,
             completed: Bool,
             expired:Bool, 
-            cancelled: Bool
+            cancelled: Bool,
+            currentLenght: UFix64,
+            maxLenght: UFix64
         ) {
             self.id = id
             self.price = currentPrice
@@ -57,6 +61,8 @@ pub contract Auction {
             self.completed = completed
             self.expired = expired
             self.cancelled = cancelled
+            self.currentLenght = currentLenght
+            self.maxLenght = maxLenght
         }
     }
 
@@ -71,6 +77,7 @@ pub contract Auction {
     pub event Canceled(tokenID: UInt64)
     pub event MarketplaceEarned(amount:UFix64, owner: Address)  
     pub event TimeRemain(amount:UFix64, owner: Address) 
+    pub event Extend(auctionLengthFrom: UFix64, auctionLengthTo: UFix64) 
 
     // AuctionItem contains the Resources and metadata for a single auction
     pub resource AuctionItem {
@@ -292,9 +299,16 @@ pub contract Auction {
             return self.startPrice
         }
 
-        //Extend an auction with a given set of blocks
-        pub fun extendWith() {
-            self.auctionLength = self.auctionLength + self.extendedLength
+        pub fun extendAuction() {
+            if(
+                //Auction time left is less than remainLengthToExtend
+                self.timeRemaining() < Fix64(self.remainLengthToExtend) 
+                // Auction length doesn't exceed maxAuctionLength after extend
+                && self.auctionLength <= self.maxAuctionLength - self.extendedLength
+            ) {
+                self.auctionLength = self.auctionLength + self.extendedLength
+                emit Extend(auctionLengthFrom: self.auctionLength - self.extendedLength, auctionLengthTo: self.auctionLength)
+            }            
         }
 
         pub fun bidder() : Address? {
@@ -353,6 +367,9 @@ pub contract Auction {
             self.recipientCollectionCap = collectionCap
             self.numberOfBids=self.numberOfBids+(1 as UInt64)
 
+            // Extend auction according to max lenght, time left and extenede length
+            self.extendAuction() 
+
             emit Bid(tokenID: self.auctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice)
         }
 
@@ -379,7 +396,9 @@ pub contract Auction {
                 minNextBid: self.minNextBid(),
                 completed: self.auctionCompleted,
                 expired: self.isAuctionExpired(),
-                cancelled: self.auctionCancelled
+                cancelled: self.auctionCancelled,
+                currentLenght: self.auctionLength,
+                maxLenght: self.maxAuctionLength
             )
         }
 

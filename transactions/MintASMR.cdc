@@ -39,10 +39,10 @@ transaction(
 
     execute {
        
-        let newNFT <- self.minterRef.mintNFT(metadata: self.metadata)
+        let newNFT <- self.minterRef.mintNFT(metadata: self.metadata, editionNumber: 1)
     
         self.receiverRef.deposit(token: <-newNFT)
 
-        log("NFT Minted and deposited to Account 2's Collection")
+        log("NFT Minted and deposited to Account's Collection")
     }
 }
