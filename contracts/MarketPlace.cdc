@@ -1,6 +1,7 @@
 import FungibleToken from "./FungibleToken.cdc"
 import FlowToken from "./FlowToken.cdc"
 import ASMR from "./ASMR.cdc"
+import Royalty from "./Royalty.cdc"
 import NonFungibleToken from "./NonFungibleToken.cdc"
 
 pub contract MarketPlace {
@@ -26,7 +27,12 @@ pub contract MarketPlace {
     pub event SaleWithdrawn(id: UInt64)
 
     pub resource interface SalePublic {
-        pub fun purchase(tokenID: UInt64, recipientCap: Capability<&{ASMR.CollectionPublic}>, buyTokens: @FungibleToken.Vault)
+        pub fun purchase(
+            tokenID: UInt64,
+            recipientCap: Capability<&{ASMR.CollectionPublic}>,
+            buyTokens: @FungibleToken.Vault,            
+            contractsAddress: Address
+        )
         pub fun idPrice(tokenID: UInt64): UFix64?
         pub fun getIDs(): [UInt64]
         pub fun borrowASMR(id: UInt64): &ASMR.NFT? {
@@ -95,7 +101,12 @@ pub contract MarketPlace {
         }
 
         // purchase lets a user send tokens to purchase an NFT that is for sale
-        pub fun purchase(tokenID: UInt64, recipientCap: Capability<&{ASMR.CollectionPublic}>, buyTokens: @FungibleToken.Vault) {
+        pub fun purchase(
+            tokenID: UInt64,
+            recipientCap: Capability<&{ASMR.CollectionPublic}>,
+            buyTokens: @FungibleToken.Vault,
+            contractsAddress: Address 
+        ) {
             pre {
                 self.forSale[tokenID] != nil && self.prices[tokenID] != nil:
                     "No token matching this ID for sale!"
@@ -114,9 +125,47 @@ pub contract MarketPlace {
                 ?? panic("Could not borrow reference to owner token vault")
             
             let token <- self.withdraw(tokenID: tokenID)
+                      
+            let contractsAccount = getAccount(contractsAddress)
+
+            let royaltyRef = contractsAccount.getCapability<&{Royalty.RoyaltyPublic}>(/public/royaltyCollection).borrow() 
+                ?? panic("Could not borrow reference to royalty")              
+
+            let asmrCollectionRef = contractsAccount.getCapability<&{ASMR.CollectionPublic}>(/public/ASMRCollection)
+                .borrow()
+                ?? panic("Could not borrow ASMR reference")
+            
+            let editionNUmber = asmrCollectionRef.getEditionNumber(id: tokenID)
+
+            let royaltyStatus = royaltyRef.getRoyalty(editionNUmber)
+
+            if (royaltyStatus.secondCommissionAuthor > 0.00 && price > 0.00) {
+                //Withdraw royalty to author and put it in their vault
+                let authorCommision =  price * royaltyStatus.secondCommissionAuthor * 0.01
+
+                let authorVaultCap = royaltyStatus.authorVaultCap.borrow() 
+                   ?? panic("Could not borrow author vault reference")
+
+                let authorCut <- buyTokens.withdraw(amount: authorCommision)               
+
+                authorVaultCap.deposit(from: <- authorCut)
+            }
+                      
+            if (royaltyStatus.secondCommissionPlatform > 0.00 && price > 0.00) {
+                //Withdraw royalty to platform and put it in their vault
+                let platformCommision =  price * royaltyStatus.secondCommissionPlatform * 0.01
+
+                let platformVaultCap = royaltyStatus.platformVaultCap.borrow() 
+                   ?? panic("Could not borrow platform vault reference")
+
+                let platformCut <- buyTokens.withdraw(amount: platformCommision)               
+
+                platformVaultCap.deposit(from: <- platformCut)
+            }
+            
 
             // deposit the purchasing tokens into the owners vault
-            vaultRef.deposit(from: <-buyTokens)
+            vaultRef.deposit(from: <- buyTokens)
 
             // deposit the NFT into the buyers collection
             recipient.deposit(token: <- token)

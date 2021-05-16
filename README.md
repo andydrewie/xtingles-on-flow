@@ -57,8 +57,10 @@ flow transactions send --code ./transactions/Bid.cdc --args-json '[{"type": "Add
 
 flow transactions send --code ./transactions/Settle.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer emulator-account
 
-flow transactions send --code ./transactions/CreateRoyalty.cdc --args-json '[{"type": "UFix64","value": "10.00"}, {"type": "UFix64","value": "20.00"},  {"type": "UFix64","value": "10.00"},  {"type": "UFix64","value": "15.00"}]' --signer emulator-account
+flow transactions send --code ./transactions/CreateRoyalty.cdc --args-json '[{"type": "UFix64","value": "10.00"}, {"type": "UFix64","value": "20.00"},  {"type": "UFix64","value": "10.00"},  {"type": "UFix64","value": "15.00"}, {"type": "Address","value": "0x179b6b1cb6755e31"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}]' --signer emulator-account
+
+
 
 flow scripts execute ./scripts/CheckRoyalty.cdc --arg Address:"0xf8d6e0586b0a20c7" --arg UInt64:"1"
 
-flow transactions send --code ./transactions/ChangeRoyalty.cdc --args-json '[{"type": "UInt64","value": "1"}, {"type": "UFix64","value": "10.00"}, {"type": "UFix64","value": "20.00"},  {"type": "UFix64","value": "10.00"},  {"type": "UFix64","value": "17.77"}]' --signer emulator-account
+flow transactions send --code ./transactions/ChangeRoyalty.cdc --args-json '[{"type": "UInt64","value": "1"}, {"type": "UFix64","value": "10.00"}, {"type": "UFix64","value": "20.00"},  {"type": "UFix64","value": "10.00"},  {"type": "UFix64","value": "17.77"}, {"type": "Address","value": "0x179b6b1cb6755e31"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}]' --signer emulator-account

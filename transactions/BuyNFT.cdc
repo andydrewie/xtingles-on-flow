@@ -1,6 +1,6 @@
 //emulator
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken, ASMR, MarketPlace from 0xf8d6e0586b0a20c7
+import NonFungibleToken, ASMR, MarketPlace, Royalty from 0xf8d6e0586b0a20c7
 
 transaction(marketplace: Address, tokenId: UInt64, amount: UFix64) {
     // reference to the buyer's NFT collection where they
@@ -8,6 +8,7 @@ transaction(marketplace: Address, tokenId: UInt64, amount: UFix64) {
 
     let vaultCap: Capability<&{FungibleToken.Receiver}>
     let collectionCap: Capability<&{ASMR.CollectionPublic}> 
+    
     // Vault that will hold the tokens that will be used
     // to buy the NFT
     let temporaryVault: @FungibleToken.Vault
@@ -38,13 +39,23 @@ transaction(marketplace: Address, tokenId: UInt64, amount: UFix64) {
     }
 
     execute {
+
+        let acct = getAccount(0xf8d6e0586b0a20c7)
+
+        let royaltyCapability = acct.getCapability<&{Royalty.RoyaltyPublic}>(/public/royaltyCollection)      
+     
         // get the read-only account storage of the seller
         let seller = getAccount(marketplace)
 
-        let marketplace= seller.getCapability(/public/ASMRSale).borrow<&{MarketPlace.SalePublic}>()
+        let marketplace = seller.getCapability(/public/ASMRSale).borrow<&{MarketPlace.SalePublic}>()
             ?? panic("Could not borrow seller's sale reference")
 
-        marketplace.purchase(tokenID: tokenId, recipientCap:self.collectionCap, buyTokens: <- self.temporaryVault)
+        marketplace.purchase(
+            tokenID: tokenId,
+            recipientCap: self.collectionCap,
+            buyTokens: <- self.temporaryVault,
+            contractsAddress: contractsAddress
+        )
     }
 }
  

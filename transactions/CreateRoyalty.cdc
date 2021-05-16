@@ -7,7 +7,9 @@ transaction(
         firstCommissionAuthor: UFix64,
         firstCommissionPlatform: UFix64,
         secondCommissionAuthor: UFix64,
-        secondCommissionPlatform: UFix64
+        secondCommissionPlatform: UFix64,
+        authorAddress: Address,
+        platformAddress: Address
     ) {
 
     let royaltyCollectionRef: &Royalty.RoyaltyCollection
@@ -24,16 +26,24 @@ transaction(
         }  
 
         self.royaltyCollectionRef = acct.borrow<&Royalty.RoyaltyCollection>(from: /storage/royaltyCollection)
-            ?? panic("could not borrow minter reference")    
+            ?? panic("could not borrow minter reference")            
    
     }
 
-    execute {    
+    execute {  
+        let authorAccount = getAccount(authorAddress)  
+        let authorVaultCap = authorAccount.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)  
+
+        let platformAccount = getAccount(platformAddress)
+        let platformVaultCap = platformAccount.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+
         let id = self.royaltyCollectionRef.createRoyalty(
             firstCommissionAuthor: firstCommissionAuthor,
             firstCommissionPlatform: firstCommissionPlatform,
             secondCommissionAuthor: secondCommissionAuthor,
-            secondCommissionPlatform: secondCommissionPlatform
+            secondCommissionPlatform: secondCommissionPlatform,
+            authorVaultCap: authorVaultCap,
+            platformVaultCap: platformVaultCap
         )
 
         log(id)

@@ -131,7 +131,7 @@ pub contract Auction {
         //the capability for the platform of the NFT to return the item to if the auction is cancelled
         priv let platformCollectionCap: Capability<&{ASMR.CollectionPublic}>
 
-        //the capability to pay the owner of the item when the auction is done
+        //the capability to pay the platform when the auction is done
         priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>
 
         //the capability to pay the author of the item when the auction is done

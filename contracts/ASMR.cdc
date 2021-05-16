@@ -1,4 +1,3 @@
-
 import NonFungibleToken from "./NonFungibleToken.cdc"
 
 pub contract ASMR: NonFungibleToken {

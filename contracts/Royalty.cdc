@@ -1,3 +1,5 @@
+import FungibleToken from "./FungibleToken.cdc"
+
 pub contract Royalty {
 
      // The total amount of editions that have been created
@@ -19,19 +21,27 @@ pub contract Royalty {
         pub let secondCommissionAuthor: UFix64
         pub let secondCommissionPlatform: UFix64
         pub let editionId: UInt64
+        //the capability to pay the platform
+        pub let platformVaultCap: Capability<&{FungibleToken.Receiver}>
+        //the capability to pay the author
+        pub let authorVaultCap: Capability<&{FungibleToken.Receiver}>
      
         init(
-            firstCommissionAuthor: UFix64
-            firstCommissionPlatform: UFix64
-            secondCommissionAuthor: UFix64
-            secondCommissionPlatform: UFix64
-            editionId: UInt64
+            firstCommissionAuthor: UFix64,
+            firstCommissionPlatform: UFix64,
+            secondCommissionAuthor: UFix64,
+            secondCommissionPlatform: UFix64,
+            editionId: UInt64,
+            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>          
         ) {
             self.firstCommissionAuthor = firstCommissionAuthor
             self.firstCommissionPlatform = firstCommissionPlatform
             self.secondCommissionAuthor = secondCommissionAuthor
             self.secondCommissionPlatform = secondCommissionPlatform           
             self.editionId = editionId
+            self.authorVaultCap = authorVaultCap
+            self.platformVaultCap = platformVaultCap
         }
     }
 
@@ -43,11 +53,19 @@ pub contract Royalty {
         priv var secondCommissionAuthor: UFix64
         priv var secondCommissionPlatform: UFix64
 
+        //the capability to pay the platform
+        priv var platformVaultCap: Capability<&{FungibleToken.Receiver}>
+
+        //the capability to pay the author
+        priv var authorVaultCap: Capability<&{FungibleToken.Receiver}>
+
         init(
-            firstCommissionAuthor: UFix64
-            firstCommissionPlatform: UFix64
-            secondCommissionAuthor: UFix64
-            secondCommissionPlatform: UFix64
+            firstCommissionAuthor: UFix64,
+            firstCommissionPlatform: UFix64,
+            secondCommissionAuthor: UFix64,
+            secondCommissionPlatform: UFix64,      
+            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>
         ) {
             Royalty.totalEditions = Royalty.totalEditions + (1 as UInt64)
             self.firstCommissionAuthor = firstCommissionAuthor
@@ -55,6 +73,8 @@ pub contract Royalty {
             self.secondCommissionAuthor = secondCommissionAuthor
             self.secondCommissionPlatform = secondCommissionPlatform     
             self.editionId = Royalty.totalEditions     
+            self.authorVaultCap = authorVaultCap
+            self.platformVaultCap = platformVaultCap
         }
         
         pub fun getRoyalty() : RoyaltyStatus {
@@ -64,20 +84,26 @@ pub contract Royalty {
                 firstCommissionPlatform: self.firstCommissionPlatform,
                 secondCommissionAuthor: self.secondCommissionAuthor,
                 secondCommissionPlatform: self.secondCommissionPlatform,
-                editionId: self.editionId
+                editionId: self.editionId,
+                authorVaultCap: self.authorVaultCap,
+                platformVaultCap: self.platformVaultCap
             )
         }
 
         pub fun changeCommission( 
-            firstCommissionAuthor: UFix64
-            firstCommissionPlatform: UFix64
-            secondCommissionAuthor: UFix64
-            secondCommissionPlatform: UFix64
+            firstCommissionAuthor: UFix64,
+            firstCommissionPlatform: UFix64,
+            secondCommissionAuthor: UFix64,
+            secondCommissionPlatform: UFix64,   
+            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>
         ) {
             self.firstCommissionAuthor = firstCommissionAuthor
             self.firstCommissionPlatform = firstCommissionPlatform
             self.secondCommissionAuthor = secondCommissionAuthor
-            self.secondCommissionPlatform = secondCommissionPlatform                
+            self.secondCommissionPlatform = secondCommissionPlatform
+            self.authorVaultCap = authorVaultCap
+            self.platformVaultCap = platformVaultCap                
         }
        
         destroy() {
@@ -90,10 +116,12 @@ pub contract Royalty {
     pub resource interface RoyaltyPublic {
 
         pub fun createRoyalty(
-            firstCommissionAuthor: UFix64
-            firstCommissionPlatform: UFix64
-            secondCommissionAuthor: UFix64
-            secondCommissionPlatform: UFix64
+            firstCommissionAuthor: UFix64,
+            firstCommissionPlatform: UFix64,
+            secondCommissionAuthor: UFix64,
+            secondCommissionPlatform: UFix64,
+            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>
         ): UInt64
 
         pub fun getRoyalty(_ id: UInt64): RoyaltyStatus
@@ -117,10 +145,12 @@ pub contract Royalty {
         // addTokenToauctionItems adds an NFT to the auction items and sets the meta data
         // for the auction item
         pub fun createRoyalty(
-            firstCommissionAuthor: UFix64
-            firstCommissionPlatform: UFix64
-            secondCommissionAuthor: UFix64
-            secondCommissionPlatform: UFix64
+            firstCommissionAuthor: UFix64,
+            firstCommissionPlatform: UFix64,
+            secondCommissionAuthor: UFix64,
+            secondCommissionPlatform: UFix64,
+            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>
         ): UInt64 {
 
             pre {              
@@ -131,7 +161,9 @@ pub contract Royalty {
                 firstCommissionAuthor: firstCommissionAuthor,
                 firstCommissionPlatform: firstCommissionPlatform,
                 secondCommissionAuthor: secondCommissionAuthor,
-                secondCommissionPlatform: secondCommissionPlatform
+                secondCommissionPlatform: secondCommissionPlatform,
+                authorVaultCap: authorVaultCap,
+                platformVaultCap: platformVaultCap
             )
 
             let id = item.editionId
@@ -155,14 +187,18 @@ pub contract Royalty {
             firstCommissionAuthor: UFix64,
             firstCommissionPlatform: UFix64,
             secondCommissionAuthor: UFix64,
-            secondCommissionPlatform: UFix64
+            secondCommissionPlatform: UFix64,
+            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>
         ) {
             let itemRef = &self.royaltyItems[id] as &RoyaltyItem
             itemRef.changeCommission(
                 firstCommissionAuthor: firstCommissionAuthor,
                 firstCommissionPlatform: firstCommissionPlatform,
                 secondCommissionAuthor: secondCommissionAuthor,
-                secondCommissionPlatform: secondCommissionPlatform
+                secondCommissionPlatform: secondCommissionPlatform,
+                authorVaultCap: authorVaultCap,
+                platformVaultCap: platformVaultCap
             )
         }
     
