@@ -15,99 +15,67 @@ pub contract Royalty {
     pub event TimeRemain(amount:UFix64, owner: Address) 
     pub event Extend(auctionLengthFrom: UFix64, auctionLengthTo: UFix64) 
 
-    pub struct RoyaltyStatus {
-        pub let firstCommissionAuthor: UFix64
-        pub let firstCommissionPlatform: UFix64
-        pub let secondCommissionAuthor: UFix64
-        pub let secondCommissionPlatform: UFix64
-        pub let editionId: UInt64
-        //the capability to pay the platform
-        pub let platformVaultCap: Capability<&{FungibleToken.Receiver}>
-        //the capability to pay the author
-        pub let authorVaultCap: Capability<&{FungibleToken.Receiver}>
+    pub struct CommissionStructure {
+        pub let vaultCap: Capability<&{FungibleToken.Receiver}>
+        pub let firstSalePercent: UFix64
+        pub let secondSalePercent: UFix64
+        pub let description: String
      
-        init(
-            firstCommissionAuthor: UFix64,
-            firstCommissionPlatform: UFix64,
-            secondCommissionAuthor: UFix64,
-            secondCommissionPlatform: UFix64,
-            editionId: UInt64,
-            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>          
+        init(           
+            vaultCap: Capability<&{FungibleToken.Receiver}>,
+            firstSalePercent: UFix64, 
+            secondSalePercent: UFix64,
+            description: String     
         ) {
-            self.firstCommissionAuthor = firstCommissionAuthor
-            self.firstCommissionPlatform = firstCommissionPlatform
-            self.secondCommissionAuthor = secondCommissionAuthor
-            self.secondCommissionPlatform = secondCommissionPlatform           
+            self.vaultCap = vaultCap
+            self.firstSalePercent = firstSalePercent
+            self.secondSalePercent = secondSalePercent
+            self.description = description
+        }
+    }
+
+    pub struct RoyaltyStatus {
+        pub let royalty: { Address: CommissionStructure }  
+        pub let editionId: UInt64      
+
+        init(
+            royalty: { Address: CommissionStructure },
+            editionId: UInt64     
+        ) {
+            self.royalty = royalty                    
             self.editionId = editionId
-            self.authorVaultCap = authorVaultCap
-            self.platformVaultCap = platformVaultCap
         }
     }
 
     // ResourceItem contains the Resources and metadata for a single auction
     pub resource RoyaltyItem {
-        pub var editionId: UInt64
-        priv var firstCommissionAuthor: UFix64
-        priv var firstCommissionPlatform: UFix64
-        priv var secondCommissionAuthor: UFix64
-        priv var secondCommissionPlatform: UFix64
-
-        //the capability to pay the platform
-        priv var platformVaultCap: Capability<&{FungibleToken.Receiver}>
-
-        //the capability to pay the author
-        priv var authorVaultCap: Capability<&{FungibleToken.Receiver}>
+        pub let editionId: UInt64
+        pub var royalty: { Address: CommissionStructure }   
 
         init(
-            firstCommissionAuthor: UFix64,
-            firstCommissionPlatform: UFix64,
-            secondCommissionAuthor: UFix64,
-            secondCommissionPlatform: UFix64,      
-            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>
+            royalty: { Address: CommissionStructure },
+            editionId: UInt64      
         ) {
             Royalty.totalEditions = Royalty.totalEditions + (1 as UInt64)
-            self.firstCommissionAuthor = firstCommissionAuthor
-            self.firstCommissionPlatform = firstCommissionPlatform
-            self.secondCommissionAuthor = secondCommissionAuthor
-            self.secondCommissionPlatform = secondCommissionPlatform     
-            self.editionId = Royalty.totalEditions     
-            self.authorVaultCap = authorVaultCap
-            self.platformVaultCap = platformVaultCap
+            self.royalty = royalty                    
+            self.editionId = editionId
         }
         
         pub fun getRoyalty() : RoyaltyStatus {
-
             return RoyaltyStatus(
-                firstCommissionAuthor: self.firstCommissionAuthor,
-                firstCommissionPlatform: self.firstCommissionPlatform,
-                secondCommissionAuthor: self.secondCommissionAuthor,
-                secondCommissionPlatform: self.secondCommissionPlatform,
-                editionId: self.editionId,
-                authorVaultCap: self.authorVaultCap,
-                platformVaultCap: self.platformVaultCap
+                royalty: self.royalty,                      
+                editionId: self.editionId
             )
         }
 
-        pub fun changeCommission( 
-            firstCommissionAuthor: UFix64,
-            firstCommissionPlatform: UFix64,
-            secondCommissionAuthor: UFix64,
-            secondCommissionPlatform: UFix64,   
-            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>
+        pub fun changeCommission(      
+           royalty: { Address: CommissionStructure }     
         ) {
-            self.firstCommissionAuthor = firstCommissionAuthor
-            self.firstCommissionPlatform = firstCommissionPlatform
-            self.secondCommissionAuthor = secondCommissionAuthor
-            self.secondCommissionPlatform = secondCommissionPlatform
-            self.authorVaultCap = authorVaultCap
-            self.platformVaultCap = platformVaultCap                
+            self.royalty = royalty         
         }
        
         destroy() {
-            log("destroy roaylty")            
+            log("destroy royalty")            
         }
     }    
 
@@ -116,12 +84,8 @@ pub contract Royalty {
     pub resource interface RoyaltyPublic {
 
         pub fun createRoyalty(
-            firstCommissionAuthor: UFix64,
-            firstCommissionPlatform: UFix64,
-            secondCommissionAuthor: UFix64,
-            secondCommissionPlatform: UFix64,
-            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>
+            royalty: { Address: CommissionStructure },
+            editionId: UInt64  
         ): UInt64
 
         pub fun getRoyalty(_ id: UInt64): RoyaltyStatus
@@ -145,12 +109,8 @@ pub contract Royalty {
         // addTokenToauctionItems adds an NFT to the auction items and sets the meta data
         // for the auction item
         pub fun createRoyalty(
-            firstCommissionAuthor: UFix64,
-            firstCommissionPlatform: UFix64,
-            secondCommissionAuthor: UFix64,
-            secondCommissionPlatform: UFix64,
-            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>
+            royalty: { Address: CommissionStructure },
+            editionId: UInt64 
         ): UInt64 {
 
             pre {              
@@ -158,12 +118,8 @@ pub contract Royalty {
             }            
            
             let item <- create RoyaltyItem(
-                firstCommissionAuthor: firstCommissionAuthor,
-                firstCommissionPlatform: firstCommissionPlatform,
-                secondCommissionAuthor: secondCommissionAuthor,
-                secondCommissionPlatform: secondCommissionPlatform,
-                authorVaultCap: authorVaultCap,
-                platformVaultCap: platformVaultCap
+                royalty: royalty,          
+                editionId: editionId            
             )
 
             let id = item.editionId
@@ -184,21 +140,11 @@ pub contract Royalty {
 
         pub fun changeCommission(
             id: UInt64,
-            firstCommissionAuthor: UFix64,
-            firstCommissionPlatform: UFix64,
-            secondCommissionAuthor: UFix64,
-            secondCommissionPlatform: UFix64,
-            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>
+            royalty: { Address: CommissionStructure }   
         ) {
             let itemRef = &self.royaltyItems[id] as &RoyaltyItem
             itemRef.changeCommission(
-                firstCommissionAuthor: firstCommissionAuthor,
-                firstCommissionPlatform: firstCommissionPlatform,
-                secondCommissionAuthor: secondCommissionAuthor,
-                secondCommissionPlatform: secondCommissionPlatform,
-                authorVaultCap: authorVaultCap,
-                platformVaultCap: platformVaultCap
+                royalty: royalty            
             )
         }
     

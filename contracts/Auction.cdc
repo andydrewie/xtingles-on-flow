@@ -243,7 +243,8 @@ pub contract Auction {
 
             let royaltyStatus = royaltyRef.getRoyalty(editionNumber)  
 
-            if (royaltyStatus.secondCommissionAuthor > 0.00 && self.currentPrice > 0.00) {
+
+          /*  if (royaltyStatus.secondCommissionAuthor > 0.00 && self.currentPrice > 0.00) {
                 //Withdraw royalty to author and put it in their vault
                 let authorCommision =  self.currentPrice * royaltyStatus.firstCommissionAuthor * 0.01
 
@@ -270,8 +271,19 @@ pub contract Auction {
                 platformVaultCap.deposit(from: <- platformCut)
 
                 emit MarketplaceEarned(amount: platformCommision, owner: platformVaultCap.owner!.address)
-            }               
+            }    */           
             
+            for key in royaltyStatus.royalty.keys {
+                let commission = self.currentPrice * royaltyStatus.royalty[key]!.firstSalePercent * 0.01
+
+                let vaultCap = royaltyStatus.royalty[key]!.vaultCap.borrow() 
+                   ?? panic("Could not borrow vault reference")                    
+
+                vaultCap!.deposit(from: <- self.bidVault.withdraw(amount: commission))
+
+                emit MarketplaceEarned(amount: commission, owner: vaultCap!.owner!.address)
+            }
+
             self.sendNFT(self.recipientCollectionCap!)
          
             self.auctionCompleted = true

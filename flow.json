@@ -29,7 +29,7 @@
 		"ASMR": "./contracts/ASMR.cdc",
 		"MarketPlace": "./contracts/MarketPlace.cdc",
 		"Auction": "./contracts/Auction.cdc",
-		"Royalty": "./contracts/Royalty.cdc"
+		"Royalty": "./contracts/Royalty.cdc"		
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -60,7 +60,7 @@
 				"ASMR",
 				"MarketPlace",
 				"Auction",
-				"Royalty"
+				"Royalty"			
 			]
 		},
 		"emulator": {

@@ -26,6 +26,8 @@ pub contract MarketPlace {
     // Event that is emitted when a seller withdraws their NFT from the sale
     pub event SaleWithdrawn(id: UInt64)
 
+    pub event MarketplaceEarned(amount:UFix64, owner: Address, description: String)
+
     pub resource interface SalePublic {
         pub fun purchase(
             tokenID: UInt64,
@@ -160,7 +162,7 @@ pub contract MarketPlace {
 
             let royaltyStatus = royaltyRef.getRoyalty(editionNumber)
 
-            if (royaltyStatus.secondCommissionAuthor > 0.00 && price > 0.00) {
+           /* if (royaltyStatus.secondCommissionAuthor > 0.00 && price > 0.00) {
                 //Withdraw royalty to author and put it in their vault
                 let authorCommision =  price * royaltyStatus.secondCommissionAuthor * 0.01
 
@@ -182,7 +184,18 @@ pub contract MarketPlace {
                 let platformCut <- buyTokens.withdraw(amount: platformCommision)               
 
                 platformVaultCap.deposit(from: <- platformCut)
-            }   
+            }   */
+
+            for key in royaltyStatus.royalty.keys {
+                let commission = price * royaltyStatus.royalty[key]!.secondSalePercent * 0.01
+
+                let vaultCap = royaltyStatus.royalty[key]!.vaultCap.borrow() 
+                   ?? panic("Could not borrow vault reference")                    
+
+                vaultCap.deposit(from: <- buyTokens.withdraw(amount: commission))
+
+                emit MarketplaceEarned(amount: commission, owner: vaultCap.owner!.address, description: royaltyStatus.royalty[key]!.description)
+            }
 
             // deposit the purchasing tokens into the owners vault
             vaultRef.deposit(from: <- buyTokens)
