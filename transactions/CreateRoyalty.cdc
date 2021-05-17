@@ -44,8 +44,6 @@ transaction(
             secondCommissionPlatform: secondCommissionPlatform,
             authorVaultCap: authorVaultCap,
             platformVaultCap: platformVaultCap
-        )
-
-        log(id)
+        )       
     }
 }

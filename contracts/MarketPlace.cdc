@@ -30,8 +30,7 @@ pub contract MarketPlace {
         pub fun purchase(
             tokenID: UInt64,
             recipientCap: Capability<&{ASMR.CollectionPublic}>,
-            buyTokens: @FungibleToken.Vault,            
-            contractsAddress: Address
+            buyTokens: @FungibleToken.Vault     
         )
         pub fun idPrice(tokenID: UInt64): UFix64?
         pub fun getIDs(): [UInt64]
@@ -50,13 +49,15 @@ pub contract MarketPlace {
     // NFT Collection object that allows a user to put their NFT up for sale
     // where others can send fungible tokens to purchase it
     //
-    pub resource SaleCollection: SalePublic {
+    pub resource SaleCollection: SalePublic {    
 
         // Dictionary of the NFTs that the user is putting up for sale
         pub var forSale: @{UInt64: ASMR.NFT}
 
         // Dictionary of the prices for each NFT by ID
         pub var prices: {UInt64: UFix64}
+
+        priv let contractsAccountAddress: Address
 
         // The fungible token vault of the owner of this sale.
         // When someone buys a token, this resource can deposit
@@ -67,6 +68,7 @@ pub contract MarketPlace {
             self.forSale <- {}
             self.ownerVault = vault
             self.prices = {}
+            self.contractsAccountAddress = 0xf8d6e0586b0a20c7
         }
 
         // withdraw gives the owner the opportunity to remove a sale from the collection
@@ -100,12 +102,35 @@ pub contract MarketPlace {
             emit PriceChanged(id: tokenID, newPrice: newPrice)
         }
 
+          // idPrice returns the price of a specific token in the sale
+        pub fun idPrice(tokenID: UInt64): UFix64? {
+            return self.prices[tokenID]
+        }
+
+        // getIDs returns an array of token IDs that are for sale
+        pub fun getIDs(): [UInt64] {
+            return self.forSale.keys
+        }
+
+        pub fun borrowASMR(id: UInt64): &ASMR.NFT? {
+            if self.forSale[id] != nil {
+                let ref = &self.forSale[id] as auth &NonFungibleToken.NFT
+                return ref as! &ASMR.NFT
+            } else {
+                return nil
+            }
+        }
+
+        pub fun getEditionNumber(id: UInt64): UInt64? {
+            let ref = self.borrowASMR(id: id) 
+            return ref!.getEditionNumber()
+        }
+
         // purchase lets a user send tokens to purchase an NFT that is for sale
         pub fun purchase(
             tokenID: UInt64,
             recipientCap: Capability<&{ASMR.CollectionPublic}>,
-            buyTokens: @FungibleToken.Vault,
-            contractsAddress: Address 
+            buyTokens: @FungibleToken.Vault
         ) {
             pre {
                 self.forSale[tokenID] != nil && self.prices[tokenID] != nil:
@@ -121,23 +146,19 @@ pub contract MarketPlace {
             
             self.prices[tokenID] = nil
 
+            let editionNumber = self.getEditionNumber(id: tokenID) ?? panic("Could not find edition number")           
+
             let vaultRef = self.ownerVault.borrow()
                 ?? panic("Could not borrow reference to owner token vault")
             
             let token <- self.withdraw(tokenID: tokenID)
                       
-            let contractsAccount = getAccount(contractsAddress)
+            let contractsAccount = getAccount(self.contractsAccountAddress)
 
             let royaltyRef = contractsAccount.getCapability<&{Royalty.RoyaltyPublic}>(/public/royaltyCollection).borrow() 
-                ?? panic("Could not borrow reference to royalty")              
+                ?? panic("Could not borrow royalty reference")     
 
-            let asmrCollectionRef = contractsAccount.getCapability<&{ASMR.CollectionPublic}>(/public/ASMRCollection)
-                .borrow()
-                ?? panic("Could not borrow ASMR reference")
-            
-            let editionNUmber = asmrCollectionRef.getEditionNumber(id: tokenID)
-
-            let royaltyStatus = royaltyRef.getRoyalty(editionNUmber)
+            let royaltyStatus = royaltyRef.getRoyalty(editionNumber)
 
             if (royaltyStatus.secondCommissionAuthor > 0.00 && price > 0.00) {
                 //Withdraw royalty to author and put it in their vault
@@ -161,8 +182,7 @@ pub contract MarketPlace {
                 let platformCut <- buyTokens.withdraw(amount: platformCommision)               
 
                 platformVaultCap.deposit(from: <- platformCut)
-            }
-            
+            }   
 
             // deposit the purchasing tokens into the owners vault
             vaultRef.deposit(from: <- buyTokens)
@@ -171,26 +191,7 @@ pub contract MarketPlace {
             recipient.deposit(token: <- token)
 
             emit TokenPurchased(id: tokenID, price: price, from: vaultRef.owner!.address, to:  recipient.owner!.address)
-        }
-
-        // idPrice returns the price of a specific token in the sale
-        pub fun idPrice(tokenID: UInt64): UFix64? {
-            return self.prices[tokenID]
-        }
-
-        // getIDs returns an array of token IDs that are for sale
-        pub fun getIDs(): [UInt64] {
-            return self.forSale.keys
-        }
-
-        pub fun borrowASMR(id: UInt64): &ASMR.NFT? {
-            if self.forSale[id] != nil {
-                let ref = &self.forSale[id] as auth &NonFungibleToken.NFT
-                return ref as! &ASMR.NFT
-            } else {
-                return nil
-            }
-        }       
+        }      
 
         destroy() {
             destroy self.forSale
@@ -202,15 +203,17 @@ pub contract MarketPlace {
         pub let metadata: ASMR.Metadata
         pub let id: UInt64  
         pub let price: UFix64?
-        init(metadata: ASMR.Metadata, id: UInt64, price: UFix64?) {
+        pub let editionNumber: UInt64
+        init(metadata: ASMR.Metadata, id: UInt64, price: UFix64?, editionNumber: UInt64) {
             self.metadata = metadata
             self.id = id 
             self.price = price
+            self.editionNumber = editionNumber
         }
     }
 
     // get info for NFT including metadata
-    pub fun getASMR(address:Address) : [SaleData] {
+    pub fun getASMR(address: Address) : [SaleData] {
 
         var saleData: [SaleData] = []
         let account = getAccount(address)
@@ -225,12 +228,13 @@ pub contract MarketPlace {
                 saleData.append(SaleData(
                     metadata: asmr!.metadata,
                     id: id,
-                    price: price             
+                    price: price,
+                    editionNumber: asmr!.editionNumber             
                 ))
             }        
+
         return saleData
-    } 
-        
+    }      
 
     // createCollection returns a new collection resource to the caller
     pub fun createSaleCollection(ownerVault: Capability<&{FungibleToken.Receiver}>): @SaleCollection {

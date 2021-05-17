@@ -22,6 +22,7 @@ pub contract ASMR: NonFungibleToken {
     pub resource interface Public {
         pub let id: UInt64
         pub let metadata: Metadata
+        pub let editionNumber: UInt64
 
         pub fun getEditionNumber(): UInt64
     }

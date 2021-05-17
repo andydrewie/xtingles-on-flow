@@ -38,7 +38,7 @@ transaction(
     }
 
     execute {
-       
+              
         let newNFT <- self.minterRef.mintNFT(metadata: self.metadata, editionNumber: 1)
     
         self.receiverRef.deposit(token: <-newNFT)

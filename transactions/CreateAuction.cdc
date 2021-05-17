@@ -11,10 +11,7 @@ transaction(
         extendedLength: UFix64, 
         remainLengthToExtend: UFix64,
         auctionStartTime: UFix64,
-        startPrice: UFix64,
-        author: Address,
-        platformCommission: UFix64,
-        authorCommission: UFix64
+        startPrice: UFix64     
     ) {
 
     let auctionCollectionRef: &Auction.AuctionCollection
@@ -49,10 +46,6 @@ transaction(
     execute {    
         let token <- self.collectionRef.withdraw(withdrawID: tokenId) as! @ASMR.NFT
 
-        let authorAcct = getAccount(author)  
-
-        let authorVaultCap = authorAcct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)  
-
         self.auctionCollectionRef.createAuction(
             token: <- token,
             minimumBidIncrement: minimumBidIncrement,
@@ -63,10 +56,7 @@ transaction(
             auctionStartTime: auctionStartTime,
             startPrice: startPrice,
             platformVaultCap: self.platformCap,
-            platformCollectionCap: self.platformCollection,
-            authorVaultCap: authorVaultCap,
-            platformCommission: platformCommission,
-            authorCommission: authorCommission
+            platformCollectionCap: self.platformCollection          
         )
     }
 }

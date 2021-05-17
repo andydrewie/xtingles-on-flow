@@ -5,7 +5,7 @@ RUN apk update && \
 ENV PATH="/root/.local/bin:${PATH}"
 WORKDIR '/app'
 COPY . ./
-RUN chmod +x ./start.sh
+RUN chmod +x ./startDocker.sh
 RUN npm install
-CMD ["./start.sh"]
+CMD ["./startDocker.sh"]
 EXPOSE 3000/tcp

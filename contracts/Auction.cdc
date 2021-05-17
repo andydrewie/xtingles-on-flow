@@ -2,6 +2,7 @@ import FungibleToken from "./FungibleToken.cdc"
 import FlowToken from "./FlowToken.cdc"
 import ASMR from "./ASMR.cdc"
 import NonFungibleToken from "./NonFungibleToken.cdc"
+import Royalty from "./Royalty.cdc"
 
 pub contract Auction {
 
@@ -15,8 +16,7 @@ pub contract Auction {
         pub let endTime : Fix64
         pub let startTime : Fix64
         pub let metadata: ASMR.Metadata?
-        pub let ASMRId: UInt64?
-        pub let author: Address
+        pub let ASMRId: UInt64?     
         pub let leader: Address?
         pub let minNextBid: UFix64
         pub let completed: Bool
@@ -34,8 +34,7 @@ pub contract Auction {
             metadata: ASMR.Metadata?,
             ASMRId: UInt64?,
             leader:Address?, 
-            bidIncrement: UFix64,
-            author: Address, 
+            bidIncrement: UFix64,           
             startTime: Fix64,
             endTime: Fix64,
             minNextBid:UFix64,
@@ -53,8 +52,7 @@ pub contract Auction {
             self.metadata = metadata
             self.ASMRId = ASMRId
             self.leader = leader
-            self.bidIncrement = bidIncrement
-            self.author = author
+            self.bidIncrement = bidIncrement       
             self.startTime = startTime
             self.endTime = endTime
             self.minNextBid = minNextBid
@@ -134,17 +132,10 @@ pub contract Auction {
         //the capability to pay the platform when the auction is done
         priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>
 
-        //the capability to pay the author of the item when the auction is done
-        priv let authorVaultCap: Capability<&{FungibleToken.Receiver}>
-
-        //the time the acution should start at
-        priv var platformCommission: UFix64
-
-        //The length in seconds for this auction
-        priv var authorCommission: UFix64
-
         //This action was cncelled
         priv var auctionCancelled: Bool
+
+        priv let contractsAccountAddress: Address
 
         init(
             NFT: @ASMR.NFT,
@@ -156,10 +147,7 @@ pub contract Auction {
             extendedLength: UFix64, 
             remainLengthToExtend: UFix64, 
             platformVaultCap: Capability<&{FungibleToken.Receiver}>,            
-            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>,
-            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformCommission: UFix64,
-            authorCommission: UFix64,            
+            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>           
         ) {
             Auction.totalAuctions = Auction.totalAuctions + (1 as UInt64)
             self.NFT <- NFT
@@ -178,11 +166,9 @@ pub contract Auction {
             self.recipientVaultCap = nil         
             self.platformVaultCap = platformVaultCap
             self.numberOfBids = 0
-            self.authorVaultCap = authorVaultCap
-            self.platformCommission = platformCommission
-            self.authorCommission = authorCommission
             self.platformCollectionCap = platformCollectionCap
             self.auctionCancelled = false
+            self.contractsAccountAddress = 0xf8d6e0586b0a20c7
         }
 
         // sendNFT sends the NFT to the Collection belonging to the provided Capability
@@ -229,6 +215,10 @@ pub contract Auction {
             } 
         }
 
+        pub fun getEditionNumber(id: UInt64): UInt64? {             
+            return self.NFT?.editionNumber
+        }
+
         //This method should probably use preconditions more 
         pub fun settleAuction()  {
 
@@ -242,23 +232,48 @@ pub contract Auction {
             if self.currentPrice == 0.0 {
                 self.returnAuctionItemToOwner()
                 return
-            }            
+            }       
 
-            //Withdraw royalty to author and put it in their vault
-            let amount = self.currentPrice * self.authorCommission * 0.01
+            let editionNumber = self.NFT?.editionNumber ?? panic("Could not find edition number") 
 
-            let authorCut <- self.bidVault.withdraw(amount:amount)
+            let contractsAccount = getAccount(self.contractsAccountAddress) 
 
-            let authorVaultCap = self.authorVaultCap.borrow()!
+            let royaltyRef = contractsAccount.getCapability<&{Royalty.RoyaltyPublic}>(/public/royaltyCollection).borrow() 
+                ?? panic("Could not borrow royalty reference")     
 
-            emit MarketplaceEarned(amount: amount, owner: authorVaultCap.owner!.address)
+            let royaltyStatus = royaltyRef.getRoyalty(editionNumber)  
 
-            authorVaultCap.deposit(from: <- authorCut)
+            if (royaltyStatus.secondCommissionAuthor > 0.00 && self.currentPrice > 0.00) {
+                //Withdraw royalty to author and put it in their vault
+                let authorCommision =  self.currentPrice * royaltyStatus.firstCommissionAuthor * 0.01
+
+                let authorVaultCap = royaltyStatus.authorVaultCap.borrow() 
+                   ?? panic("Could not borrow author vault reference")
+
+                let authorCut <- self.bidVault.withdraw(amount: authorCommision)               
+
+                authorVaultCap.deposit(from: <- authorCut)
+
+                emit MarketplaceEarned(amount: authorCommision, owner: authorVaultCap.owner!.address)
+
+            }
+                      
+            if (royaltyStatus.secondCommissionPlatform > 0.00 && self.currentPrice > 0.00) {
+                //Withdraw royalty to platform and put it in their vault
+                let platformCommision = self.currentPrice * royaltyStatus.secondCommissionPlatform * 0.01
+
+                let platformVaultCap = royaltyStatus.platformVaultCap.borrow() 
+                   ?? panic("Could not borrow platform vault reference")
+
+                let platformCut <- self.bidVault.withdraw(amount: platformCommision)               
+
+                platformVaultCap.deposit(from: <- platformCut)
+
+                emit MarketplaceEarned(amount: platformCommision, owner: platformVaultCap.owner!.address)
+            }               
             
             self.sendNFT(self.recipientCollectionCap!)
-
-            self.sendBidTokens(self.platformVaultCap)
-
+         
             self.auctionCompleted = true
             
             emit Settled(tokenID: self.auctionID, price: self.currentPrice)
@@ -293,7 +308,7 @@ pub contract Auction {
         pub fun minNextBid() :UFix64 {
             //If there are bids then the next min bid is the current price plus the increment
             if self.currentPrice != 0.0 {
-                return self.currentPrice + self.minimumBidIncrement
+                return self.currentPrice + self.currentPrice * self.minimumBidIncrement * 0.01
             }
             //else stASMR price
             return self.startPrice
@@ -389,8 +404,7 @@ pub contract Auction {
                 metadata: self.NFT?.metadata,
                 ASMRId: self.NFT?.id,
                 leader: leader,
-                bidIncrement: self.minimumBidIncrement,
-                author: self.authorVaultCap.borrow()!.owner!.address,
+                bidIncrement: self.minimumBidIncrement,         
                 startTime: Fix64(self.auctionStartTime),
                 endTime: Fix64(self.auctionStartTime+self.auctionLength),
                 minNextBid: self.minNextBid(),
@@ -434,10 +448,8 @@ pub contract Auction {
             auctionStartTime: UFix64,
             startPrice: UFix64, 
             platformVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>,
-            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformCommission: UFix64,
-            authorCommission: UFix64) 
+            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>
+        ) 
 
         pub fun getAuctionStatuses(): {UInt64: AuctionStatus}
         pub fun getAuctionStatus(_ id:UInt64): AuctionStatus
@@ -484,10 +496,8 @@ pub contract Auction {
             auctionStartTime: UFix64,
             startPrice: UFix64,           
             platformVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>,
-            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformCommission: UFix64,
-            authorCommission: UFix64) {
+            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>
+        ) {
 
             pre {              
                 auctionLength > 0.00 : "Auction lenght should be more then 0.00"
@@ -506,10 +516,7 @@ pub contract Auction {
                 auctionStartTime: auctionStartTime,
                 startPrice: startPrice,             
                 platformVaultCap: platformVaultCap,
-                authorVaultCap: authorVaultCap,
-                platformCollectionCap: platformCollectionCap,
-                platformCommission: platformCommission,
-                authorCommission: authorCommission,
+                platformCollectionCap: platformCollectionCap 
             )
 
             let id = item.auctionID
@@ -613,11 +620,8 @@ pub contract Auction {
             remainLengthToExtend: UFix64,
             auctionStartTime: UFix64,
             startPrice: UFix64,          
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>,
-            authorVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>,
-            platformCommission: UFix64,
-            authorCommission: UFix64,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>,          
+            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>      
         ) : @AuctionItem {
         
         // create a new auction items resource container
@@ -631,10 +635,7 @@ pub contract Auction {
             extendedLength: extendedLength,    
             remainLengthToExtend:  remainLengthToExtend,                
             platformVaultCap: platformVaultCap,
-            platformCollectionCap: platformCollectionCap,    
-            authorVaultCap: authorVaultCap,            
-            platformCommission: platformCommission,
-            authorCommission: authorCommission,
+            platformCollectionCap: platformCollectionCap           
         )
     }
 

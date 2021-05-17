@@ -38,12 +38,7 @@ transaction(marketplace: Address, tokenId: UInt64, amount: UFix64) {
         self.temporaryVault <- vaultRef.withdraw(amount: amount)
     }
 
-    execute {
-
-        let acct = getAccount(0xf8d6e0586b0a20c7)
-
-        let royaltyCapability = acct.getCapability<&{Royalty.RoyaltyPublic}>(/public/royaltyCollection)      
-     
+    execute {    
         // get the read-only account storage of the seller
         let seller = getAccount(marketplace)
 
@@ -53,8 +48,7 @@ transaction(marketplace: Address, tokenId: UInt64, amount: UFix64) {
         marketplace.purchase(
             tokenID: tokenId,
             recipientCap: self.collectionCap,
-            buyTokens: <- self.temporaryVault,
-            contractsAddress: contractsAddress
+            buyTokens: <- self.temporaryVault     
         )
     }
 }
