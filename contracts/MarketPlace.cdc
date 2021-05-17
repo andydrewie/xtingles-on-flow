@@ -161,37 +161,13 @@ pub contract MarketPlace {
                 ?? panic("Could not borrow royalty reference")     
 
             let royaltyStatus = royaltyRef.getRoyalty(editionNumber)
-
-           /* if (royaltyStatus.secondCommissionAuthor > 0.00 && price > 0.00) {
-                //Withdraw royalty to author and put it in their vault
-                let authorCommision =  price * royaltyStatus.secondCommissionAuthor * 0.01
-
-                let authorVaultCap = royaltyStatus.authorVaultCap.borrow() 
-                   ?? panic("Could not borrow author vault reference")
-
-                let authorCut <- buyTokens.withdraw(amount: authorCommision)               
-
-                authorVaultCap.deposit(from: <- authorCut)
-            }
-                      
-            if (royaltyStatus.secondCommissionPlatform > 0.00 && price > 0.00) {
-                //Withdraw royalty to platform and put it in their vault
-                let platformCommision =  price * royaltyStatus.secondCommissionPlatform * 0.01
-
-                let platformVaultCap = royaltyStatus.platformVaultCap.borrow() 
-                   ?? panic("Could not borrow platform vault reference")
-
-                let platformCut <- buyTokens.withdraw(amount: platformCommision)               
-
-                platformVaultCap.deposit(from: <- platformCut)
-            }   */
-
+    
             for key in royaltyStatus.royalty.keys {
                 let commission = price * royaltyStatus.royalty[key]!.secondSalePercent * 0.01
 
-                let vaultCap = royaltyStatus.royalty[key]!.vaultCap.borrow() 
-                   ?? panic("Could not borrow vault reference")                    
+                let account = getAccount(key) 
 
+                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver).borrow() ?? panic("Could not borrow vault reference")       
                 vaultCap.deposit(from: <- buyTokens.withdraw(amount: commission))
 
                 emit MarketplaceEarned(amount: commission, owner: vaultCap.owner!.address, description: royaltyStatus.royalty[key]!.description)

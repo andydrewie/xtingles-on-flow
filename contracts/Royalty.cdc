@@ -16,18 +16,15 @@ pub contract Royalty {
     pub event Extend(auctionLengthFrom: UFix64, auctionLengthTo: UFix64) 
 
     pub struct CommissionStructure {
-        pub let vaultCap: Capability<&{FungibleToken.Receiver}>
         pub let firstSalePercent: UFix64
         pub let secondSalePercent: UFix64
         pub let description: String
      
-        init(           
-            vaultCap: Capability<&{FungibleToken.Receiver}>,
+        init(          
             firstSalePercent: UFix64, 
             secondSalePercent: UFix64,
             description: String     
-        ) {
-            self.vaultCap = vaultCap
+        ) {           
             self.firstSalePercent = firstSalePercent
             self.secondSalePercent = secondSalePercent
             self.description = description
@@ -53,12 +50,11 @@ pub contract Royalty {
         pub var royalty: { Address: CommissionStructure }   
 
         init(
-            royalty: { Address: CommissionStructure },
-            editionId: UInt64      
+            royalty: { Address: CommissionStructure }
         ) {
             Royalty.totalEditions = Royalty.totalEditions + (1 as UInt64)
             self.royalty = royalty                    
-            self.editionId = editionId
+            self.editionId = Royalty.totalEditions 
         }
         
         pub fun getRoyalty() : RoyaltyStatus {
@@ -84,8 +80,7 @@ pub contract Royalty {
     pub resource interface RoyaltyPublic {
 
         pub fun createRoyalty(
-            royalty: { Address: CommissionStructure },
-            editionId: UInt64  
+            royalty: { Address: CommissionStructure }      
         ): UInt64
 
         pub fun getRoyalty(_ id: UInt64): RoyaltyStatus
@@ -109,8 +104,7 @@ pub contract Royalty {
         // addTokenToauctionItems adds an NFT to the auction items and sets the meta data
         // for the auction item
         pub fun createRoyalty(
-            royalty: { Address: CommissionStructure },
-            editionId: UInt64 
+            royalty: { Address: CommissionStructure }        
         ): UInt64 {
 
             pre {              
@@ -118,8 +112,7 @@ pub contract Royalty {
             }            
            
             let item <- create RoyaltyItem(
-                royalty: royalty,          
-                editionId: editionId            
+                royalty: royalty                   
             )
 
             let id = item.editionId

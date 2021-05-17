@@ -243,45 +243,16 @@ pub contract Auction {
 
             let royaltyStatus = royaltyRef.getRoyalty(editionNumber)  
 
-
-          /*  if (royaltyStatus.secondCommissionAuthor > 0.00 && self.currentPrice > 0.00) {
-                //Withdraw royalty to author and put it in their vault
-                let authorCommision =  self.currentPrice * royaltyStatus.firstCommissionAuthor * 0.01
-
-                let authorVaultCap = royaltyStatus.authorVaultCap.borrow() 
-                   ?? panic("Could not borrow author vault reference")
-
-                let authorCut <- self.bidVault.withdraw(amount: authorCommision)               
-
-                authorVaultCap.deposit(from: <- authorCut)
-
-                emit MarketplaceEarned(amount: authorCommision, owner: authorVaultCap.owner!.address)
-
-            }
-                      
-            if (royaltyStatus.secondCommissionPlatform > 0.00 && self.currentPrice > 0.00) {
-                //Withdraw royalty to platform and put it in their vault
-                let platformCommision = self.currentPrice * royaltyStatus.secondCommissionPlatform * 0.01
-
-                let platformVaultCap = royaltyStatus.platformVaultCap.borrow() 
-                   ?? panic("Could not borrow platform vault reference")
-
-                let platformCut <- self.bidVault.withdraw(amount: platformCommision)               
-
-                platformVaultCap.deposit(from: <- platformCut)
-
-                emit MarketplaceEarned(amount: platformCommision, owner: platformVaultCap.owner!.address)
-            }    */           
-            
             for key in royaltyStatus.royalty.keys {
                 let commission = self.currentPrice * royaltyStatus.royalty[key]!.firstSalePercent * 0.01
 
-                let vaultCap = royaltyStatus.royalty[key]!.vaultCap.borrow() 
-                   ?? panic("Could not borrow vault reference")                    
+                let account = getAccount(key) 
 
-                vaultCap!.deposit(from: <- self.bidVault.withdraw(amount: commission))
+                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver).borrow() ?? panic("Could not borrow vault reference")       
 
-                emit MarketplaceEarned(amount: commission, owner: vaultCap!.owner!.address)
+                vaultCap.deposit(from: <- self.bidVault.withdraw(amount: commission))
+
+                emit MarketplaceEarned(amount: commission, owner: vaultCap.owner!.address)
             }
 
             self.sendNFT(self.recipientCollectionCap!)

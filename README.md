@@ -45,7 +45,7 @@ flow transactions send --code ./transactions/Bid.cdc --args-json '[{"type": "Add
 
 flow transactions send --code ./transactions/CancelAuction.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UInt64","value": "2"}]' --signer emulator-account
 
-flow transactions send --code ./transactions/CreateAuction.cdc --args-json '[{"type": "UInt64","value": "0"}, {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1621070445.00"},{"type": "UFix64","value": "1000.0"}]' --signer emulator-account
+flow transactions send --code ./transactions/CreateAuction.cdc --args-json '[{"type": "UInt64","value": "1"}, {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1621290161.00"},{"type": "UFix64","value": "1000.0"}]' --signer emulator-account
 
 flow accounts create --key 4267a5ef429dbc569172013021563b73466121394448f3360d146bfb16f9008f1b39e6c6fcb8cff7e96e512e64e6888f1749cd14e63c28da26684a1df1a745a4
 --signer emulator-account
@@ -68,3 +68,36 @@ flow scripts execute ./scripts/CheckRoyalty.cdc --arg Address:"0xf8d6e0586b0a20c
 flow scripts execute ./scripts/CheckEditionNumberNFT.cdc --arg Address:"0xf8d6e0586b0a20c7" --arg UInt64:"0"
 
 flow transactions send --code ./transactions/CreateAuction.cdc --args-json '[{"type": "UInt64","value": "0"}, {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1621261126.00"},{"type": "UFix64","value": "1000.0"}]' --signer emulator-account
+
+
+flow transactions send --code ./transactions/CreateRoyalty.cdc --args-json 
+'{"type": "Dictionary",
+"value": [
+    {
+      "key": {
+        "type": "Address",
+        "value": "0xf8d6e0586b0a20c7"
+      },
+      "value": {
+          "type": "Struct",
+          "value": {            
+              "fields": [
+                  {
+                    "name": "firstSalePercent",
+                    "value":  "1.00"
+                  },   
+                  {
+                    "name": "secondSalePercent",
+                    "value": "1.00"
+                  },
+                  {
+                    "name": "description",
+                    "value": "xxx"
+                  }
+              ]
+          }
+      }
+    }
+]}' --signer emulator-account
+
+
