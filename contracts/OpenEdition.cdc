@@ -64,7 +64,7 @@ pub contract OpenEdition {
         pub let openEditionID: UInt64
 
         //The minimum increment for a bid. This is an english auction style system where bids increase
-        priv let price: UFix64
+        pub let price: UFix64
 
         //the time the acution should start at
         priv var startTime: UFix64
@@ -167,7 +167,7 @@ pub contract OpenEdition {
                 emit Earned(amount: commission, owner: vaultCap.owner!.address, description: royaltyStatus.royalty[key]!.description)
             }
 
-            emit Purchase(openEditionId: self.openEditionID, buyerAddress: buyerCollectionCap.borrow()!.owner!.address, price: self.price, tokenID: newNFTId, edition: self.numberOfMintedNFT)
+            emit Purchase(openEditionId: self.openEditionID, buyerAddress: buyerCollectionCap.borrow()!.owner!.address, price: self.price, tokenID: 1, edition: self.numberOfMintedNFT)
         }
 
         pub fun getAuctionStatus() : OpenEditionStatus {       
@@ -194,7 +194,26 @@ pub contract OpenEdition {
             log("destroy open editions")                       
          
         }
-    }    
+    }   
+
+    pub struct BoughtOpenEditionItem {        
+        pub let price: UFix64
+        pub let buyerAddress: Address
+        pub let boughtTime: UFix64
+        pub let collectionCap: Capability<&{ASMR.CollectionPublic}>
+     
+        init(         
+            price: UFix64,           
+            buyerAddress: Address,          
+            boughtTime: UFix64,
+            collectionCap: Capability<&{ASMR.CollectionPublic}>
+        ) {
+            self.price = price
+            self.buyerAddress = buyerAddress     
+            self.boughtTime = boughtTime        
+            self.collectionCap = collectionCap
+        }
+    } 
 
     // AuctionPublic is a resource interface that restricts users to
     // retreiving the auction price list and placing bids
@@ -226,8 +245,11 @@ pub contract OpenEdition {
         // Auction Items
         access(account) var openEditionsItems: @{UInt64: OpenEditionItem}     
 
+        access(account) var buyedOpenEditionsItems: { Address: BoughtOpenEditionItem} 
+
         init() {
-            self.openEditionsItems <- {}
+            self.openEditionsItems <- {}    
+            self.buyedOpenEditionsItems = {}     
         }
 
         pub fun keys() : [UInt64] {
@@ -327,7 +349,8 @@ pub contract OpenEdition {
         pub fun purchase(
             id: UInt64, 
             buyerTokens: @FungibleToken.Vault,      
-            collectionCap: Capability<&{ASMR.CollectionPublic}>
+            collectionCap: Capability<&{ASMR.CollectionPublic}>,
+            buyerAddress: Address
         ) {
             pre {
                 self.openEditionsItems[id] != nil:
@@ -340,6 +363,13 @@ pub contract OpenEdition {
                 buyerTokens: <- buyerTokens,
                 buyerCollectionCap: collectionCap
             )
+
+            self.buyedOpenEditionsItems.insert(key: buyerAddress, BoughtOpenEditionItem(
+                price: itemRef.price,           
+                buyerAddress: buyerAddress,          
+                boughtTime: getCurrentBlock().timestamp,
+                collectionCap: collectionCap
+            ))
         }
 
         destroy() {
