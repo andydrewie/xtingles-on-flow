@@ -34,7 +34,7 @@ You can execute test inside this project:
 
 The other way to execute tests is inside Docker.
 
-flow transactions send --code ./transactions/CreateAuction.cdc --args-json '[{"type": "UInt64","value": "0"}, {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "3600.00"}, {"type": "UFix64","value": "1621020627.00"},{"type": "UFix64","value": "1000.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UFix64","value": "90.0"}, {"type": "UFix64","value": "10.0"}]' --signer emulator-account
+flow transactions send --code ./transactions/CreateAuction.cdc --args-json '[{"type": "UInt64","value": "1"}, {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "3600.00"}, {"type": "UFix64","value": "1621020627.00"},{"type": "UFix64","value": "1000.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UFix64","value": "90.0"}, {"type": "UFix64","value": "10.0"}]' --signer emulator-account
 
 flow scripts execute ./scripts/CheckAuctionStatuses.cdc --arg Address:"0xf8d6e0586b0a20c7"
 

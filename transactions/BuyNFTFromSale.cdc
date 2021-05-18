@@ -57,7 +57,7 @@ transaction(
 
         marketplace.purchase(
             tokenID: tokenId,
-            recipientCap:self.collectionCap,
+            recipientCap: self.collectionCap,
             buyTokens: <- self.temporaryVault     
         )
     }
