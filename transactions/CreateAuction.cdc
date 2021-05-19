@@ -3,8 +3,7 @@ import FungibleToken from 0xee82856bf20e2aa6
 import Auction from 0xf8d6e0586b0a20c7
 import NonFungibleToken from 0xf8d6e0586b0a20c7
 
-transaction(
-        tokenId: UInt64,
+transaction(      
         minimumBidIncrement: UFix64, 
         auctionLength: UFix64,
         maxAuctionLength: UFix64,
@@ -15,7 +14,6 @@ transaction(
     ) {
 
     let auctionCollectionRef: &Auction.AuctionCollection
-    let collectionRef: &{ASMR.CollectionPublic}
     let platformCap: Capability<&{FungibleToken.Receiver}>
     let platformCollection: Capability<&{ASMR.CollectionPublic}>
  
@@ -36,18 +34,12 @@ transaction(
 
         self.platformCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
 
-        self.collectionRef = acct.getCapability<&{ASMR.CollectionPublic}>(/public/ASMRCollection)
-            .borrow()
-            ?? panic("Could not borrow receiver reference") 
-
         self.platformCollection = acct.getCapability<&{ASMR.CollectionPublic}>(ASMR.CollectionPublicPath)
     }
 
     execute {    
-        let token <- self.collectionRef.withdraw(withdrawID: tokenId) as! @ASMR.NFT
-
-        self.auctionCollectionRef.createAuction(
-            token: <- token,
+     
+        self.auctionCollectionRef.createAuction(          
             minimumBidIncrement: minimumBidIncrement,
             auctionLength: auctionLength,
             maxAuctionLength:  maxAuctionLength,

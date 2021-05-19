@@ -137,8 +137,7 @@ pub contract Auction {
 
         priv let contractsAccountAddress: Address
 
-        init(
-            NFT: @ASMR.NFT,
+        init(          
             minimumBidIncrement: UFix64,
             auctionStartTime: UFix64,
             startPrice: UFix64, 
@@ -150,7 +149,7 @@ pub contract Auction {
             platformCollectionCap: Capability<&{ASMR.CollectionPublic}>           
         ) {
             Auction.totalAuctions = Auction.totalAuctions + (1 as UInt64)
-            self.NFT <- NFT
+            self.NFT <- nil
             self.bidVault <- FlowToken.createEmptyVault()
             self.auctionID = Auction.totalAuctions
             self.minimumBidIncrement = minimumBidIncrement
@@ -403,6 +402,14 @@ pub contract Auction {
             self.auctionCancelled = true
         }
 
+        pub fun addNFT(NFT: @ASMR.NFT) {
+            pre {
+                self.NFT == nil : "NFT in auction has already existed"
+            }
+
+            self.NFT <-! NFT
+        }
+
         destroy() {
             log("destroy auction")
                        
@@ -422,7 +429,6 @@ pub contract Auction {
     pub resource interface AuctionPublic {
 
         pub fun createAuction(
-            token: @ASMR.NFT, 
             minimumBidIncrement: UFix64, 
             auctionLength: UFix64, 
             maxAuctionLength: UFix64,  
@@ -469,8 +475,7 @@ pub contract Auction {
 
         // addTokenToauctionItems adds an NFT to the auction items and sets the meta data
         // for the auction item
-        pub fun createAuction(
-            token: @ASMR.NFT, 
+        pub fun createAuction(       
             minimumBidIncrement: UFix64, 
             auctionLength: UFix64, 
             maxAuctionLength: UFix64,
@@ -489,8 +494,7 @@ pub contract Auction {
             }
             
             // create a new auction items resource container
-            let item <- Auction.createStandaloneAuction(
-                token: <-token,
+            let item <- Auction.createStandaloneAuction(             
                 minimumBidIncrement: minimumBidIncrement,
                 auctionLength: auctionLength,                
                 maxAuctionLength: maxAuctionLength,
@@ -587,6 +591,16 @@ pub contract Auction {
             )
         }
 
+        pub fun addNFT(id: UInt64, NFT: @ASMR.NFT) {
+            pre {
+                self.auctionItems[id] != nil:
+                    "Auction does not exist"
+            }
+            let itemRef = &self.auctionItems[id] as &AuctionItem
+
+            itemRef.addNFT(NFT: <- NFT)
+        }
+
         destroy() {
             log("destroy auction collection")
             // destroy the empty resources
@@ -594,8 +608,7 @@ pub contract Auction {
         }
     }
 
-    pub fun createStandaloneAuction(
-            token: @ASMR.NFT, 
+    pub fun createStandaloneAuction(         
             minimumBidIncrement: UFix64, 
             auctionLength: UFix64,
             maxAuctionLength: UFix64,
@@ -608,8 +621,7 @@ pub contract Auction {
         ) : @AuctionItem {
         
         // create a new auction items resource container
-        return <- create AuctionItem(
-            NFT: <-token,
+        return <- create AuctionItem(         
             minimumBidIncrement: minimumBidIncrement,
             auctionStartTime: auctionStartTime,
             startPrice: startPrice,

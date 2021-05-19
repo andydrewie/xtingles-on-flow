@@ -4,7 +4,7 @@ pub contract ASMR: NonFungibleToken {
     // Named Paths
     //
     pub let CollectionStoragePath: StoragePath
-    pub let CollectionPublicPath: PublicPath    
+    pub let CollectionPublicPath: PublicPath     
     pub let MinterStoragePath: StoragePath
 
     // Events
@@ -35,8 +35,7 @@ pub contract ASMR: NonFungibleToken {
         pub let artist: String
         pub let artistAddress:Address
         pub let description: String
-        pub let edition: UInt64
-        pub let maxEdition: UInt64
+        pub (set) var edition: UInt64       
 
         init(url:String,
             picturePreview:String,
@@ -45,8 +44,8 @@ pub contract ASMR: NonFungibleToken {
             artist: String,
             artistAddress:Address, 
             description: String,        
-            edition: UInt64,
-            maxEdition: UInt64) {
+            edition: UInt64
+        ) {
                 self.url=url
                 self.animation=animation
                 self.picturePreview=picturePreview
@@ -54,8 +53,7 @@ pub contract ASMR: NonFungibleToken {
                 self.artist=artist
                 self.artistAddress=artistAddress
                 self.description=description  
-                self.edition=edition
-                self.maxEdition=maxEdition
+                self.edition=edition              
         }
     }
 
@@ -205,8 +203,7 @@ pub contract ASMR: NonFungibleToken {
                     artist: metadata.artist,
                     artistAddress: metadata.artistAddress, 
                     description: metadata.description,        
-                    edition: metadata.edition,
-                    maxEdition: metadata.maxEdition
+                    edition: metadata.edition                 
                 ),
                 editionNumber: editionNumber
             )
@@ -258,8 +255,7 @@ pub contract ASMR: NonFungibleToken {
                 artist: metadata.artist,
                 artistAddress: metadata.artistAddress, 
                 description: metadata.description,        
-                edition: metadata.edition,
-                maxEdition: metadata.maxEdition                
+                edition: metadata.edition                     
             ),
             editionNumber: editionNumber
         )
@@ -278,9 +274,11 @@ pub contract ASMR: NonFungibleToken {
 
         self.account.save<@NonFungibleToken.Collection>(<- ASMR.createEmptyCollection(), to: ASMR.CollectionStoragePath)
         self.account.link<&{ASMR.CollectionPublic}>(ASMR.CollectionPublicPath, target: ASMR.CollectionStoragePath)
+        
  
         let minter <- create NFTMinter()         
         self.account.save(<-minter, to: self.MinterStoragePath)
+        self.account.link<&ASMR.NFTMinter>(/private/ASMRMinter, target: self.MinterStoragePath)
 
         emit ContractInitialized()
 	}

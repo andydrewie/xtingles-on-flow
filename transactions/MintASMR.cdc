@@ -8,8 +8,7 @@ transaction(
         artist: String,
         artistAddress: Address, 
         description: String,        
-        edition: UInt64,
-        maxEdition: UInt64) {
+        edition: UInt64) {
     let receiverRef: &{ASMR.CollectionPublic}
     let minterRef: &ASMR.NFTMinter
     let metadata: ASMR.Metadata
@@ -32,8 +31,7 @@ transaction(
             artist: artist,
             artistAddress: 0xf8d6e0586b0a20c7, 
             description: description,        
-            edition: edition,
-            maxEdition: maxEdition
+            edition: edition      
         )
     }
 

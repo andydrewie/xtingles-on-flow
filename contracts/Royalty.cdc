@@ -23,7 +23,7 @@ pub contract Royalty {
         init(          
             firstSalePercent: UFix64, 
             secondSalePercent: UFix64,
-            description: String     
+            description: String    
         ) {           
             self.firstSalePercent = firstSalePercent
             self.secondSalePercent = secondSalePercent
@@ -33,34 +33,41 @@ pub contract Royalty {
 
     pub struct RoyaltyStatus {
         pub let royalty: { Address: CommissionStructure }  
-        pub let editionId: UInt64      
+        pub let editionId: UInt64  
+        pub let maxEdition: UInt64      
 
         init(
             royalty: { Address: CommissionStructure },
-            editionId: UInt64     
+            editionId: UInt64,
+            maxEdition: UInt64      
         ) {
             self.royalty = royalty                    
             self.editionId = editionId
+            self.maxEdition = maxEdition
         }
     }
 
     // ResourceItem contains the Resources and metadata for a single auction
     pub resource RoyaltyItem {
         pub let editionId: UInt64
-        pub var royalty: { Address: CommissionStructure }   
+        pub var royalty: { Address: CommissionStructure }
+        priv var maxEdition: UInt64  
 
         init(
-            royalty: { Address: CommissionStructure }
+            royalty: { Address: CommissionStructure },
+            maxEdition: UInt64
         ) {
             Royalty.totalEditions = Royalty.totalEditions + (1 as UInt64)
             self.royalty = royalty                    
             self.editionId = Royalty.totalEditions 
+            self.maxEdition = maxEdition
         }
         
         pub fun getRoyalty() : RoyaltyStatus {
             return RoyaltyStatus(
                 royalty: self.royalty,                      
-                editionId: self.editionId
+                editionId: self.editionId,
+                maxEdition: self.maxEdition
             )
         }
 
@@ -68,6 +75,16 @@ pub contract Royalty {
            royalty: { Address: CommissionStructure }     
         ) {
             self.royalty = royalty         
+        }
+
+        pub fun changeMaxEdition (      
+           maxEdition: UInt64     
+        ) {
+            pre {
+               self.maxEdition < UInt64(1) : "You could not change max edition" 
+            }
+
+            self.maxEdition = maxEdition       
         }
        
         destroy() {
@@ -80,7 +97,8 @@ pub contract Royalty {
     pub resource interface RoyaltyPublic {
 
         pub fun createRoyalty(
-            royalty: { Address: CommissionStructure }      
+            royalty: { Address: CommissionStructure },
+            maxEdition: UInt64     
         ): UInt64
 
         pub fun getRoyalty(_ id: UInt64): RoyaltyStatus
@@ -104,7 +122,8 @@ pub contract Royalty {
         // addTokenToauctionItems adds an NFT to the auction items and sets the meta data
         // for the auction item
         pub fun createRoyalty(
-            royalty: { Address: CommissionStructure }        
+            royalty: { Address: CommissionStructure },
+            maxEdition: UInt64        
         ): UInt64 {
 
             pre {              
@@ -112,7 +131,8 @@ pub contract Royalty {
             }            
            
             let item <- create RoyaltyItem(
-                royalty: royalty                   
+                royalty: royalty,
+                maxEdition: maxEdition                  
             )
 
             let id = item.editionId
@@ -138,6 +158,16 @@ pub contract Royalty {
             let itemRef = &self.royaltyItems[id] as &RoyaltyItem
             itemRef.changeCommission(
                 royalty: royalty            
+            )
+        }
+
+        pub fun changeMaxEdition(
+            id: UInt64,
+            maxEdition: UInt64
+        ) {
+            let itemRef = &self.royaltyItems[id] as &RoyaltyItem
+            itemRef.changeMaxEdition(
+                maxEdition: maxEdition        
             )
         }
     

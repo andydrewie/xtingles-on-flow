@@ -51,7 +51,7 @@ pub contract OpenEdition {
     pub event Created(id: UInt64, price: UFix64, startTime: UFix64)
     pub event Purchase(openEditionId: UInt64, buyerAddress: Address, price: UFix64, tokenID: UInt64, edition: UInt64)
     pub event Earned(amount:UFix64, owner: Address, description: String)
-    pub event Settled(tokenID: UInt64, price: UFix64)
+    pub event Settled(id: UInt64, price: UFix64, amountMintedNFT: UInt64)
     pub event Canceled(id: UInt64)
 
     // OpenEditionItem contains the Resources and metadata for a single auction
@@ -78,18 +78,22 @@ pub contract OpenEdition {
         //This action was cncelled
         priv var cancelled: Bool
 
-        priv var editionNumber: UInt64  
+        priv let editionNumber: UInt64  
 
         priv let contractsAccountAddress: Address
 
         priv let metadata: ASMR.Metadata
+
+        //the capability to pay the platform when the purchase is done
+        priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>   
 
         init(
             price: UFix64,
             startTime: UFix64,
             saleLength: UFix64, 
             editionNumber: UInt64,
-            metadata: ASMR.Metadata                
+            metadata: ASMR.Metadata,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>
         ) {
             OpenEdition.totalOpenEditions = OpenEdition.totalOpenEditions + (1 as UInt64)
             self.price = price
@@ -102,6 +106,7 @@ pub contract OpenEdition {
             self.cancelled = false
             self.metadata = metadata
             self.contractsAccountAddress = 0xf8d6e0586b0a20c7
+            self.platformVaultCap = platformVaultCap
         }        
 
         pub fun getEditionNumber(id: UInt64): UInt64 {             
@@ -109,16 +114,18 @@ pub contract OpenEdition {
         }
 
         //This method should probably use preconditions more 
-        pub fun settleOpenEdition()  {
+        pub fun settleOpenEdition(clientRoyalty: &Royalty.RoyaltyCollection)  {
 
             pre {
                 !self.completed : "The open edition is already settled"            
                 self.isAuctionExpired() : "Auction has not completed yet"
             }     
          
-            self.completed = true
-            
-            emit Settled(tokenID: self.openEditionID, price: self.price)
+            self.completed = true  
+
+            clientRoyalty.changeMaxEdition(id: self.editionNumber, maxEdition: self.numberOfMintedNFT)
+                      
+            emit Settled(id: self.openEditionID, price: self.price, amountMintedNFT: self.numberOfMintedNFT)
         }
   
         //this can be negative if is expired
@@ -134,18 +141,27 @@ pub contract OpenEdition {
             return remaining
         }
 
+        pub fun getPrice(): UFix64  {
+            return self.price
+        }
+
         pub fun isAuctionExpired(): Bool {
             let timeRemaining = self.timeRemaining()
             return timeRemaining < Fix64(0.0)
         }
 
         // This method should probably use preconditions more
-        pub fun purchase(buyerTokens: @FungibleToken.Vault, buyerCollectionCap: Capability<&{ASMR.CollectionPublic}>) {
-
+        pub fun purchase(
+            buyerTokens: @FungibleToken.Vault,
+            buyerCollectionCap: Capability<&{ASMR.CollectionPublic}>,
+            minterCap: Capability<&ASMR.NFTMinter>
+        ) {
             pre {
                 !self.completed : "The open edition has already settled"              
                 self.startTime < getCurrentBlock().timestamp : "The open edition has not started yet"
                 !self.cancelled : "Open edition was cancelled"
+                !self.isAuctionExpired() : "The open edition time has finished"
+                !self.cancelled : "The open edition was cancelled"     
             }
 
             let contractsAccount = getAccount(self.contractsAccountAddress)
@@ -167,7 +183,25 @@ pub contract OpenEdition {
                 emit Earned(amount: commission, owner: vaultCap.owner!.address, description: royaltyStatus.royalty[key]!.description)
             }
 
-            emit Purchase(openEditionId: self.openEditionID, buyerAddress: buyerCollectionCap.borrow()!.owner!.address, price: self.price, tokenID: 1, edition: self.numberOfMintedNFT)
+            let minterRef = minterCap.borrow() ?? panic("Could not borrow minter reference")     
+
+            let platformValutCap = self.platformVaultCap.borrow() ?? panic("Could not borrow platform vault reference")   
+
+            platformValutCap.deposit(from: <- buyerTokens)
+
+            self.numberOfMintedNFT = self.numberOfMintedNFT + UInt64(1)
+
+            self.metadata.edition = self.numberOfMintedNFT
+
+            let newNFT <- minterRef.mintNFT(metadata: self.metadata, editionNumber: self.editionNumber)
+
+            let buyerNFTCollection = buyerCollectionCap.borrow() ?? panic("Could not borrow platform vault reference") 
+
+            let tokenID = newNFT.id  
+    
+            buyerNFTCollection.deposit(token: <- newNFT)           
+
+            emit Purchase(openEditionId: self.openEditionID, buyerAddress: buyerCollectionCap.borrow()!.owner!.address, price: self.price, tokenID: tokenID, edition: self.numberOfMintedNFT)
         }
 
         pub fun getAuctionStatus() : OpenEditionStatus {       
@@ -196,25 +230,6 @@ pub contract OpenEdition {
         }
     }   
 
-    pub struct BoughtOpenEditionItem {        
-        pub let price: UFix64
-        pub let buyerAddress: Address
-        pub let boughtTime: UFix64
-        pub let collectionCap: Capability<&{ASMR.CollectionPublic}>
-     
-        init(         
-            price: UFix64,           
-            buyerAddress: Address,          
-            boughtTime: UFix64,
-            collectionCap: Capability<&{ASMR.CollectionPublic}>
-        ) {
-            self.price = price
-            self.buyerAddress = buyerAddress     
-            self.boughtTime = boughtTime        
-            self.collectionCap = collectionCap
-        }
-    } 
-
     // AuctionPublic is a resource interface that restricts users to
     // retreiving the auction price list and placing bids
     pub resource interface OpenEditionPublic {
@@ -224,18 +239,20 @@ pub contract OpenEdition {
             startTime: UFix64,
             saleLength: UFix64, 
             editionNumber: UInt64,
-            metadata: ASMR.Metadata    
+            metadata: ASMR.Metadata,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>  
         ) 
 
         pub fun getOpenEditionStatuses(): {UInt64: OpenEditionStatus}
         pub fun getOpenEditionStatus(_ id : UInt64):  OpenEditionStatus
         pub fun getTimeLeft(_ id: UInt64): Fix64
+        pub fun getPrice(_ id:UInt64): UFix64 
         pub fun cancelOpenEdition(_ id: UInt64)
 
         pub fun purchase(
             id: UInt64, 
             buyerTokens: @FungibleToken.Vault,      
-            collectionCap: Capability<&{ASMR.CollectionPublic}>
+            collectionCap: Capability<&{ASMR.CollectionPublic}>       
         )
     }
 
@@ -245,11 +262,11 @@ pub contract OpenEdition {
         // Auction Items
         access(account) var openEditionsItems: @{UInt64: OpenEditionItem}     
 
-        access(account) var buyedOpenEditionsItems: { Address: BoughtOpenEditionItem} 
+        access(contract) let minterCap: Capability<&ASMR.NFTMinter>
 
-        init() {
-            self.openEditionsItems <- {}    
-            self.buyedOpenEditionsItems = {}     
+        init(minterCap: Capability<&ASMR.NFTMinter>) {
+            self.openEditionsItems <- {} 
+            self.minterCap = minterCap
         }
 
         pub fun keys() : [UInt64] {
@@ -263,7 +280,8 @@ pub contract OpenEdition {
             startTime: UFix64,
             saleLength: UFix64, 
             editionNumber: UInt64,
-            metadata: ASMR.Metadata     
+            metadata: ASMR.Metadata,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>  
         ) {
 
             pre {              
@@ -277,7 +295,8 @@ pub contract OpenEdition {
                 startTime: startTime,
                 saleLength: saleLength, 
                 editionNumber: editionNumber,
-                metadata: metadata     
+                metadata: metadata,  
+                platformVaultCap: platformVaultCap
             )
 
             let id = item.openEditionID
@@ -309,12 +328,23 @@ pub contract OpenEdition {
         pub fun getOpenEditionStatus(_ id:UInt64): OpenEditionStatus {
             pre {
                 self.openEditionsItems[id] != nil:
-                    "NFT doesn't exist"
+                    "Open Edition doesn't exist"
             }
 
             // Get the auction item resources
             let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
             return itemRef.getAuctionStatus()
+        }
+
+        pub fun getPrice(_ id:UInt64): UFix64  {
+            pre {
+                self.openEditionsItems[id] != nil:
+                    "Open Edition doesn't exist"
+            }
+
+            // Get the open edition item resources
+            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
+            return itemRef.getPrice()
         }
 
         pub fun getTimeLeft(_ id: UInt64): Fix64 {
@@ -330,9 +360,9 @@ pub contract OpenEdition {
 
         // settleAuction sends the auction item to the highest bidder
         // and deposits the FungibleTokens into the auction owner's account
-        pub fun settleOpenEdition(_ id: UInt64) {
+        pub fun settleOpenEdition(id: UInt64, clientRoyalty: &Royalty.RoyaltyCollection) {
             let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
-            itemRef.settleOpenEdition()
+            itemRef.settleOpenEdition(clientRoyalty: clientRoyalty)
         }
 
         pub fun cancelOpenEdition(_ id: UInt64) {
@@ -349,27 +379,19 @@ pub contract OpenEdition {
         pub fun purchase(
             id: UInt64, 
             buyerTokens: @FungibleToken.Vault,      
-            collectionCap: Capability<&{ASMR.CollectionPublic}>,
-            buyerAddress: Address
+            collectionCap: Capability<&{ASMR.CollectionPublic}>       
         ) {
             pre {
                 self.openEditionsItems[id] != nil:
                     "Open Edition does not exist"
             }
-
             // Get the auction item resources
             let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
             itemRef.purchase(
                 buyerTokens: <- buyerTokens,
-                buyerCollectionCap: collectionCap
+                buyerCollectionCap: collectionCap,
+                minterCap: self.minterCap
             )
-
-            self.buyedOpenEditionsItems.insert(key: buyerAddress, BoughtOpenEditionItem(
-                price: itemRef.price,           
-                buyerAddress: buyerAddress,          
-                boughtTime: getCurrentBlock().timestamp,
-                collectionCap: collectionCap
-            ))
         }
 
         destroy() {
@@ -379,12 +401,12 @@ pub contract OpenEdition {
         }
     }
 
-    // createAuctionCollection returns a new AuctionCollection resource to the caller
-    pub fun createAuctionCollection(): @OpenEditionCollection {
-        let auctionCollection <- create OpenEditionCollection()
+    // createAuctionCollection returns a OpenEditionCollection resource to the caller
+    pub fun createOpenEditionCollection(minterCap: Capability<&ASMR.NFTMinter>): @OpenEditionCollection {
+        let openEditionCollection <- create OpenEditionCollection(minterCap: minterCap)
 
         emit OpenEditionCollectionCreated()
-        return <- auctionCollection
+        return <- openEditionCollection
     }
 
     init() {

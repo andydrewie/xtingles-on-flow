@@ -62,8 +62,7 @@ describe("Contracts", () => {
           ["xxx", t.String], 
           [EMULAGOR_ACCOUNT, t.Address], 
           ["xxx", t.String], 
-          [1, t.UInt64], 
-          [10, t.UInt64], 
+          [1, t.UInt64]
         ], 
         signers: [EMULAGOR_ACCOUNT],
       });
@@ -87,7 +86,76 @@ describe("Contracts", () => {
         "artistAddress": "0xf8d6e0586b0a20c7",
         "description": "xxx",
         "edition": 1, 
-        "maxEdition": 10,
+        "name": "xxx",
+        "picturePreview": "xxx",
+        "url": "xxx"
+      })
+    }); 
+});
+
+describe("Auction", () => {
+  let createAuction, checkAuctionStatuses, checkTime;
+
+  beforeAll(async () => {
+    createAuction = fs.readFileSync(
+      path.join(
+        __dirname,
+        `../transactions/CreateAuction.cdc`
+      ),
+      "utf8"    
+    );
+  
+    checkAuctionStatuses = fs.readFileSync(
+      path.join(
+        __dirname,
+        `../scripts/CheckAuctionStatuses.cdc`
+      ),
+      "utf8"    
+    );
+
+    checkTime = fs.readFileSync(
+      path.join(
+        __dirname,
+        `../scripts/CheckTime.cdc`
+      ),
+      "utf8"    
+    );
+  
+    try {
+      await sendTransaction({
+        code: createAuction,
+        args: [
+          ["xxx", t.String],    
+          ["xxx", t.String], 
+          ["xxx", t.String], 
+          ["xxx", t.String], 
+          ["xxx", t.String], 
+          [EMULAGOR_ACCOUNT, t.Address], 
+          ["xxx", t.String], 
+          [1, t.UInt64]
+        ], 
+        signers: [EMULAGOR_ACCOUNT],
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  });
+ 
+  test("check minted ASMR", async () => {    
+    const result = await executeScript({
+      code: checkASMRScript,
+      args: [
+        [EMULAGOR_ACCOUNT, t.Address]
+      ] 
+    });
+    expect(result[0].id).toBe(0);
+    expect(result[0].metadata).toEqual(
+      {
+        "animation": "xxx",
+        "artist": "xxx",
+        "artistAddress": "0xf8d6e0586b0a20c7",
+        "description": "xxx",
+        "edition": 1, 
         "name": "xxx",
         "picturePreview": "xxx",
         "url": "xxx"
