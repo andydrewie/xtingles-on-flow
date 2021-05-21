@@ -30,7 +30,8 @@
 		"MarketPlace": "./contracts/MarketPlace.cdc",
 		"Auction": "./contracts/Auction.cdc",
 		"Royalty": "./contracts/Royalty.cdc",
-		"OpenEdition": "./contracts/OpenEdition.cdc"		
+		"OpenEdition": "./contracts/OpenEdition.cdc",
+		"Drawing": "./contracts/Drawing.cdc"			
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -61,7 +62,9 @@
 				"ASMR",
 				"MarketPlace",
 				"Auction",
-				"Royalty"			
+				"Royalty",
+				"OpenEdition", 
+				"Drawing"			
 			]
 		},
 		"emulator": {
@@ -71,7 +74,8 @@
 				"MarketPlace", 
 				"Auction",
 				"Royalty",
-				"OpenEdition"
+				"OpenEdition", 
+				"Drawing"
 			]
 		}
 	}

@@ -6,15 +6,15 @@ import Royalty from "./Royalty.cdc"
 
 pub contract Drawing {
 
-    priv resource BidStorage {
+    pub resource BidStorage {
         // This is block bid value from user
-        priv let bidVault: @FungibleToken.Vault
+        pub var bidVault: @FungibleToken.Vault
 
         // User's NFT storage
-        priv let collectionCap: Capability<&{ASMR.CollectionPublic}>
+        pub let collectionCap: Capability<&{ASMR.CollectionPublic}>
         
         // User's Flow vault
-        priv let vaultCap: Capability<&{FungibleToken.Receiver}>
+        pub let vaultCap: Capability<&{FungibleToken.Receiver}>
         
         init(
            bidTokens: @FungibleToken.Vault,
@@ -22,10 +22,26 @@ pub contract Drawing {
            vaultCap: Capability<&{FungibleToken.Receiver}>
         ) {
             self.bidVault <- FlowToken.createEmptyVault()
-            self.bidVault.deposit(from: <-bidTokens)         
+            self.bidVault.deposit(from: <- bidTokens)         
             self.collectionCap = collectionCap
             self.vaultCap = vaultCap
-        }      
+        } 
+
+        pub fun withdrawBidsTokens(): @FungibleToken.Vault {
+            var otherbidVault <- FlowToken.createEmptyVault()
+            self.bidVault <-> otherbidVault
+            return <- otherbidVault
+        }
+
+        pub fun borrowNFT(): &BidStorage {
+            return &self as &BidStorage
+        }
+
+       
+        destroy() {
+            log("destroy BidStorage")
+            destroy self.bidVault
+        }     
     }
 
     pub struct DrawingStatus{
@@ -36,20 +52,18 @@ pub contract Drawing {
         pub let timeRemaining : Fix64
         pub let endTime : Fix64
         pub let startTime : Fix64
-        pub let metadata: ASMR.Metadata?
-        pub let ASMRId: UInt64?     
+        pub let metadata: ASMR.Metadata?   
         pub let completed: Bool
         pub let expired: Bool
         pub let cancelled: Bool       
      
         init(
             id:UInt64, 
-            currentPrice: UFix64, 
+            price: UFix64, 
             bids:UInt64, 
             active: Bool, 
             timeRemaining:Fix64, 
-            metadata: ASMR.Metadata?,
-            ASMRId: UInt64?,            
+            metadata: ASMR.Metadata?,                 
             startTime: Fix64,
             endTime: Fix64,   
             completed: Bool,
@@ -57,12 +71,11 @@ pub contract Drawing {
             cancelled: Bool     
         ) {
             self.id = id
-            self.price = currentPrice
+            self.price = price
             self.bids = bids
             self.active = active
             self.timeRemaining = timeRemaining
-            self.metadata = metadata
-            self.ASMRId = ASMRId        
+            self.metadata = metadata       
             self.startTime = startTime
             self.endTime = endTime    
             self.completed = completed
@@ -75,14 +88,14 @@ pub contract Drawing {
     pub var totalDrawings: UInt64
 
     // Events
-    pub event CollectionCreated(owner: Address)
-    pub event Created(tokenID: UInt64, owner: Address, startPrice: UFix64, startTime: UFix64)
+    pub event CollectionCreated()
+    pub event Created(tokenID: UInt64, price: UFix64, startTime: UFix64)
     pub event Bid(id: UInt64, bidderAddress: Address)
     pub event Settled(tokenID: UInt64, price: UFix64)
     pub event Canceled(tokenID: UInt64)
-    pub event MarketplaceEarned(amount:UFix64, owner: Address)  
-    pub event TimeRemain(amount:UFix64, owner: Address) 
-    pub event Extend(DrawingLengthFrom: UFix64, DrawingLengthTo: UFix64) 
+    pub event TimeRemain(amount:UFix64, owner: Address)    
+    pub event Refund(address: Address, amount: UFix64) 
+    pub event Earned(amount:UFix64, owner: Address, description: String)
 
     // DrawingItem contains the Resources and metadata for a single Drawing
     pub resource DrawingItem {
@@ -97,7 +110,7 @@ pub contract Drawing {
         pub let drawingID: UInt64
       
         // The time the drawing should start at
-        priv var drawingStartTime: UFix64
+        priv var startTime: UFix64
 
         // The length in seconds for this Drawing
         priv var drawingLength: UFix64
@@ -108,9 +121,6 @@ pub contract Drawing {
         // Price of NFT 
         priv var price: UFix64
 
-        // the capability for the platform of the NFT to return the item to if the Drawing is cancelled
-        priv let platformCollectionCap: Capability<&{ASMR.CollectionPublic}>
-
         // the capability to pay the platform when the Drawing is done
         priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>
 
@@ -120,90 +130,126 @@ pub contract Drawing {
         // address, where contract was deployed
         priv let contractsAccountAddress: Address
 
+        priv let metadata: ASMR.Metadata
+
+        priv let editionNumber: UInt64
+
         init(   
             price: UFix64,         
-            drawingStartTime: UFix64,          
+            startTime: UFix64,          
             drawingLength: UFix64,       
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>,            
-            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>           
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>,
+            metadata: ASMR.Metadata,
+            editionNumber: UInt64           
         ) {
             Drawing.totalDrawings = Drawing.totalDrawings + (1 as UInt64)            
-            self.drawingID = drawing.totalDrawings         
+            self.drawingID = Drawing.totalDrawings         
             self.drawingLength = drawingLength
             self.price = price
-            self.drawingStartTime = drawingStartTime
+            self.startTime = startTime
             self.drawingCompleted = false   
             self.platformVaultCap = platformVaultCap
-            self.numberOfBids = 0
-            self.platformCollectionCap = platformCollectionCap
+            self.numberOfBids = 0      
             self.drawingCancelled = false
             self.contractsAccountAddress = 0xf8d6e0586b0a20c7
             self.BidStorages <- {}
+            self.metadata = metadata
+            self.editionNumber = editionNumber
         }
 
         // sendNFT sends the NFT to the Collection belonging to the provided Capability
-        access(contract) fun sendNFT(_ capability: Capability<&{ASMR.CollectionPublic}>) {
-            if let collectionRef = capability.borrow() {
-                let NFT <- self.NFT <- nil
-                collectionRef.deposit(token: <-NFT!)
-                return
-            } 
+        access(contract) fun sendNFT(capability: Capability<&{ASMR.CollectionPublic}>, bidTokens: @FungibleToken.Vault) {
+            let collectionRef = capability.borrow() ?? panic("can't borrow collection ASMR reference") 
 
-            if let platformCollection = self.platformCollectionCap.borrow() {
-                let NFT <- self.NFT <- nil
-                platformCollection.deposit(token: <-NFT!)
-                return 
-            } 
+            collectionRef.deposit(token: <- ASMR.mint(metadata: self.metadata, editionNumber: self.editionNumber))
+            
+            let contractsAccountAddress = Address(0xf8d6e0586b0a20c7)
+
+            let contractsAccount = getAccount(contractsAccountAddress)
+
+            let royaltyRef = contractsAccount.getCapability<&{Royalty.RoyaltyPublic}>(/public/royaltyCollection).borrow() 
+                ?? panic("Could not borrow royalty reference")     
+
+            let royaltyStatus = royaltyRef.getRoyalty(self.editionNumber)
+
+            for key in royaltyStatus.royalty.keys {
+                let commission = self.price * royaltyStatus.royalty[key]!.firstSalePercent * 0.01
+
+                let account = getAccount(key) 
+
+                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver).borrow() ?? panic("Could not borrow vault reference")     
+
+                vaultCap.deposit(from: <- bidTokens.withdraw(amount: commission))
+
+                emit Earned(amount: commission, owner: vaultCap.owner!.address, description: royaltyStatus.royalty[key]!.description)
+            }   
+
+            let platformCap = self.platformVaultCap.borrow() ?? panic("Could not borrow vault reference")      
+
+            platformCap.deposit(from: <- bidTokens)
+        }
+
+        pub fun borrowBidStorage(address: Address): &BidStorage {
+            return &self.BidStorages[address] as &BidStorage
         }
         
         // sendBidTokens sends the bid tokens to the Vault Receiver belonging to the provided Capability
-        access(contract) fun sendBidTokens(_ capability: Capability<&{FungibleToken.Receiver}>) {
+        access(contract) fun sendBidTokens(
+            bidTokens: @FungibleToken.Vault,
+            vaultCap: Capability<&{FungibleToken.Receiver}>
+        ) {
             // borrow a reference to the owner's NFT receiver
-            if let vaultRef = capability.borrow() {
-                let bidVaultRef = &self.bidVault as &FungibleToken.Vault
-
-                if(bidVaultRef.balance > 0.0) {
-                    vaultRef.deposit(from: <- bidVaultRef.withdraw(amount: bidVaultRef.balance))
-                }
-                return
-            }
-
-            if let ownerRef = self.platformVaultCap.borrow() {
-                let bidVaultRef = &self.bidVault as &FungibleToken.Vault
-                if(bidVaultRef.balance > 0.0) {
-                    ownerRef.deposit(from: <-bidVaultRef.withdraw(amount: bidVaultRef.balance))
-                }
-                return
-            }
+            let vaultRef = vaultCap.borrow() ?? panic("can't borrow vaultCap reference")
+            vaultRef.deposit(from: <- bidTokens) 
         }
 
         pub fun getEditionNumber(id: UInt64): UInt64? {             
-            return self.NFT?.editionNumber
+            return self.editionNumber
         }
 
         //This method should probably use preconditions more 
-        pub fun settleDrawing()  {
+        pub fun settleDrawing(lotterryWinners: [Address])  {
 
             pre {
-                !self.DrawingCompleted : "The Drawing is already settled"
-                self.NFT != nil: "NFT in Drawing does not exist"
+                !self.drawingCompleted : "The Drawing is already settled"
+                self.metadata != nil: "NFT can be minted, because metadata is omitted"
                 self.isDrawingExpired() : "Drawing has not completed yet"
+                !self.drawingCompleted : "The Drawing is already settled"
             }
 
-            // return if there are no bids to settle
-            if self.currentPrice == 0.0 {
-                self.returnDrawingItemToOwner()
-                return
-            }       
+            for address in self.BidStorages.keys {
+                if(lotterryWinners.contains(address)) {
+                    let bidStorage = self.borrowBidStorage(address: address)     
+                    let balance = bidStorage.bidVault.balance       
+
+                    self.sendNFT(
+                        capability: bidStorage.collectionCap,
+                        bidTokens: <- bidStorage.withdrawBidsTokens()                
+                    )                    
+
+                } else {
+                    let bidStorage = self.borrowBidStorage(address: address)     
+                    let balance = bidStorage.bidVault.balance       
+
+                    self.sendBidTokens(
+                        bidTokens: <- bidStorage.withdrawBidsTokens(),
+                        vaultCap: bidStorage.vaultCap
+                    )
+
+                    emit Refund(address: address, amount: balance) 
+                }
+            }
+
+            self.drawingCompleted = true
             
-            emit Settled(tokenID: self.DrawingID, price: self.currentPrice)
+            emit Settled(tokenID: self.drawingID, price: self.price)
         }
 
         //this can be negative if is expired
         pub fun timeRemaining() : Fix64 {
-            let DrawingLength = self.DrawingLength
+            let DrawingLength = self.drawingLength
 
-            let startTime = self.DrawingStartTime
+            let startTime = self.startTime
 
             let currentTime = getCurrentBlock().timestamp
 
@@ -232,11 +278,11 @@ pub contract Drawing {
         ) {
 
             pre {               
-                bidTokens.balance < price: "Bid is less than price"
-                !self.DrawingCompleted : "The Drawing is already settled"
-                self.NFT != nil: "NFT in Drawing does not exist"
-                self.DrawingStartTime < getCurrentBlock().timestamp : "The Drawing has not started yet"
-                !self.DrawingCancelled : "Drawing was cancelled"
+                bidTokens.balance == self.price: "Bid is not equal price"
+                !self.drawingCompleted : "The Drawing is already settled"
+                self.startTime < getCurrentBlock().timestamp : "The Drawing has not started yet"
+                self.startTime + self.drawingLength > getCurrentBlock().timestamp : "The Drawing has already finished"
+                !self.drawingCancelled : "Drawing was cancelled"
             }
 
             let bidderAddress = vaultCap.borrow()!.owner!.address
@@ -246,7 +292,7 @@ pub contract Drawing {
                 panic("you cannot make a bid and send the ASMR to somebody else collection")
             }
 
-            if !BidStorages.containsKey(bidderAddress) {
+            if self.BidStorages.containsKey(bidderAddress) {
                 panic("you can make only one bid from one account")
             }
 
@@ -263,45 +309,41 @@ pub contract Drawing {
             emit Bid(id: self.drawingID, bidderAddress: bidderAddress)
         }
 
-        pub fun getDrawingStatus() : DrawingStatus {
-
-            var leader : Address? = nil
-            if let recipient = self.recipientVaultCap {
-                leader = recipient.borrow()!.owner!.address
-            }
+        pub fun getDrawingStatus() : DrawingStatus {       
 
             return DrawingStatus(
-                id: self.DrawingID,
+                id: self.drawingID, 
                 price: self.price, 
-                bids: self.numberOfBids,
-                active: !self.DrawingCompleted && !self.isDrawingExpired(),
-                timeRemaining: self.timeRemaining(),
-                metadata: self.NFT?.metadata,
-                ASMRId: self.NFT?.id,
-                leader: leader,                      
-                startTime: Fix64(self.DrawingStartTime),
-                endTime: Fix64(self.DrawingStartTime+self.DrawingLength),
-                completed: self.DrawingCompleted,
-                expired: self.isDrawingExpired(),
-                cancelled: self.DrawingCancelled  
+                bids: self.numberOfBids, 
+                active: !self.drawingCompleted && !self.isDrawingExpired(), 
+                timeRemaining: self.timeRemaining(), 
+                metadata: self.metadata,                 
+                startTime: Fix64(self.startTime),
+                endTime: Fix64(self.startTime + self.drawingLength),   
+                completed: self.drawingCompleted,
+                expired: self.isDrawingExpired(), 
+                cancelled: self.drawingCancelled   
             )
         }
 
         pub fun cancelDrawing() {
-            self.DrawingCancelled = true
+            self.drawingCancelled = true
+        }
+
+        pub fun getPrice(): UFix64  {
+            return self.price
+        }
+
+
+        pub fun getBidsAddresses() : [Address] {       
+
+            return self.BidStorages.keys
         }
 
         destroy() {
             log("destroy Drawing")
                        
-            // if there's a bidder...
-            if let vaultCap = self.recipientVaultCap {
-                // ...send the bid tokens back to the bidder
-                self.sendBidTokens(vaultCap)
-            }
-
-            destroy self.NFT
-            destroy self.bidVault
+            destroy self.BidStorages        
         }
     }    
 
@@ -311,16 +353,19 @@ pub contract Drawing {
 
         pub fun createDrawing(   
             price: UFix64,         
-            drawingStartTime: UFix64,          
+            startTime: UFix64,          
             drawingLength: UFix64,       
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>,            
-            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>    
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>,          
+            metadata: ASMR.Metadata,
+            editionNumber: UInt64      
         ) 
 
         pub fun getDrawingStatuses(): {UInt64: DrawingStatus}
         pub fun getDrawingStatus(_ id:UInt64): DrawingStatus
         pub fun getTimeLeft(_ id: UInt64): Fix64
         pub fun cancelDrawing(_ id: UInt64)
+        pub fun getPrice(_ id:UInt64): UFix64 
+        pub fun getBidsAddresses(_ id:UInt64) : [Address]
 
         pub fun placeBid(
             id: UInt64, 
@@ -337,12 +382,7 @@ pub contract Drawing {
         // Drawing Items
         access(account) var DrawingItems: @{UInt64: DrawingItem}             
      
-        access(contract) let marketplaceVault: Capability<&{FungibleToken.Receiver}>
-
-        init(
-            marketplaceVault: Capability<&{FungibleToken.Receiver}>            
-        ) {
-            self.marketplaceVault = marketplaceVault
+        init() {          
             self.DrawingItems <- {}
         }
 
@@ -354,28 +394,30 @@ pub contract Drawing {
         // for the Drawing item
         pub fun createDrawing(       
             price: UFix64,         
-            drawingStartTime: UFix64,          
+            startTime: UFix64,          
             drawingLength: UFix64,       
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>,            
-            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>    
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>,         
+            metadata: ASMR.Metadata,
+            editionNumber: UInt64    
         ) {
 
             pre {              
                 drawingLength > 0.00 : "Drawing lenght should be more then 0.00"
-                drawingStartTime > getCurrentBlock().timestamp : "Drawing start time can't be in the past"
+                startTime > getCurrentBlock().timestamp : "Drawing start time can't be in the past"
                 price > 0.00 : "Start price should be more then 0.00"
             }
             
             // create a new Drawing items resource container
-            let item <- <- create DrawingItem(         
+            let item <- create DrawingItem(         
                 price: price,         
-                drawingStartTime: drawingStartTime,          
+                startTime: startTime,          
                 drawingLength: drawingLength,       
-                platformVaultCap: platformVaultCap,            
-                platformCollectionCap: platformCollectionCap       
+                platformVaultCap: platformVaultCap,              
+                metadata: metadata,
+                editionNumber:  editionNumber
             )
 
-            let id = item.DrawingID
+            let id = item.drawingID
 
             // update the Drawing items dictionary with the new resources
             let oldItem <- self.DrawingItems[id] <- item
@@ -384,7 +426,7 @@ pub contract Drawing {
 
             let owner = platformVaultCap.borrow()!.owner!.address
 
-            emit Created(tokenID: id, owner: owner, startPrice: startPrice, startTime: DrawingStartTime)
+            emit Created(tokenID: id, price: price, startTime: startTime)
         }
 
         // getDrawingPrices returns a dictionary of available NFT IDs with their current price
@@ -427,9 +469,9 @@ pub contract Drawing {
 
         // settleDrawing sends the Drawing item to the highest bidder
         // and deposits the FungibleTokens into the Drawing owner's account
-        pub fun settleDrawing(_ id: UInt64) {
+        pub fun settleDrawing(id: UInt64, lotterryWinners: [Address]) {
             let itemRef = &self.DrawingItems[id] as &DrawingItem
-            itemRef.settleDrawing()
+            itemRef.settleDrawing(lotterryWinners: lotterryWinners)
         }
 
         pub fun cancelDrawing(_ id: UInt64) {
@@ -438,7 +480,6 @@ pub contract Drawing {
                     "Drawing does not exist"
             }
             let itemRef = &self.DrawingItems[id] as &DrawingItem
-            itemRef.returnDrawingItemToOwner()
             itemRef.cancelDrawing()
             emit Canceled(tokenID: id)
         }
@@ -465,14 +506,27 @@ pub contract Drawing {
             )
         }
 
-        pub fun addNFT(id: UInt64, NFT: @ASMR.NFT) {
+        pub fun getPrice(_ id:UInt64): UFix64  {
             pre {
                 self.DrawingItems[id] != nil:
-                    "Drawing does not exist"
+                    "Drawing doesn't exist"
             }
-            let itemRef = &self.DrawingItems[id] as &DrawingItem
 
-            itemRef.addNFT(NFT: <- NFT)
+            // Get the drawing item resources
+            let itemRef = &self.DrawingItems[id] as &DrawingItem
+            return itemRef.getPrice()
+        }
+
+
+        pub fun getBidsAddresses(_ id:UInt64) : [Address] {       
+            pre {
+                self.DrawingItems[id] != nil:
+                    "Drawing doesn't exist"
+            }
+
+            // Get the drawing item resources
+            let itemRef = &self.DrawingItems[id] as &DrawingItem
+            return itemRef.getBidsAddresses()
         }
 
         destroy() {
@@ -483,12 +537,10 @@ pub contract Drawing {
     }
 
     // createDrawingCollection returns a new DrawingCollection resource to the caller
-    pub fun createDrawingCollection(marketplaceVault: Capability<&{FungibleToken.Receiver}>): @DrawingCollection {
-        let DrawingCollection <- create DrawingCollection(
-            marketplaceVault: marketplaceVault        
-        )
+    pub fun createDrawingCollection(): @DrawingCollection {
+        let DrawingCollection <- create DrawingCollection()
 
-        emit CollectionCreated(owner: marketplaceVault.borrow()!.owner!.address)
+        emit CollectionCreated()
         return <- DrawingCollection
     }
 
