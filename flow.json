@@ -31,7 +31,9 @@
 		"Auction": "./contracts/Auction.cdc",
 		"Royalty": "./contracts/Royalty.cdc",
 		"OpenEdition": "./contracts/OpenEdition.cdc",
-		"Drawing": "./contracts/Drawing.cdc"			
+		"Drawing": "./contracts/Drawing.cdc",
+		"Pack": "./contracts/Pack.cdc",
+		"PackSale": "./contracts/PackSale.cdc"				
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -64,7 +66,9 @@
 				"Auction",
 				"Royalty",
 				"OpenEdition", 
-				"Drawing"			
+				"Drawing",
+				"Pack",
+				"PackSale"		
 			]
 		},
 		"emulator": {
@@ -75,7 +79,9 @@
 				"Auction",
 				"Royalty",
 				"OpenEdition", 
-				"Drawing"
+				"Drawing",
+				"Pack",
+				"PackSale"
 			]
 		}
 	}

@@ -117,7 +117,6 @@ flow transactions send --code ./transactions/PurchaseOpenEdition.cdc --args-json
 flow transactions send --code ./transactions/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "	1621439123.00"},{"type": "UFix64","value": "1000.0"}]' --signer emulator-account
 
 
-
 flow transactions send --code ./transactions/AddNFTInAuction.cdc --args-json '[{"type": "UInt64","value": "1"}, {"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"}]' --signer emulator-account
 
 
@@ -129,3 +128,9 @@ flow transactions send --code ./transactions/DrawingBid.cdc --args-json '[{"type
 flow transactions send --code ./transactions/Tick.cdc --signer emulator-account
 
 flow transactions send --code ./transactions/SettleDrawing.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer emulator-account
+
+flow transactions send --code ./transactions/CreatePackSale.cdc --args-json '[{"type": "UFix64","value": "120.00"}, { "type": "UFix64","value": "1622126157.00"}, {"type": "UFix64","value": "300.00"}]' --signer emulator-account
+
+flow transactions send --code ./transactions/MintPacks.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "10"}, {"type": "UInt64","value": "1"}, {"type": "UInt64","value": "1"}]' --signer emulator-account
+
+flow scripts execute ./scripts/CheckPackSale.cdc --arg Address:"0xf8d6e0586b0a20c7"

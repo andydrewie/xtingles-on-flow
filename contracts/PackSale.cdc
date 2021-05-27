@@ -1,9 +1,9 @@
 import FungibleToken from "./FungibleToken.cdc"
 import FlowToken from "./FlowToken.cdc"
 import ASMR from "./ASMR.cdc"
-import NonFungibleToken from "./NonFungibleToken.cdc"
 import Royalty from "./Royalty.cdc"
 import Pack from "./Pack.cdc"
+import NonFungibleToken from "./NonFungibleToken.cdc"
 
 pub contract PackSale {
 
@@ -17,6 +17,9 @@ pub contract PackSale {
         pub let completed: Bool
         pub let expired: Bool
         pub let cancelled: Bool 
+        pub let maxEdition: UInt64
+        pub let metadata: Pack.Metadata? 
+        pub let editions: [UInt64]
      
         init(
             id:UInt64, 
@@ -27,7 +30,10 @@ pub contract PackSale {
             endTime: Fix64,
             completed: Bool,
             expired:Bool, 
-            cancelled: Bool     
+            cancelled: Bool,
+            maxEdition: UInt64,
+            metadata: Pack.Metadata?,
+            editions: [UInt64]     
         ) {
             self.id = id
             self.price = price         
@@ -38,6 +44,9 @@ pub contract PackSale {
             self.completed = completed
             self.expired = expired
             self.cancelled = cancelled
+            self.metadata = metadata
+            self.maxEdition = maxEdition
+            self.editions = editions
         }
     }
 
@@ -48,8 +57,8 @@ pub contract PackSale {
     pub event PackSaleCollectionCreated()
     pub event Created(id: UInt64, price: UFix64, startTime: UFix64)
     pub event Purchase(PackSaleId: UInt64, buyerAddress: Address, price: UFix64, tokenID: UInt64, edition: UInt64)
-    pub event Earned(amount:UFix64, owner: Address, description: String)
-    pub event Settled(id: UInt64, price: UFix64, amountMintedNFT: UInt64)
+    pub event Earned(amount:UFix64, owner: Address)
+    pub event Settled(id: UInt64, price: UFix64)
     pub event Canceled(id: UInt64)
 
     // PackSaleItem contains the Resources and metadata for a single auction
@@ -82,11 +91,15 @@ pub contract PackSale {
         //the capability to pay the platform when the purchase is done
         priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>   
 
+        priv var metadata: Pack.Metadata?
+
+        priv var maxEdition: UInt64
+
         init(
             price: UFix64,
             startTime: UFix64,
             saleLength: UFix64,
-            royalty: { Address: UFix64 }
+            royalty: { Address: UFix64 },
             platformVaultCap: Capability<&{FungibleToken.Receiver}>
         ) {
             PackSale.totalPackSales = PackSale.totalPackSales + (1 as UInt64)
@@ -100,6 +113,8 @@ pub contract PackSale {
             self.contractsAccountAddress = 0xf8d6e0586b0a20c7
             self.platformVaultCap = platformVaultCap
             self.packs <- {}
+            self.metadata = nil
+            self.maxEdition = 0
         }        
 
         //This method should probably use preconditions more 
@@ -112,7 +127,7 @@ pub contract PackSale {
          
             self.completed = true  
 
-            emit Settled(id: self.PackSaleID, price: self.price, amountMintedNFT: self.numberOfMintedNFT)
+            emit Settled(id: self.PackSaleID, price: self.price)
         }
   
         //this can be negative if is expired
@@ -137,29 +152,37 @@ pub contract PackSale {
             return timeRemaining < Fix64(0.0)
         }
 
-        // This method should probably use preconditions more
-        pub fun purchase(
-            buyerTokens: @FungibleToken.Vault,
-            buyerCollectionCap: Capability<&{ASMR.CollectionPublic}>,
-            minterCap: Capability<&ASMR.NFTMinter>
-        ) {
-            pre {
-                !self.completed : "The open edition has already settled"              
-                self.startTime < getCurrentBlock().timestamp : "The open edition has not started yet"
-                !self.cancelled : "Open edition was cancelled"
-                !self.isAuctionExpired() : "The open edition time has finished"
-                !self.cancelled : "The open edition was cancelled"     
+        pub fun mintPacks(metadata: Pack.Metadata, maxEdition: UInt64) {
+            var currentEdition = (1 as UInt64);
+
+            while currentEdition <= maxEdition {               
+                
+                let oldToken <- self.packs[currentEdition] <- Pack.mint(metadata: metadata)
+
+                destroy oldToken   
+
+                currentEdition = currentEdition + (1 as UInt64);
             }
 
-            let contractsAccount = getAccount(self.contractsAccountAddress)
+            self.metadata = metadata
+            self.maxEdition = maxEdition
+        }
 
-            let royaltyRef = contractsAccount.getCapability<&{Royalty.RoyaltyPublic}>(/public/royaltyCollection).borrow() 
-                ?? panic("Could not borrow royalty reference")     
+        pub fun purchase(
+            buyerTokens: @FungibleToken.Vault,
+            buyerCollectionCap: Capability<&{Pack.CollectionPublic}>,
+            edition: UInt64      
+        ) {
+            pre {
+                !self.completed : "The pack sale has already settled"              
+                self.startTime < getCurrentBlock().timestamp : "The pack sale has not started yet"
+                !self.cancelled : "Pack sale was cancelled"
+                !self.isAuctionExpired() : "The pack sale has finished"      
+                !self.packs.containsKey(edition) : "Edition does not exists" 
+            }    
 
-            let royaltyStatus = royaltyRef.getRoyalty(self.editionNumber)
-
-            for key in royaltyStatus.royalty.keys {
-                let commission = self.price * royaltyStatus.royalty[key]!.firstSalePercent * 0.01
+            for key in self.royalty.keys {
+                let commission = self.price * self.royalty[key]! * 0.01
 
                 let account = getAccount(key) 
 
@@ -167,43 +190,35 @@ pub contract PackSale {
 
                 vaultCap.deposit(from: <- buyerTokens.withdraw(amount: commission))
 
-                emit Earned(amount: commission, owner: vaultCap.owner!.address, description: royaltyStatus.royalty[key]!.description)
+                emit Earned(amount: commission, owner: vaultCap.owner!.address)
             }
-
-            let minterRef = minterCap.borrow() ?? panic("Could not borrow minter reference")     
 
             let platformValutCap = self.platformVaultCap.borrow() ?? panic("Could not borrow platform vault reference")   
 
             platformValutCap.deposit(from: <- buyerTokens)
 
-            self.numberOfMintedNFT = self.numberOfMintedNFT + UInt64(1)
+            let buyerPacksCollection = buyerCollectionCap.borrow() ?? panic("Could not borrow pack collection reference") 
 
-            self.metadata.edition = self.numberOfMintedNFT
+            let pack <- self.packs.remove(key: edition) ?? panic("missing pack")
+          
+            buyerPacksCollection.deposit(token: <- pack)           
+        } 
 
-            let newNFT <- minterRef.mintNFT(metadata: self.metadata, editionNumber: self.editionNumber)
-
-            let buyerNFTCollection = buyerCollectionCap.borrow() ?? panic("Could not borrow platform vault reference") 
-
-            let tokenID = newNFT.id  
-    
-            buyerNFTCollection.deposit(token: <- newNFT)           
-
-            emit Purchase(PackSaleId: self.PackSaleID, buyerAddress: buyerCollectionCap.borrow()!.owner!.address, price: self.price, tokenID: tokenID, edition: self.numberOfMintedNFT)
-        }
-
-        pub fun getAuctionStatus() : PackSaleStatus {       
+        pub fun getPackSaleStatus() : PackSaleStatus {       
 
             return PackSaleStatus(
                 id: self.PackSaleID,
                 price: self.price,             
                 active: !self.completed && !self.isAuctionExpired(),
-                timeRemaining: self.timeRemaining(),
-                metadata: self.metadata,             
+                timeRemaining: self.timeRemaining(),                       
                 startTime: Fix64(self.startTime),
                 endTime: Fix64(self.startTime + self.saleLength),            
                 completed: self.completed,
                 expired: self.isAuctionExpired(),
-                cancelled: self.cancelled           
+                cancelled: self.cancelled,
+                maxEdition: self.maxEdition,
+                metadata: self.metadata,
+                editions: self.packs.keys           
             )
         }
 
@@ -212,7 +227,9 @@ pub contract PackSale {
         }
 
         destroy() {
-            log("destroy open editions")                       
+            log("destroy open editions")
+
+            destroy self.packs;                       
          
         }
     }   
@@ -235,11 +252,11 @@ pub contract PackSale {
         pub fun getPrice(_ id:UInt64): UFix64 
         pub fun cancelPackSale(_ id: UInt64)
 
-        pub fun purchase(
+       /* pub fun purchase(
             id: UInt64, 
             buyerTokens: @FungibleToken.Vault,      
             collectionCap: Capability<&{ASMR.CollectionPublic}>       
-        )
+        ) */
     }
 
     // AuctionCollection contains a dictionary of AuctionItems and provides
@@ -247,12 +264,9 @@ pub contract PackSale {
     pub resource PackSaleCollection: PackSalePublic {
         // Auction Items
         access(account) var PackSalesItems: @{UInt64: PackSaleItem}     
-
-        access(contract) let minterCap: Capability<&ASMR.NFTMinter>
-
-        init(minterCap: Capability<&ASMR.NFTMinter>) {
+  
+        init() {
             self.PackSalesItems <- {} 
-            self.minterCap = minterCap
         }
 
         pub fun keys() : [UInt64] {
@@ -303,7 +317,7 @@ pub contract PackSale {
 
             for id in self.PackSalesItems.keys {
                 let itemRef = &self.PackSalesItems[id] as? &PackSaleItem
-                priceList[id] = itemRef.getAuctionStatus()
+                priceList[id] = itemRef.getPackSaleStatus()
             }
             
             return priceList
@@ -317,7 +331,18 @@ pub contract PackSale {
 
             // Get the auction item resources
             let itemRef = &self.PackSalesItems[id] as &PackSaleItem
-            return itemRef.getAuctionStatus()
+            return itemRef.getPackSaleStatus()
+        }
+
+        pub fun mintPacks(metadata: Pack.Metadata, maxEdition: UInt64, id: UInt64) {
+            pre {
+                self.PackSalesItems[id] != nil:
+                    "Open Edition doesn't exist"
+            }
+
+            // Get the auction item resources
+            let itemRef = &self.PackSalesItems[id] as &PackSaleItem
+            itemRef.mintPacks(metadata: metadata, maxEdition: maxEdition)
         }
 
         pub fun getPrice(_ id:UInt64): UFix64  {
@@ -360,7 +385,7 @@ pub contract PackSale {
         }
 
         // purchase sends the buyer's tokens to the buyer's tokens vault      
-        pub fun purchase(
+     /*   pub fun purchase(
             id: UInt64, 
             buyerTokens: @FungibleToken.Vault,      
             collectionCap: Capability<&{ASMR.CollectionPublic}>       
@@ -376,7 +401,7 @@ pub contract PackSale {
                 buyerCollectionCap: collectionCap,
                 minterCap: self.minterCap
             )
-        }
+        } */
 
         destroy() {
             log("destroy open edition collection")
@@ -386,8 +411,8 @@ pub contract PackSale {
     }
 
     // createAuctionCollection returns a PackSaleCollection resource to the caller
-    pub fun createPackSaleCollection(minterCap: Capability<&ASMR.NFTMinter>): @PackSaleCollection {
-        let PackSaleCollection <- create PackSaleCollection(minterCap: minterCap)
+    pub fun createPackSaleCollection(): @PackSaleCollection {
+        let PackSaleCollection <- create PackSaleCollection()
 
         emit PackSaleCollectionCreated()
         return <- PackSaleCollection

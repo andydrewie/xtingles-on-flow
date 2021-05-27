@@ -22,7 +22,6 @@ pub contract Pack: NonFungibleToken {
     pub resource interface Public {
         pub let id: UInt64
         pub let metadata: Metadata
-        pub let edition:  UInt64
     }
 
     pub struct Metadata {
@@ -45,7 +44,7 @@ pub contract Pack: NonFungibleToken {
             artistAddress:Address, 
             description: String,        
             edition: UInt64,
-            maxEditon: UInt64
+            maxEdition: UInt64
         ) {
                 self.url=url
                 self.animation=animation
@@ -68,14 +67,11 @@ pub contract Pack: NonFungibleToken {
 
         pub let metadata: Metadata
 
-        pub let edition:  UInt64
-
         // initializer
         //
-        init(initID: UInt64, metadata: Metadata, edition: UInt64) {
+        init(initID: UInt64, metadata: Metadata) {
             self.id = initID   
-            self.metadata = metadata     
-            self.edition=edition
+            self.metadata = metadata 
         }
     }
 
@@ -144,13 +140,7 @@ pub contract Pack: NonFungibleToken {
             return ref as! &Pack.NFT     
         }
   
-        pub fun getEditionNumber(id: UInt64): UInt64 {
-            let ref = self.getNFT(id: id)
-
-            return ref.getEditionNumber()
-        }
-
-        // borrowNFT
+          // borrowNFT
         // Gets a reference to an NFT in the collection
         // so that the caller can read its metadata and call its methods
         //
@@ -189,7 +179,7 @@ pub contract Pack: NonFungibleToken {
     // mint NFTs for test purposes
     pub resource NFTMinter {
   
-        pub fun mintNFT(metadata: Metadata, editionNumber: UInt64): @NFT {
+        pub fun mintNFT(metadata: Metadata): @NFT {
             var newNFT <- create NFT(
                 initID: Pack.totalSupply,
                 metadata: Metadata(
@@ -208,7 +198,7 @@ pub contract Pack: NonFungibleToken {
 
             Pack.totalSupply = Pack.totalSupply + UInt64(1)
 
-            return <-newNFT
+            return <- newNFT
         }
     }
 
@@ -225,19 +215,19 @@ pub contract Pack: NonFungibleToken {
     // get info for NFT including metadata
     pub fun getPack(address:Address) : [PackData] {
 
-        var PackData: [PackData] = []
+        var packData: [PackData] = []
         let account = getAccount(address)
 
         if let PackCollection= account.getCapability(self.CollectionPublicPath).borrow<&{Pack.CollectionPublic}>()  {
             for id in PackCollection.getIDs() {
                 var Pack = PackCollection.borrowPack(id: id) 
-                PackData.append(PackData(
+                packData.append(PackData(
                     metadata: Pack!.metadata,
                     id: id
                 ))
             }
         }
-        return PackData
+        return packData
     } 
 
     // mint NFT from other contract (auction or fix price)
