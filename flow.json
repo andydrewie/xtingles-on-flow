@@ -38,7 +38,10 @@
 	"networks": {
 		"emulator": "127.0.0.1:3569",
 		"mainnet": "access.mainnet.nodes.onflow.org:9000",
-		"testnet": "access.devnet.nodes.onflow.org:9000"
+		"testnet": {
+			"host": "access.testnet.nodes.onflow.org:9000",
+			"chain": "flow-testnet"
+		}
 	},
 	"accounts": {
 		"emulator-account": {
@@ -54,8 +57,8 @@
 			"keys": "1394d1a74c0be41868a92155e43d7d70e52e592609cb28696fa408c7b06a5338"
 		},
 		"testnet-account": {
-			"address": "0x175e958cf586f54c",
-			"keys": "4e091244bee5c0356d49563133e715c01bf60d2c9bd89d4f2ea81aa018201b10"
+			"address": "2695ea898b04f0c0",
+			"keys": "515affb23ac04fb9a149af15ed3b1cad47ab4c7f41db99c3044ff16effab29b3"
 		}
 	},
 	"deployments": {

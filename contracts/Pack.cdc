@@ -1,4 +1,5 @@
 import NonFungibleToken from "./NonFungibleToken.cdc"
+import ASMR from "./ASMR.cdc"
 
 pub contract Pack: NonFungibleToken {
     // Named Paths
@@ -156,7 +157,27 @@ pub contract Pack: NonFungibleToken {
                 return nil
             }
         }
-        
+
+      /*  pub fun unpack(
+            id: UInt64,
+            metadata: [ASMR.Metadata],
+            editionNumber: UInt64,
+            recipientCap: Capability<&{ASMR.CollectionPublic}>
+        ) {
+            pre {              
+                self.ownedNFTs[id].containsKey(edition) : "Edition does not exists" 
+            } 
+
+            for meta in metadata {
+                let token <- ASMR.mint(metadata: meta, editionNumber: editionNumber)
+                let recipient = recipientCap.borrow() ?? panic("Could not borrow recipient of ASMR") 
+                // deposit the NFT into the buyers collection
+                recipient.deposit(token: <- token)
+            }
+
+            destroy self.ownedNFTs.remove(key: id)
+        } */
+
         // destructor
         destroy() {
             destroy self.ownedNFTs

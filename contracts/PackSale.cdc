@@ -64,7 +64,7 @@ pub contract PackSale {
     // PackSaleItem contains the Resources and metadata for a single auction
     pub resource PackSaleItem {
         
-        //The id of this individual open edition
+        //The id of this individual Pack Sale
         pub let PackSaleID: UInt64
 
         //The minimum increment for a bid. This is an english auction style system where bids increase
@@ -121,7 +121,7 @@ pub contract PackSale {
         pub fun settlePackSale(clientRoyalty: &Royalty.RoyaltyCollection)  {
 
             pre {
-                !self.completed : "The open edition is already settled"            
+                !self.completed : "The Pack Sale is already settled"            
                 self.isAuctionExpired() : "Auction has not completed yet"
             }     
          
@@ -178,7 +178,7 @@ pub contract PackSale {
                 self.startTime < getCurrentBlock().timestamp : "The pack sale has not started yet"
                 !self.cancelled : "Pack sale was cancelled"
                 !self.isAuctionExpired() : "The pack sale has finished"      
-                !self.packs.containsKey(edition) : "Edition does not exists" 
+                self.packs.containsKey(edition) : "Edition does not exists" 
             }    
 
             for key in self.royalty.keys {
@@ -227,7 +227,7 @@ pub contract PackSale {
         }
 
         destroy() {
-            log("destroy open editions")
+            log("destroy Pack Sales")
 
             destroy self.packs;                       
          
@@ -252,11 +252,12 @@ pub contract PackSale {
         pub fun getPrice(_ id:UInt64): UFix64 
         pub fun cancelPackSale(_ id: UInt64)
 
-       /* pub fun purchase(
+        pub fun purchase(
             id: UInt64, 
-            buyerTokens: @FungibleToken.Vault,      
-            collectionCap: Capability<&{ASMR.CollectionPublic}>       
-        ) */
+            buyerTokens: @FungibleToken.Vault,
+            buyerCollectionCap: Capability<&{Pack.CollectionPublic}>,
+            edition: UInt64    
+        )
     }
 
     // AuctionCollection contains a dictionary of AuctionItems and provides
@@ -310,7 +311,7 @@ pub contract PackSale {
         // getAuctionPrices returns a dictionary of available NFT IDs with their current price
         pub fun getPackSaleStatuses(): {UInt64: PackSaleStatus} {
             pre {
-                self.PackSalesItems.keys.length > 0: "There are no open edition items"
+                self.PackSalesItems.keys.length > 0: "There are no Pack Sale items"
             }
 
             let priceList: {UInt64: PackSaleStatus} = {}
@@ -326,7 +327,7 @@ pub contract PackSale {
         pub fun getPackSaleStatus(_ id:UInt64): PackSaleStatus {
             pre {
                 self.PackSalesItems[id] != nil:
-                    "Open Edition doesn't exist"
+                    "Pack Sale doesn't exist"
             }
 
             // Get the auction item resources
@@ -337,7 +338,7 @@ pub contract PackSale {
         pub fun mintPacks(metadata: Pack.Metadata, maxEdition: UInt64, id: UInt64) {
             pre {
                 self.PackSalesItems[id] != nil:
-                    "Open Edition doesn't exist"
+                    "Pack Sale doesn't exist"
             }
 
             // Get the auction item resources
@@ -348,10 +349,10 @@ pub contract PackSale {
         pub fun getPrice(_ id:UInt64): UFix64  {
             pre {
                 self.PackSalesItems[id] != nil:
-                    "Open Edition doesn't exist"
+                    "Pack Sale doesn't exist"
             }
 
-            // Get the open edition item resources
+            // Get the Pack Sale item resources
             let itemRef = &self.PackSalesItems[id] as &PackSaleItem
             return itemRef.getPrice()
         }
@@ -359,7 +360,7 @@ pub contract PackSale {
         pub fun getTimeLeft(_ id: UInt64): Fix64 {
             pre {
                 self.PackSalesItems[id] != nil:
-                    "Open Edition doesn't exist"
+                    "Pack Sale doesn't exist"
             }
 
             // Get the auction item resources
@@ -377,7 +378,7 @@ pub contract PackSale {
         pub fun cancelPackSale(_ id: UInt64) {
             pre {
                 self.PackSalesItems[id] != nil:
-                    "Open Edition does not exist"
+                    "Pack Sale does not exist"
             }
             let itemRef = &self.PackSalesItems[id] as &PackSaleItem     
             itemRef.cancelAuction()
@@ -385,26 +386,28 @@ pub contract PackSale {
         }
 
         // purchase sends the buyer's tokens to the buyer's tokens vault      
-     /*   pub fun purchase(
+        pub fun purchase(
             id: UInt64, 
-            buyerTokens: @FungibleToken.Vault,      
-            collectionCap: Capability<&{ASMR.CollectionPublic}>       
+            buyerTokens: @FungibleToken.Vault,
+            buyerCollectionCap: Capability<&{Pack.CollectionPublic}>,
+            edition: UInt64         
         ) {
             pre {
                 self.PackSalesItems[id] != nil:
-                    "Open Edition does not exist"
+                    "Pack Sale does not exist"
             }
+
             // Get the auction item resources
             let itemRef = &self.PackSalesItems[id] as &PackSaleItem
             itemRef.purchase(
-                buyerTokens: <- buyerTokens,
-                buyerCollectionCap: collectionCap,
-                minterCap: self.minterCap
+                buyerTokens: <-buyerTokens,
+                buyerCollectionCap: buyerCollectionCap,
+                edition: edition
             )
-        } */
+        }
 
         destroy() {
-            log("destroy open edition collection")
+            log("destroy Pack Sale collection")
             // destroy the empty resources
             destroy self.PackSalesItems
         }

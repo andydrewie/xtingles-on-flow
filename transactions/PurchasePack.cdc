@@ -5,7 +5,8 @@ import PackSale from 0xf8d6e0586b0a20c7
 
 transaction(
         packOwner: Address,
-        id: UInt64 
+        id: UInt64,
+        edition: UInt64 
     ) {
 
     let packSaleCollectionRef: &AnyResource{PackSale.PackSalePublic}
@@ -21,6 +22,7 @@ transaction(
 
         // if collection is not created yet we make it.
         if !collectionCap.check() {
+
             // store an empty NFT Collection in account storage
             acct.save<@NonFungibleToken.Collection>(<- Pack.createEmptyCollection(), to: Pack.CollectionStoragePath)
 
@@ -30,7 +32,7 @@ transaction(
 
         self.collectionCap = acct.getCapability<&{Pack.CollectionPublic}>(Pack.CollectionPublicPath)
         
-        self.packSaleCollectionRef = owner.getCapability<&AnyResource{OPackSale.PackSalePublic}>(/public/packSaleCollection)
+        self.packSaleCollectionRef = owner.getCapability<&AnyResource{PackSale.PackSalePublic}>(/public/packSaleCollection)
             .borrow()
             ?? panic("Could not borrow nft sale reference")
 
@@ -39,7 +41,7 @@ transaction(
         let vaultRef = acct.borrow<&FungibleToken.Vault>(from: /storage/flowTokenVault)
             ?? panic("Could not borrow owner's Vault reference")
 
-        let amount = self.openEditionCollectionRef.getPrice(id)
+        let amount = self.packSaleCollectionRef.getPrice(id)
         
          // withdraw tokens from the buyer's Vault
         self.temporaryVault <- vaultRef.withdraw(amount: amount)        
@@ -48,8 +50,11 @@ transaction(
 
     execute {
        
-        self.openEditionCollectionRef.purchase(
-            id: id, buyerTokens: <- self.temporaryVault, collectionCap: self.collectionCap
+        self.packSaleCollectionRef.purchase(
+            id: id,
+            buyerTokens: <- self.temporaryVault,
+            buyerCollectionCap: self.collectionCap,
+            edition: edition
         )       
     }
 }
