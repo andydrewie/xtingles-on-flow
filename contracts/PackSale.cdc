@@ -186,7 +186,7 @@ pub contract PackSale {
 
                 let account = getAccount(key) 
 
-                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver).borrow() ?? panic("Could not borrow vault reference")     
+                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver).borrow() ?? panic("Could not borrow vault reference")     
 
                 vaultCap.deposit(from: <- buyerTokens.withdraw(amount: commission))
 

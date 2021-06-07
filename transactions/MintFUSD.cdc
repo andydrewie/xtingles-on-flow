@@ -8,9 +8,9 @@ transaction(amount: UFix64, to: Address) {
 
   prepare(acct: AuthAccount) {
    
-    let minterdd = acct.borrow<&FUSD.Minter>(from: /storage/FUSDMinter)!
+    let minter = acct.borrow<&FUSD.Minter>(from: /storage/FUSDMinter)!
 
-    self.sentVault <- minterdd.mintTokens(amount: 1000.00)
+    self.sentVault <- minter.mintTokens(amount: amount)
   
   }
 

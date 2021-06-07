@@ -167,7 +167,7 @@ pub contract MarketPlace {
 
                 let account = getAccount(key) 
 
-                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver).borrow() ?? panic("Could not borrow vault reference")       
+                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver).borrow() ?? panic("Could not borrow vault reference")       
                 vaultCap.deposit(from: <- buyTokens.withdraw(amount: commission))
 
                 emit MarketplaceEarned(amount: commission, owner: vaultCap.owner!.address, description: royaltyStatus.royalty[key]!.description)

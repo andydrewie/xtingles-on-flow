@@ -51,7 +51,7 @@ transaction(
         self.openEditionCollectionRef = acct.borrow<&OpenEdition.OpenEditionCollection>(from: /storage/openEditionCollection)
             ?? panic("could not borrow open edition collection reference")  
 
-        self.platformCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+        self.platformCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
 
         self.metadata = ASMR.Metadata(
             url: url,

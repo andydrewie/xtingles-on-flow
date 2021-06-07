@@ -25,7 +25,7 @@ transaction(
         let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(/public/auctionCollection)
 
         if !auctionCap.check() {
-            let receiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+            let receiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
             let sale <- Auction.createAuctionCollection(marketplaceVault: receiver)
             acct.save(<-sale, to: /storage/auctionCollection)         
             acct.link<&{Auction.AuctionPublic}>(/public/auctionCollection, target: /storage/auctionCollection)

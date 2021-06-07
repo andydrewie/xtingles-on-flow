@@ -49,7 +49,7 @@ transaction(
         self.drawingCollectionRef = acct.borrow<&Drawing.DrawingCollection>(from: /storage/drawingCollection)
             ?? panic("could not borrow open edition collection reference")  
 
-        self.platformCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+        self.platformCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
 
         self.metadata = ASMR.Metadata(
             url: url,

@@ -31,9 +31,9 @@ transaction(
 
         self.collectionCap = collectionCap
         
-        self.vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+        self.vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
                    
-        let vaultRef = account.borrow<&FungibleToken.Vault>(from: /storage/flowTokenVault)
+        let vaultRef = account.borrow<&FungibleToken.Vault>(from: /storage/fusdVault)
             ?? panic("Could not borrow owner's Vault reference")
         
         let acct = getAccount(marketplace)

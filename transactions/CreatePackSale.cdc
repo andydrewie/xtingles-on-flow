@@ -26,7 +26,7 @@ transaction(
         self.packSaleCollectionRef = acct.borrow<&PackSale.PackSaleCollection>(from: /storage/packSaleCollection)
             ?? panic("could not borrow minter reference")    
 
-        self.platformCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+        self.platformCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
     }
 
     execute {   

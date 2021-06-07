@@ -12,7 +12,7 @@ transaction(tokenId: UInt64, price: UFix64) {
         let marketplaceCap = acct.getCapability<&{MarketPlace.SalePublic}>(/public/ASMRSale)
 
         if !marketplaceCap.check() {
-            let receiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+            let receiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
             let sale <- MarketPlace.createSaleCollection(ownerVault: receiver)
             acct.save(<-sale, to: /storage/ASMRSale)
             acct.link<&MarketPlace.SaleCollection{MarketPlace.SalePublic}>(/public/ASMRSale, target: /storage/ASMRSale)

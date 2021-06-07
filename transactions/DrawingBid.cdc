@@ -33,9 +33,9 @@ transaction(
             .borrow()
             ?? panic("Could not borrow drawing reference")
 
-        self.vaultCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+        self.vaultCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
    
-        let vaultRef = acct.borrow<&FungibleToken.Vault>(from: /storage/flowTokenVault)
+        let vaultRef = acct.borrow<&FungibleToken.Vault>(from: /storage/fusdVault)
             ?? panic("Could not borrow owner's Vault reference")
         
         let amount = self.drawingRef.getPrice(id)        

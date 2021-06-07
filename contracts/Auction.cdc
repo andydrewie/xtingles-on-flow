@@ -150,7 +150,7 @@ pub contract Auction {
         ) {
             Auction.totalAuctions = Auction.totalAuctions + (1 as UInt64)
             self.NFT <- nil
-            self.bidVault <- FlowToken.createEmptyVault()
+            self.bidVault <- FUSD.createEmptyVault()
             self.auctionID = Auction.totalAuctions
             self.minimumBidIncrement = minimumBidIncrement
             self.auctionLength = auctionLength
@@ -247,7 +247,7 @@ pub contract Auction {
 
                 let account = getAccount(key) 
 
-                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver).borrow() ?? panic("Could not borrow vault reference")       
+                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver).borrow() ?? panic("Could not borrow vault reference")       
 
                 vaultCap.deposit(from: <- self.bidVault.withdraw(amount: commission))
 

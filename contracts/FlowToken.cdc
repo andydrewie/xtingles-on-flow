@@ -171,14 +171,14 @@ pub contract FlowToken: FungibleToken {
         // Create the Vault with the total supply of tokens and save it in storage
         //
         let vault <- create Vault(balance: self.totalSupply)
-        adminAccount.save(<-vault, to: /storage/flowTokenVault)
+        adminAccount.save(<-vault, to: /storage/fusdVault)
 
         // Create a public capability to the stored Vault that only exposes
         // the `deposit` method through the `Receiver` interface
         //
         adminAccount.link<&FlowToken.Vault{FungibleToken.Receiver}>(
-            /public/flowTokenReceiver,
-            target: /storage/flowTokenVault
+            /public/fusdReceiver,
+            target: /storage/fusdVault
         )
 
         // Create a public capability to the stored Vault that only exposes
@@ -186,7 +186,7 @@ pub contract FlowToken: FungibleToken {
         //
         adminAccount.link<&FlowToken.Vault{FungibleToken.Balance}>(
             /public/flowTokenBalance,
-            target: /storage/flowTokenVault
+            target: /storage/fusdVault
         )
 
         let admin <- create Administrator()
