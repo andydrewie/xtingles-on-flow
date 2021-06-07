@@ -1,5 +1,5 @@
 import FungibleToken from "./FungibleToken.cdc"
-import FlowToken from "./FlowToken.cdc"
+import FUSD from "./FUSD.cdc"
 import ASMR from "./ASMR.cdc"
 import NonFungibleToken from "./NonFungibleToken.cdc"
 import Royalty from "./Royalty.cdc"

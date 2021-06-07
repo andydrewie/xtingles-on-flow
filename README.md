@@ -135,7 +135,13 @@ flow transactions send --code ./transactions/MintPacks.cdc --args-json '[{"type"
 
 flow scripts execute ./scripts/CheckPackSale.cdc --arg Address:"0xf8d6e0586b0a20c7"
 
-flow transactions send --code ./transactions/AuthCheck.cdc --args-json '[{"type": "String","value": "to8FWc2vxTTfM1cO"}]' --network=testnet --signer testnet-account 
+flow transactions send --code ./transactions/AuthCheck.cdc --args-json '[{"type": "String","value": "UVvs6tT4eTE2dDkM"}]' --network=testnet --signer testnet-account 
 
 
 flow transactions send --code ./transactions/PurchasePack.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"},  {"type": "UInt64","value": "1"}, {"type": "UInt64","value": "7"}]' --signer emulator-account
+
+
+flow transactions send --code ./transactions/SetupFUSD.cdc --signer emulator-account
+
+
+flow transactions send --code ./transactions/MintFUSD.cdc --args-json '[{"type": "UFix64","value": "5000.00"}, {"type": "Address","value": "0x01cf0e2f2f715450"}]' --signer emulator-account
