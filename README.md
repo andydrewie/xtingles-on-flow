@@ -114,10 +114,16 @@ flow transactions send --code ./transactions/PurchaseOpenEdition.cdc --args-json
 {"type": "UInt64","value": "3"}]' --signer second-account
 
 
-flow transactions send --code ./transactions/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "	1621439123.00"},{"type": "UFix64","value": "1000.0"}]' --signer emulator-account
+flow transactions send --code ./transactions/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1623172621.00"},{"type": "UFix64","value": "1000.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}]' --signer emulator-account
 
+ auctionId: UInt64,
+        link: String,          
+        name: String, 
+        author: String,      
+        description: String,        
+        edition: UInt64   
 
-flow transactions send --code ./transactions/AddNFTInAuction.cdc --args-json '[{"type": "UInt64","value": "1"}, {"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"}]' --signer emulator-account
+flow transactions send --code ./transactions/AddNFTInAuction.cdc --args-json '[{"type": "UInt64","value": "1"}, {"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"}]' --signer emulator-account
 
 
 flow transactions send --code ./transactions/CreateDrawing.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1621611328.00"}, {"type": "UFix64","value": "300.00"}]' --signer emulator-account
@@ -144,4 +150,27 @@ flow transactions send --code ./transactions/PurchasePack.cdc --args-json '[{"ty
 flow transactions send --code ./transactions/SetupFUSD.cdc --signer emulator-account
 
 
-flow transactions send --code ./transactions/MintFUSD.cdc --args-json '[{"type": "UFix64","value": "5000.00"}, {"type": "Address","value": "0x01cf0e2f2f715450"}]' --signer emulator-account
+flow transactions send --code ./transactions/MintFUSD.cdc --args-json '[{"type": "UFix64","value": "5000.00"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}]' --signer emulator-account
+
+
+  link: metadata.link,          
+                name: metadata.name, 
+                author: metadata.name,      
+                description: metadata.description,        
+                edition: metadata.edition, 
+                properties: metadata.properties     
+
+
+
+flow transactions send --code ./transactions/MintASMR.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"}]' --signer emulator-account
+
+
+flow transactions send --code ./transactions/AuthCheck.cdc --args-json '[{"type": "UFix64","value": "33.00000000"}, {"type": "UFix64","value": "17.10837246"}]' --network=testnet --signer testnet-account 
+
+
+
+flow transactions send --code ./transactions/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1623183930.00"},{"type": "UFix64","value": "1000.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer emulator-account
+
+flow transactions send --code ./transactions/CreationAuctionNew.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1623183930.00"},{"type": "UFix64","value": "1000.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer emulator-account
+
+flow scripts execute ./scripts/CheckAuctionStatus.cdc --arg Address:"0xf8d6e0586b0a20c7" --arg UInt64:"1"

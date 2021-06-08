@@ -30,7 +30,7 @@
 		"ASMR": "./contracts/ASMR.cdc",
 		"MarketPlace": "./contracts/MarketPlace.cdc",
 		"Auction": "./contracts/Auction.cdc",
-		"Royalty": "./contracts/Royalty.cdc",
+		"Edition": "./contracts/Edition.cdc",
 		"OpenEdition": "./contracts/OpenEdition.cdc",
 		"Drawing": "./contracts/Drawing.cdc",
 		"Pack": "./contracts/Pack.cdc",
@@ -51,11 +51,11 @@
 		},
 		"second-account": {
 			"address": "0x01cf0e2f2f715450",
-			"keys": "521cac87a4705c06ef3d2481ccd7b9615b35c1135eec259158061f7641f9f068"
+			"keys": "521cac87a4705c06ef3d2481ccd7b9615b35c1135eec259158061f7641f9f068"				
 		},
 		"third-account": {
-			"address": "0x179b6b1cb6755e31",
-			"keys": "1394d1a74c0be41868a92155e43d7d70e52e592609cb28696fa408c7b06a5338"
+			"address": "0x179b6b1cb6755e31",			
+			"keys": "1394d1a74c0be41868a92155e43d7d70e52e592609cb28696fa408c7b06a5338"	
 		},
 		"testnet-account": {
 			"address": "2695ea898b04f0c0",
@@ -68,8 +68,7 @@
 	},
 	"deployments": {
 		"testnet": {
-			"testnet-account": [
-	
+			"testnet-account": [	
 				"ASMR",
 				"MarketPlace",
 				"Auction",
@@ -83,15 +82,10 @@
 		"emulator": {
 			"emulator-account": [				
 				"NonFungibleToken",			
-				"ASMR",
-				"MarketPlace", 
+				"ASMR",		
 				"Auction",
-				"Royalty",
-				"OpenEdition", 
-				"Drawing",
-				"Pack",
-				"PackSale",			
-				"FUSD"			
+				"Edition",
+				"FUSD"				
 			]
 		}
 	}

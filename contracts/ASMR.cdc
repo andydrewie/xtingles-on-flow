@@ -1,18 +1,16 @@
 import NonFungibleToken from "./NonFungibleToken.cdc"
 
 pub contract ASMR: NonFungibleToken {
-    // Named Paths
-    //
+    // Named Paths   
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath     
     pub let MinterStoragePath: StoragePath
 
     // Events
-    //
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
-    pub event Created(id: UInt64, metadata: Metadata)
+    pub event Created(id: UInt64)
 
     // totalSupply
     // The total number of NFTs that have been minted
@@ -23,43 +21,36 @@ pub contract ASMR: NonFungibleToken {
         pub let id: UInt64
         pub let metadata: Metadata
         pub let editionNumber: UInt64
-
         pub fun getEditionNumber(): UInt64
     }
 
     pub struct Metadata {
-        pub let url: String
-        pub let picturePreview: String
-        pub let animation: String
+        pub let link: String     
         pub let name: String
-        pub let artist: String
-        pub let artistAddress:Address
+        pub let author: String
         pub let description: String
-        pub (set) var edition: UInt64       
+        pub (set) var edition: UInt64  
+        pub let properties: AnyStruct     
 
-        init(url:String,
-            picturePreview:String,
-            animation: String,
+        init(
+            link:String,          
             name: String, 
-            artist: String,
-            artistAddress:Address, 
+            author: String,      
             description: String,        
-            edition: UInt64
-        ) {
-                self.url=url
-                self.animation=animation
-                self.picturePreview=picturePreview
-                self.name=name
-                self.artist=artist
-                self.artistAddress=artistAddress
-                self.description=description  
-                self.edition=edition              
+            edition: UInt64, 
+            properties:AnyStruct
+    )  {
+            self.link = link             
+            self.name = name
+            self.author = author            
+            self.description = description  
+            self.edition = edition 
+            self.properties = properties             
         }
     }
 
     // NFT
     // ASMR as an NFT
-    //
     pub resource NFT: NonFungibleToken.INFT, Public {
         // The token's ID
         pub let id: UInt64      
@@ -196,18 +187,16 @@ pub contract ASMR: NonFungibleToken {
             var newNFT <- create NFT(
                 initID: ASMR.totalSupply,
                 metadata: Metadata(
-                    url: metadata.url,
-                    picturePreview: metadata.picturePreview,
-                    animation: metadata.animation,
+                    link: metadata.link,          
                     name: metadata.name, 
-                    artist: metadata.artist,
-                    artistAddress: metadata.artistAddress, 
+                    author: metadata.name,      
                     description: metadata.description,        
-                    edition: metadata.edition                 
+                    edition: metadata.edition, 
+                    properties: metadata.properties           
                 ),
                 editionNumber: editionNumber
             )
-            emit Created(id: ASMR.totalSupply, metadata: newNFT.metadata)
+            emit Created(id: ASMR.totalSupply)
 
             ASMR.totalSupply = ASMR.totalSupply + UInt64(1)
 
@@ -248,18 +237,16 @@ pub contract ASMR: NonFungibleToken {
         var newNFT <- create NFT(
             initID: ASMR.totalSupply,
             metadata: Metadata(
-                url: metadata.url,
-                picturePreview: metadata.picturePreview,
-                animation: metadata.animation,
+                link: metadata.link,          
                 name: metadata.name, 
-                artist: metadata.artist,
-                artistAddress: metadata.artistAddress, 
+                author: metadata.name,      
                 description: metadata.description,        
-                edition: metadata.edition                     
+                edition: metadata.edition, 
+                properties: metadata.properties            
             ),
             editionNumber: editionNumber
         )
-        emit Created(id: ASMR.totalSupply, metadata: newNFT.metadata)
+        emit Created(id: ASMR.totalSupply)
         
         ASMR.totalSupply = ASMR.totalSupply + UInt64(1)
         return <- newNFT
@@ -275,7 +262,6 @@ pub contract ASMR: NonFungibleToken {
         self.account.save<@NonFungibleToken.Collection>(<- ASMR.createEmptyCollection(), to: ASMR.CollectionStoragePath)
         self.account.link<&{ASMR.CollectionPublic}>(ASMR.CollectionPublicPath, target: ASMR.CollectionStoragePath)
         
- 
         let minter <- create NFTMinter()         
         self.account.save(<-minter, to: self.MinterStoragePath)
         self.account.link<&ASMR.NFTMinter>(/private/ASMRMinter, target: self.MinterStoragePath)

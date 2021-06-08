@@ -1,14 +1,12 @@
 import ASMR from 0xf8d6e0586b0a20c7
 
 transaction(
-        url: String,
-        picturePreview: String,
-        animation: String,
+        link: String,          
         name: String, 
-        artist: String,
-        artistAddress: Address, 
+        author: String,      
         description: String,        
-        edition: UInt64) {
+        edition: UInt64   
+    ) {
     let receiverRef: &{ASMR.CollectionPublic}
     let minterRef: &ASMR.NFTMinter
     let metadata: ASMR.Metadata
@@ -24,14 +22,12 @@ transaction(
             ?? panic("could not borrow minter reference")
 
         self.metadata = ASMR.Metadata(
-            url: url,
-            picturePreview: picturePreview,
-            animation: animation,
-            name: name, 
-            artist: artist,
-            artistAddress: 0xf8d6e0586b0a20c7, 
-            description: description,        
-            edition: edition      
+            link: link,
+            name: name,           
+            author: author, 
+            description: description,     
+            edition: edition,
+            properties: {}
         )
     }
 

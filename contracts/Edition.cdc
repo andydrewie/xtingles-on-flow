@@ -1,20 +1,12 @@
 import FungibleToken from "./FungibleToken.cdc"
 
-pub contract Royalty {
+// Edition is the batch of items with the almost same metadata. This is copies of one item
+pub contract Edition {
 
-     // The total amount of editions that have been created
+    // The total amount of editions that have been created
     pub var totalEditions: UInt64
 
-    // Events
-    pub event CollectionCreated(owner: Address)
-    pub event Created(tokenID: UInt64, owner: Address, startPrice: UFix64, startTime: UFix64)
-    pub event Bid(tokenID: UInt64, bidderAddress: Address, bidPrice: UFix64)
-    pub event Settled(tokenID: UInt64, price: UFix64)
-    pub event Canceled(tokenID: UInt64)
-    pub event MarketplaceEarned(amount:UFix64, owner: Address)  
-    pub event TimeRemain(amount:UFix64, owner: Address) 
-    pub event Extend(auctionLengthFrom: UFix64, auctionLengthTo: UFix64) 
-
+    // Struct to display and handle commissions
     pub struct CommissionStructure {
         pub let firstSalePercent: UFix64
         pub let secondSalePercent: UFix64
@@ -31,7 +23,8 @@ pub contract Royalty {
         }
     }
 
-    pub struct RoyaltyStatus {
+    // Info about editions
+    pub struct EditionStatus {
         pub let royalty: { Address: CommissionStructure }  
         pub let editionId: UInt64  
         pub let maxEdition: UInt64      
@@ -47,8 +40,8 @@ pub contract Royalty {
         }
     }
 
-    // ResourceItem contains the Resources and metadata for a single auction
-    pub resource RoyaltyItem {
+    // Attributes one edition, where stores royalty and count of copies in editions
+    pub resource EditionItem {
         pub let editionId: UInt64
         pub var royalty: { Address: CommissionStructure }
         priv var maxEdition: UInt64  
@@ -57,30 +50,34 @@ pub contract Royalty {
             royalty: { Address: CommissionStructure },
             maxEdition: UInt64
         ) {
-            Royalty.totalEditions = Royalty.totalEditions + (1 as UInt64)
+            Edition.totalEditions = Edition.totalEditions + (1 as UInt64)
             self.royalty = royalty                    
-            self.editionId = Royalty.totalEditions 
+            self.editionId = Edition.totalEditions 
             self.maxEdition = maxEdition
         }
-        
-        pub fun getRoyalty() : RoyaltyStatus {
-            return RoyaltyStatus(
+
+        // Get status of edition        
+        pub fun getEdition(): EditionStatus {
+            return EditionStatus(
                 royalty: self.royalty,                      
                 editionId: self.editionId,
                 maxEdition: self.maxEdition
             )
         }
 
+        // Change commision
         pub fun changeCommission(      
            royalty: { Address: CommissionStructure }     
         ) {
             self.royalty = royalty         
         }
 
+        // Change count of copies. This is used for Open Edition, because the eventual amount of copies are unknown        
         pub fun changeMaxEdition (      
            maxEdition: UInt64     
         ) {
             pre {
+               // You can change this number only once after Open Edition would be completed
                self.maxEdition < UInt64(1) : "You could not change max edition" 
             }
 
@@ -88,40 +85,39 @@ pub contract Royalty {
         }
        
         destroy() {
-            log("destroy royalty")            
+            log("destroy edition item")            
         }
     }    
 
-    // AuctionPublic is a resource interface that restricts users to
-    // retreiving the auction price list and placing bids
-    pub resource interface RoyaltyPublic {
+    // EditionPublic is a resource interface that restricts users to
+    // retreiving the edition information
+    pub resource interface EditionPublic {
 
-        pub fun createRoyalty(
+        pub fun createEdition(
             royalty: { Address: CommissionStructure },
             maxEdition: UInt64     
         ): UInt64
 
-        pub fun getRoyalty(_ id: UInt64): RoyaltyStatus
+        pub fun getEdition(_ id: UInt64): EditionStatus
     }
 
-    //aucti RoyaltyCollection contains a dictionary ofaucti RoyaltyItems and provides
-    // methods for manipulating theaucti RoyaltyItems
-    pub resource RoyaltyCollection: RoyaltyPublic  {
+    //EditionCollection contains a dictionary EditionItems and provides
+    // methods for manipulating EditionItems
+    pub resource EditionCollection: EditionPublic  {
 
-        // Royalty Items
-        access(account) var royaltyItems: @{UInt64: RoyaltyItem} 
+        // Edition Items
+        access(account) var editionItems: @{UInt64: EditionItem} 
 
         init() {    
-            self.royaltyItems <- {}
+            self.editionItems <- {}
         }
 
         pub fun keys() : [UInt64] {
-            return self.royaltyItems.keys
+            return self.editionItems.keys
         }
 
-        // addTokenToauctionItems adds an NFT to the auction items and sets the meta data
-        // for the auction item
-        pub fun createRoyalty(
+        // add
+        pub fun createEdition(
             royalty: { Address: CommissionStructure },
             maxEdition: UInt64        
         ): UInt64 {
@@ -130,7 +126,7 @@ pub contract Royalty {
             
             }            
            
-            let item <- create RoyaltyItem(
+            let item <- create EditionItem(
                 royalty: royalty,
                 maxEdition: maxEdition                  
             )
@@ -138,52 +134,53 @@ pub contract Royalty {
             let id = item.editionId
 
             // update the auction items dictionary with the new resources
-            let oldItem <- self.royaltyItems[id] <- item
+            let oldItem <- self.editionItems[id] <- item
             
             destroy oldItem
 
             return id
         }
      
-        pub fun getRoyalty(_ id: UInt64): RoyaltyStatus {
+        pub fun getEdition(_ id: UInt64): EditionStatus {
             // Get the auction item resources
-            let itemRef = &self.royaltyItems[id] as &RoyaltyItem
-            return itemRef.getRoyalty()
+            let itemRef = &self.editionItems[id] as &EditionItem
+            return itemRef.getEdition()
         }
 
+        //Change commission
         pub fun changeCommission(
             id: UInt64,
             royalty: { Address: CommissionStructure }   
         ) {
-            let itemRef = &self.royaltyItems[id] as &RoyaltyItem
+            let itemRef = &self.editionItems[id] as &EditionItem
             itemRef.changeCommission(
                 royalty: royalty            
             )
         }
 
+        // Change count of copies. This is used for Open Edition, because the eventual amount of copies are unknown 
         pub fun changeMaxEdition(
             id: UInt64,
             maxEdition: UInt64
         ) {
-            let itemRef = &self.royaltyItems[id] as &RoyaltyItem
+            let itemRef = &self.editionItems[id] as &EditionItem
             itemRef.changeMaxEdition(
                 maxEdition: maxEdition        
             )
         }
     
         destroy() {
-            log("destroy royalty collection")
+            log("destroy edition collection")
             // destroy the empty resources
-            destroy self.royaltyItems
+            destroy self.editionItems
         }
-    }
-   
+    }   
 
-    // createRoyaltyCollection returns a new createRoyaltyCollection  resource to the caller
-    pub fun createRoyaltyCollection(): @RoyaltyCollection {
-        let royaltyCollection <- create RoyaltyCollection()
+    // createEditionCollection returns a new createEditionCollection resource to the caller
+    pub fun createEditionCollection(): @EditionCollection {
+        let editionCollection <- create EditionCollection()
 
-        return <- royaltyCollection
+        return <- editionCollection
     }
 
     init() {

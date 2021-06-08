@@ -46,5 +46,6 @@ transaction(
 
     execute {    
         self.auctionCollectionRef.placeBid(id: id, bidTokens:  <- self.temporaryVault, vaultCap: self.vaultCap, collectionCap: self.collectionCap)       
+        
     }
 }

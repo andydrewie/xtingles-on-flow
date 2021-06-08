@@ -2,7 +2,7 @@ import FungibleToken from "./FungibleToken.cdc"
 import FUSD from "./FUSD.cdc"
 import ASMR from "./ASMR.cdc"
 import NonFungibleToken from "./NonFungibleToken.cdc"
-import Royalty from "./Royalty.cdc"
+import Edition from "./Edition.cdc"
 
 pub contract Auction {
 
@@ -68,14 +68,13 @@ pub contract Auction {
     pub var totalAuctions: UInt64
 
     // Events
-    pub event CollectionCreated(owner: Address)
-    pub event Created(tokenID: UInt64, owner: Address, startPrice: UFix64, startTime: UFix64)
-    pub event Bid(tokenID: UInt64, bidderAddress: Address, bidPrice: UFix64)
-    pub event Settled(tokenID: UInt64, price: UFix64)
-    pub event Canceled(tokenID: UInt64)
-    pub event MarketplaceEarned(amount:UFix64, owner: Address)  
-    pub event TimeRemain(amount:UFix64, owner: Address) 
-    pub event Extend(auctionLengthFrom: UFix64, auctionLengthTo: UFix64) 
+    pub event CollectionCreated()
+    pub event Created(auctionID: UInt64, owner: Address, startPrice: UFix64, startTime: UFix64)
+    pub event Bid(auctionID: UInt64, bidderAddress: Address, bidPrice: UFix64)
+    pub event Settled(auctionID: UInt64, price: UFix64)
+    pub event Canceled(auctionID: UInt64)
+    pub event Earned(auctionID: UInt64, amount: UFix64, owner: Address)  
+    pub event Extend(auctionID: UInt64, auctionLengthFrom: UFix64, auctionLengthTo: UFix64) 
 
     // AuctionItem contains the Resources and metadata for a single auction
     pub resource AuctionItem {
@@ -84,8 +83,6 @@ pub contract Auction {
         priv var numberOfBids: UInt64
 
         //The Item that is sold at this auction
-        //It would be really easy to extend this auction with using a NFTCollection here to be able to auction of several NFTs as a single
-        //Lets say if you want to auction of a pack of TopShot moments
         priv var NFT: @ASMR.NFT?
 
         //This is the escrow vault that holds the tokens for the current largest bid
@@ -97,7 +94,7 @@ pub contract Auction {
         //The minimum increment for a bid. This is an english auction style system where bids increase
         priv let minimumBidIncrement: UFix64
 
-        //the time the acution should start at
+        //the time the auction should start at
         priv var auctionStartTime: UFix64
 
         //The length in seconds for this auction
@@ -115,9 +112,10 @@ pub contract Auction {
         //Right now the dropitem is not moved from the collection when it ends, it is just marked here that it has ended 
         priv var auctionCompleted: Bool
 
-        // Auction State
+        //Start price
         access(account) var startPrice: UFix64
 
+        //Current price
         priv var currentPrice: UFix64
 
         //the capability that points to the resource where you want the NFT transfered to if you win this bid. 
@@ -132,7 +130,7 @@ pub contract Auction {
         //the capability to pay the platform when the auction is done
         priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>
 
-        //This action was cncelled
+        //This action was cancelled
         priv var auctionCancelled: Bool
 
         priv let contractsAccountAddress: Address
@@ -184,7 +182,6 @@ pub contract Auction {
                 return 
             } 
         }
-
         
         // sendBidTokens sends the bid tokens to the Vault Receiver belonging to the provided Capability
         access(contract) fun sendBidTokens(_ capability: Capability<&{FungibleToken.Receiver}>) {
@@ -218,7 +215,6 @@ pub contract Auction {
             return self.NFT?.editionNumber
         }
 
-        //This method should probably use preconditions more 
         pub fun settleAuction()  {
 
             pre {
@@ -237,13 +233,13 @@ pub contract Auction {
 
             let contractsAccount = getAccount(self.contractsAccountAddress) 
 
-            let royaltyRef = contractsAccount.getCapability<&{Royalty.RoyaltyPublic}>(/public/royaltyCollection).borrow() 
+            let editionRef = contractsAccount.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow() 
                 ?? panic("Could not borrow royalty reference")     
 
-            let royaltyStatus = royaltyRef.getRoyalty(editionNumber)  
+            let editionStatus = editionRef.getEdition(editionNumber)  
 
-            for key in royaltyStatus.royalty.keys {
-                let commission = self.currentPrice * royaltyStatus.royalty[key]!.firstSalePercent * 0.01
+            for key in editionStatus.royalty.keys {
+                let commission = self.currentPrice * editionStatus.royalty[key]!.firstSalePercent * 0.01
 
                 let account = getAccount(key) 
 
@@ -251,14 +247,22 @@ pub contract Auction {
 
                 vaultCap.deposit(from: <- self.bidVault.withdraw(amount: commission))
 
-                emit MarketplaceEarned(amount: commission, owner: vaultCap.owner!.address)
+                emit Earned(auctionID: self.auctionID, amount: commission, owner: vaultCap.owner!.address)
             }
+
+            let platformCap = self.platformVaultCap.borrow() ?? panic("Could not borrow platform vault reference")    
+
+            let balanceBidVault = self.bidVault.balance   
+            
+            platformCap.deposit(from: <- self.bidVault.withdraw(amount: self.bidVault.balance))
+
+            emit Earned(auctionID: self.auctionID, amount: balanceBidVault, owner: platformCap.owner!.address)
 
             self.sendNFT(self.recipientCollectionCap!)
          
             self.auctionCompleted = true
             
-            emit Settled(tokenID: self.auctionID, price: self.currentPrice)
+            emit Settled(auctionID: self.auctionID, price: self.currentPrice)
         }
 
         pub fun returnAuctionItemToOwner() {
@@ -292,19 +296,23 @@ pub contract Auction {
             if self.currentPrice != 0.0 {
                 return self.currentPrice + self.currentPrice * self.minimumBidIncrement * 0.01
             }
-            //else stASMR price
+
+            //else start ASMR price
             return self.startPrice
         }
 
         pub fun extendAuction() {
             if(
                 //Auction time left is less than remainLengthToExtend
+
                 self.timeRemaining() < Fix64(self.remainLengthToExtend) 
+
                 // Auction length doesn't exceed maxAuctionLength after extend
+
                 && self.auctionLength <= self.maxAuctionLength - self.extendedLength
             ) {
                 self.auctionLength = self.auctionLength + self.extendedLength
-                emit Extend(auctionLengthFrom: self.auctionLength - self.extendedLength, auctionLengthTo: self.auctionLength)
+                emit Extend(auctionID: self.auctionID, auctionLengthFrom: self.auctionLength - self.extendedLength, auctionLengthTo: self.auctionLength)
             }            
         }
 
@@ -330,10 +338,11 @@ pub contract Auction {
                 self.NFT != nil: "NFT in auction does not exist"
                 self.auctionStartTime < getCurrentBlock().timestamp : "The auction has not started yet"
                 !self.auctionCancelled : "Auction was cancelled"
+                !self.isAuctionExpired() : "Time expired"
             }
 
-            let bidderAddress=vaultCap.borrow()!.owner!.address
-            let collectionAddress=collectionCap.borrow()!.owner!.address
+            let bidderAddress = vaultCap.borrow()!.owner!.address
+            let collectionAddress = collectionCap.borrow()!.owner!.address
 
             if bidderAddress != collectionAddress {
               panic("you cannot make a bid and send the ASMR to somebody elses collection")
@@ -367,7 +376,7 @@ pub contract Auction {
             // Extend auction according to max lenght, time left and extenede length
             self.extendAuction() 
 
-            emit Bid(tokenID: self.auctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice)
+            emit Bid(auctionID: self.auctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice)
         }
 
         pub fun getAuctionStatus() : AuctionStatus {
@@ -438,7 +447,7 @@ pub contract Auction {
             startPrice: UFix64, 
             platformVaultCap: Capability<&{FungibleToken.Receiver}>,
             platformCollectionCap: Capability<&{ASMR.CollectionPublic}>
-        ) 
+        ): UInt64
 
         pub fun getAuctionStatuses(): {UInt64: AuctionStatus}
         pub fun getAuctionStatus(_ id:UInt64): AuctionStatus
@@ -458,14 +467,9 @@ pub contract Auction {
     pub resource AuctionCollection: AuctionPublic {
 
         // Auction Items
-        access(account) var auctionItems: @{UInt64: AuctionItem}             
-     
-        access(contract) let marketplaceVault: Capability<&{FungibleToken.Receiver}>
+        access(account) var auctionItems: @{UInt64: AuctionItem}       
 
-        init(
-            marketplaceVault: Capability<&{FungibleToken.Receiver}>            
-        ) {
-            self.marketplaceVault = marketplaceVault
+        init() { 
             self.auctionItems <- {}
         }
 
@@ -485,7 +489,7 @@ pub contract Auction {
             startPrice: UFix64,           
             platformVaultCap: Capability<&{FungibleToken.Receiver}>,
             platformCollectionCap: Capability<&{ASMR.CollectionPublic}>
-        ) {
+        ): UInt64 {
 
             pre {              
                 auctionLength > 0.00 : "Auction lenght should be more then 0.00"
@@ -494,16 +498,16 @@ pub contract Auction {
             }
             
             // create a new auction items resource container
-            let item <- Auction.createStandaloneAuction(             
+            let item <- create AuctionItem(         
                 minimumBidIncrement: minimumBidIncrement,
-                auctionLength: auctionLength,                
-                maxAuctionLength: maxAuctionLength,
-                extendedLength: extendedLength, 
-                remainLengthToExtend:  remainLengthToExtend,
                 auctionStartTime: auctionStartTime,
-                startPrice: startPrice,             
+                startPrice: startPrice,
+                auctionLength: auctionLength,  
+                maxAuctionLength: maxAuctionLength,  
+                extendedLength: extendedLength,    
+                remainLengthToExtend:  remainLengthToExtend,                
                 platformVaultCap: platformVaultCap,
-                platformCollectionCap: platformCollectionCap 
+                platformCollectionCap: platformCollectionCap           
             )
 
             let id = item.auctionID
@@ -515,7 +519,9 @@ pub contract Auction {
 
             let owner = platformVaultCap.borrow()!.owner!.address
 
-            emit Created(tokenID: id, owner: owner, startPrice: startPrice, startTime: auctionStartTime)
+            emit Created(auctionID: id, owner: owner, startPrice: startPrice, startTime: auctionStartTime)
+
+            return id
         }
 
         // getAuctionPrices returns a dictionary of available NFT IDs with their current price
@@ -571,7 +577,7 @@ pub contract Auction {
             let itemRef = &self.auctionItems[id] as &AuctionItem
             itemRef.returnAuctionItemToOwner()
             itemRef.cancelAuction()
-            emit Canceled(tokenID: id)
+            emit Canceled(auctionID: id)
         }
 
         // placeBid sends the bidder's tokens to the bid vault and updates the
@@ -608,39 +614,10 @@ pub contract Auction {
         }
     }
 
-    pub fun createStandaloneAuction(         
-            minimumBidIncrement: UFix64, 
-            auctionLength: UFix64,
-            maxAuctionLength: UFix64,
-            extendedLength: UFix64, 
-            remainLengthToExtend: UFix64,
-            auctionStartTime: UFix64,
-            startPrice: UFix64,          
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>,          
-            platformCollectionCap: Capability<&{ASMR.CollectionPublic}>      
-        ) : @AuctionItem {
-        
-        // create a new auction items resource container
-        return <- create AuctionItem(         
-            minimumBidIncrement: minimumBidIncrement,
-            auctionStartTime: auctionStartTime,
-            startPrice: startPrice,
-            auctionLength: auctionLength,  
-            maxAuctionLength: maxAuctionLength,  
-            extendedLength: extendedLength,    
-            remainLengthToExtend:  remainLengthToExtend,                
-            platformVaultCap: platformVaultCap,
-            platformCollectionCap: platformCollectionCap           
-        )
-    }
-
     // createAuctionCollection returns a new AuctionCollection resource to the caller
-    pub fun createAuctionCollection(marketplaceVault: Capability<&{FungibleToken.Receiver}>): @AuctionCollection {
-        let auctionCollection <- create AuctionCollection(
-            marketplaceVault: marketplaceVault        
-        )
-
-        emit CollectionCreated(owner: marketplaceVault.borrow()!.owner!.address)
+    pub fun createAuctionCollection(): @AuctionCollection {
+        let auctionCollection <- create AuctionCollection()
+    
         return <- auctionCollection
     }
 
