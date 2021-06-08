@@ -14,9 +14,15 @@
    flow scripts execute ./scripts/CheckAuctionStatus.cdc --arg Address:"0xf8d6e0586b0a20c7" --arg UInt64:1
 
 7. bid:
+  flow transactions send --code ./transactions/Bid.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"},
+  {"type": "UInt64","value": "1"}, {"type": "UFix64","value": "1000.0"}]' --signer second-account
    
 
 8. transaction to crate new blocks: 
    flow transactions send --code ./transactions/Tick.cdc --signer emulator-account
 
 
+9. settle:
+  flow transactions send --code ./transactions/Settle.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer emulator-account
+
+10. check NFTs on account: flow scripts execute ./scripts/CheckASMR.cdc --arg Address:"0xf8d6e0586b0a20c7"
