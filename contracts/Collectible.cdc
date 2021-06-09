@@ -1,6 +1,6 @@
 import NonFungibleToken from "./NonFungibleToken.cdc"
 
-pub contract ASMR: NonFungibleToken {
+pub contract Collectible: NonFungibleToken {
     // Named Paths   
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath     
@@ -50,7 +50,7 @@ pub contract ASMR: NonFungibleToken {
     }
 
     // NFT
-    // ASMR as an NFT
+    // Collectible as an NFT
     pub resource NFT: NonFungibleToken.INFT, Public {
         // The token's ID
         pub let id: UInt64      
@@ -78,7 +78,7 @@ pub contract ASMR: NonFungibleToken {
         pub fun deposit(token: @NonFungibleToken.NFT)
         pub fun getIDs(): [UInt64]
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT  
-        pub fun borrowASMR(id: UInt64): &ASMR.NFT? {
+        pub fun borrowCollectible(id: UInt64): &Collectible.NFT? {
             // If the result isn't nil, the id of the returned reference
             // should be the same as the argument to the function
             post {
@@ -114,7 +114,7 @@ pub contract ASMR: NonFungibleToken {
         // and adds the ID to the id array
         //
         pub fun deposit(token: @NonFungibleToken.NFT) {
-            let token <- token as! @ASMR.NFT
+            let token <- token as! @Collectible.NFT
 
             let id: UInt64 = token.id
 
@@ -133,9 +133,9 @@ pub contract ASMR: NonFungibleToken {
             return self.ownedNFTs.keys
         }
 
-        pub fun getNFT(id: UInt64): &ASMR.NFT {
+        pub fun getNFT(id: UInt64): &Collectible.NFT {
             let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
-            return ref as! &ASMR.NFT     
+            return ref as! &Collectible.NFT     
         }
   
         pub fun getEditionNumber(id: UInt64): UInt64 {
@@ -152,10 +152,10 @@ pub contract ASMR: NonFungibleToken {
             return &self.ownedNFTs[id] as &NonFungibleToken.NFT
         }
 
-        pub fun borrowASMR(id: UInt64): &ASMR.NFT? {
+        pub fun borrowCollectible(id: UInt64): &Collectible.NFT? {
             if self.ownedNFTs[id] != nil {
                 let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
-                return ref as! &ASMR.NFT
+                return ref as! &Collectible.NFT
             } else {
                 return nil
             }
@@ -185,7 +185,7 @@ pub contract ASMR: NonFungibleToken {
   
         pub fun mintNFT(metadata: Metadata, editionNumber: UInt64): @NFT {
             var newNFT <- create NFT(
-                initID: ASMR.totalSupply,
+                initID: Collectible.totalSupply,
                 metadata: Metadata(
                     link: metadata.link,          
                     name: metadata.name, 
@@ -196,46 +196,46 @@ pub contract ASMR: NonFungibleToken {
                 ),
                 editionNumber: editionNumber
             )
-            emit Created(id: ASMR.totalSupply)
+            emit Created(id: Collectible.totalSupply)
 
-            ASMR.totalSupply = ASMR.totalSupply + UInt64(1)
+            Collectible.totalSupply = Collectible.totalSupply + UInt64(1)
 
             return <-newNFT
         }
     }
 
     // structure for display NFTs data
-    pub struct ASMRData {
-        pub let metadata: ASMR.Metadata
+    pub struct CollectibleData {
+        pub let metadata: Collectible.Metadata
         pub let id: UInt64
-        init(metadata: ASMR.Metadata, id: UInt64) {
+        init(metadata: Collectible.Metadata, id: UInt64) {
             self.metadata= metadata
             self.id=id
         }
     }
 
     // get info for NFT including metadata
-    pub fun getASMR(address:Address) : [ASMRData] {
+    pub fun getCollectible(address:Address) : [CollectibleData] {
 
-        var asmrData: [ASMRData] = []
+        var collectibleData: [CollectibleData] = []
         let account = getAccount(address)
 
-        if let asmrCollection= account.getCapability(self.CollectionPublicPath).borrow<&{ASMR.CollectionPublic}>()  {
-            for id in asmrCollection.getIDs() {
-                var asmr = asmrCollection.borrowASMR(id: id) 
-                asmrData.append(ASMRData(
-                    metadata: asmr!.metadata,
+        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&{Collectible.CollectionPublic}>()  {
+            for id in CollectibleCollection.getIDs() {
+                var collectible = CollectibleCollection.borrowCollectible(id: id) 
+                collectibleData.append(CollectibleData(
+                    metadata: collectible!.metadata,
                     id: id
                 ))
             }
         }
-        return asmrData
+        return collectibleData
     } 
 
     // mint NFT from other contract (auction or fix price)
-    access(account) fun mint(metadata: Metadata, editionNumber: UInt64) : @ASMR.NFT {
+    access(account) fun mint(metadata: Metadata, editionNumber: UInt64) : @Collectible.NFT {
         var newNFT <- create NFT(
-            initID: ASMR.totalSupply,
+            initID: Collectible.totalSupply,
             metadata: Metadata(
                 link: metadata.link,          
                 name: metadata.name, 
@@ -246,25 +246,25 @@ pub contract ASMR: NonFungibleToken {
             ),
             editionNumber: editionNumber
         )
-        emit Created(id: ASMR.totalSupply)
+        emit Created(id: Collectible.totalSupply)
         
-        ASMR.totalSupply = ASMR.totalSupply + UInt64(1)
+        Collectible.totalSupply = Collectible.totalSupply + UInt64(1)
         return <- newNFT
     }
 
     init() {
         // Initialize the total supply
         self.totalSupply = 0
-        self.CollectionPublicPath = /public/ASMRCollection
-        self.CollectionStoragePath = /storage/ASRMCollection
-        self.MinterStoragePath = /storage/ASMRMinter
+        self.CollectionPublicPath = /public/CollectibleCollection
+        self.CollectionStoragePath = /storage/CollectibleCollection
+        self.MinterStoragePath = /storage/CollectibleMinter
 
-        self.account.save<@NonFungibleToken.Collection>(<- ASMR.createEmptyCollection(), to: ASMR.CollectionStoragePath)
-        self.account.link<&{ASMR.CollectionPublic}>(ASMR.CollectionPublicPath, target: ASMR.CollectionStoragePath)
+        self.account.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
+        self.account.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         
         let minter <- create NFTMinter()         
         self.account.save(<-minter, to: self.MinterStoragePath)
-        self.account.link<&ASMR.NFTMinter>(/private/ASMRMinter, target: self.MinterStoragePath)
+        self.account.link<&Collectible.NFTMinter>(/private/CollectibleMinter, target: self.MinterStoragePath)
 
         emit ContractInitialized()
 	}

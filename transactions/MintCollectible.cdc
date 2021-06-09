@@ -1,4 +1,4 @@
-import ASMR from 0xf8d6e0586b0a20c7
+import Collectible from 0xf8d6e0586b0a20c7
 
 transaction(
         link: String,          
@@ -7,21 +7,22 @@ transaction(
         description: String,        
         edition: UInt64   
     ) {
-    let receiverRef: &{ASMR.CollectionPublic}
-    let minterRef: &ASMR.NFTMinter
-    let metadata: ASMR.Metadata
+        
+    let receiverRef: &{Collectible.CollectionPublic}
+    let minterRef: &Collectible.NFTMinter
+    let metadata: Collectible.Metadata
 
     prepare(
         acct: AuthAccount     
     ) {
-        self.receiverRef = acct.getCapability<&{ASMR.CollectionPublic}>(/public/ASMRCollection)
+        self.receiverRef = acct.getCapability<&{Collectible.CollectionPublic}>(/public/CollectibleCollection)
             .borrow()
             ?? panic("Could not borrow receiver reference")        
         
-        self.minterRef = acct.borrow<&ASMR.NFTMinter>(from: /storage/ASMRMinter)
+        self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: /storage/CollectibleMinter)
             ?? panic("could not borrow minter reference")
 
-        self.metadata = ASMR.Metadata(
+        self.metadata = Collectible.Metadata(
             link: link,
             name: name,           
             author: author, 

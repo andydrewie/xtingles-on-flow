@@ -1,6 +1,6 @@
-import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken from 0xf8d6e0586b0a20c7
-import Auction, ASMR, Edition from 0xf8d6e0586b0a20c7
+import FungibleToken from 0x9a0766d93b6608b7
+import NonFungibleToken from 0x631e88ae7f1d7c20
+import Auction, Collectible, Edition from 0x2695ea898b04f0c0
 
 transaction(      
         minimumBidIncrement: UFix64, 
@@ -19,10 +19,11 @@ transaction(
 
     let auctionCollectionRef: &Auction.AuctionCollection
     let platformCap: Capability<&{FungibleToken.Receiver}>
-    let platformCollection: Capability<&{ASMR.CollectionPublic}>
-    let minterRef: &ASMR.NFTMinter
+    let platformCollection: Capability<&{Collectible.CollectionPublic}>
+    let minterRef: &Collectible.NFTMinter
     let editionCollectionRef: &Edition.EditionCollection
-    let metadata: ASMR.Metadata
+    let editionCap: Capability<&{Edition.EditionPublic}>
+    let metadata: Collectible.Metadata
   
     prepare(acct: AuthAccount) {
 
@@ -42,12 +43,12 @@ transaction(
 
         self.platformCap = platform.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
 
-        self.platformCollection = platform.getCapability<&{ASMR.CollectionPublic}>(ASMR.CollectionPublicPath)
+        self.platformCollection = platform.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
-        self.minterRef = acct.borrow<&ASMR.NFTMinter>(from: /storage/ASMRMinter)
+        self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: /storage/CollectibleMinter)
             ?? panic("could not borrow minter reference")
 
-        self.metadata = ASMR.Metadata(
+        self.metadata = Collectible.Metadata(
             link: link,          
             name: name, 
             author: author,      
@@ -62,8 +63,10 @@ transaction(
             let edition <- Edition.createEditionCollection()
             acct.save( <- edition, to: /storage/editionCollection)         
             acct.link<&{Edition.EditionPublic}>(/public/editionCollection, target: /storage/editionCollection)
-            log("Royalty Collection Created for account")
+            log("Edition Collection Created for account")
         }  
+
+        self.editionCap = acct.getCapability<&{Edition.EditionPublic}>(/public/editionCollection)
 
         self.editionCollectionRef = acct.borrow<&Edition.EditionCollection>(from: /storage/editionCollection)
             ?? panic("could not borrow edition reference reference")     
@@ -80,7 +83,8 @@ transaction(
             auctionStartTime: auctionStartTime,
             startPrice: startPrice,
             platformVaultCap: self.platformCap,
-            platformCollectionCap: self.platformCollection          
+            platformCollectionCap: self.platformCollection,
+            editionCap: self.editionCap   
         )
 
         let editionId = self.editionCollectionRef.createEdition(

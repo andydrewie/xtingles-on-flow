@@ -5,7 +5,7 @@ pub fun main(address:Address, id: UInt64): Fix64 {
 
     let acctAuctionRef = acct.getCapability<&AnyResource{Auction.AuctionPublic}>(/public/auctionCollection)
         .borrow()
-        ?? panic("Could not borrow nft sale reference")
+        ?? panic("Could not borrow auction public reference")
 
     return acctAuctionRef.getTimeLeft(id)
 }

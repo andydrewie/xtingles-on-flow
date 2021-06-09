@@ -26,8 +26,13 @@
 				"emulator": "0x0ae53cb6e3f42a79"
 			}
 		},
-		"FUSD": "./contracts/FUSD.cdc",
-		"ASMR": "./contracts/ASMR.cdc",
+		"FUSD": {
+			"source": "./contracts/FUSD.cdc",
+			"aliases": {
+				"testnet": "0xe223d8a629e49c68"
+			}
+		},
+		"Collectible": "./contracts/Collectible.cdc",
 		"MarketPlace": "./contracts/MarketPlace.cdc",
 		"Auction": "./contracts/Auction.cdc",
 		"Edition": "./contracts/Edition.cdc",
@@ -61,28 +66,27 @@
 			"address": "2695ea898b04f0c0",
 			"keys": "515affb23ac04fb9a149af15ed3b1cad47ab4c7f41db99c3044ff16effab29b3"
 		},
-		"testnet-frotnend-account": {
-			"address": "2695ea898b04f0c0",
-			"keys": "515affb23ac04fb9a149af15ed3b1cad47ab4c7f41db99c3044ff16effab29b3"
+		"testnet-second-account": {
+			"address": "616e69383b392700",
+			"keys": "3dee6904f1bdd6e7159029f224e249e2d555efa3ce1c6a272acab20d31c3faff"
+		},
+		"testnet-third-account": {
+			"address": "96c8ac9a55867f24",
+			"keys": "3b0248d3bf3b06b339bdd3d534d3ea8429c3deb3e9a8044856d8a6d9f07c5e21"
 		}
 	},
 	"deployments": {
 		"testnet": {
 			"testnet-account": [	
-				"ASMR",
-				"MarketPlace",
+				"Collectible",		
 				"Auction",
-				"Royalty",
-				"OpenEdition", 
-				"Drawing",
-				"Pack",
-				"PackSale"					
+				"Edition"					
 			]
 		},
 		"emulator": {
 			"emulator-account": [				
 				"NonFungibleToken",			
-				"ASMR",		
+				"Collectible",		
 				"Auction",
 				"Edition",
 				"FUSD"				
