@@ -89,7 +89,8 @@
 				"Collectible",		
 				"Auction",
 				"Edition",
-				"FUSD"				
+				"FUSD",
+				"MarketPlace"				
 			]
 		}
 	}

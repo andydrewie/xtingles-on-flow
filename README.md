@@ -47,3 +47,23 @@ three accounts: testnet-account, testnet-second-account, testnet-third-account
 5. check NFTs on account: flow scripts execute ./scripts/testnet/CheckCollectible.cdc --arg Address:"0x2695ea898b04f0c0" --network=testnet
 
 6. flow scripts execute ./scripts/testnet/FUSDBalance.cdc --arg Address:"0x616e69383b392700" --network=testnet
+
+
+flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x616e69383b392700"}, {"type": "UInt64","value": "6"}, {"type": "UFix64","value": "2.00"}]' --signer testnet-second-account --network=testnet
+
+
+flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "UInt64","value": "6"}, {"type": "UFix64","value": "2.00"}]' --signer testnet-second-account --network=testnet
+
+
+flow transactions send --code ./transactions/emulator/MintCollectible.cdc --args-json '[{"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "2"}]' --signer emulator-account
+
+
+flow transactions send --code ./transactions/emulator/SaleNFT.cdc --args-json '[{"type": "UInt64","value": "1"}, {"type": "UFix64","value": "33.0"}]' --signer emulator-account
+
+flow transactions send --code ./transactions/emulator/CreateEdition.cdc --args-json '[{"type": "UFix64","value": "10.00"}, {"type": "UFix64","value": "20.00"},  {"type": "UFix64","value": "10.00"},  {"type": "UFix64","value": "15.00"}, {"type": "Address","value": "0x179b6b1cb6755e31"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}]' --signer emulator-account
+
+ flow transactions send --code ./transactions/emulator/CreateEdition.cdc --signer emulator-account
+
+  flow transactions send --code ./transactions/trancations/BuyNFTFromSale.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UInt64","value": "1"}]' --signer second-account
+
+  flow transactions send --code ./transactions/emulator/BuyNFTFromSale.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UInt64","value": "1"}]' --signer third-account

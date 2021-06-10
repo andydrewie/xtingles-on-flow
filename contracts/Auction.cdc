@@ -234,33 +234,33 @@ pub contract Auction {
 
             let editionNumber = self.NFT?.editionNumber ?? panic("Could not find edition number") 
 
-            let editionRef = self.editionCap.borrow() ?? panic("Could not borrow royalty reference")     
+            let editionRef = self.editionCap.borrow() ?? panic("Could not borrow edition reference")     
 
             let editionStatus = editionRef.getEdition(editionNumber)  
 
             for key in editionStatus.royalty.keys {
-                let commission = self.currentPrice * editionStatus.royalty[key]!.firstSalePercent * 0.01
+                if (editionStatus.royalty[key]!.firstSalePercent > 0.0) {
+                    let commission = self.currentPrice * editionStatus.royalty[key]!.firstSalePercent * 0.01
 
-                let account = getAccount(key) 
+                    let account = getAccount(key) 
 
-                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)    
+                    let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)    
 
-                if (vaultCap.check()) {
-                    let vault = vaultCap.borrow()!
-                    vault.deposit(from: <- self.bidVault.withdraw(amount: commission))
-                    emit Earned(auctionID: self.auctionID, amount: commission, owner: key)
-                } else {
-                    emit FailEarned(auctionID: self.auctionID, amount: commission, owner: key)
+                    if (vaultCap.check()) {
+                        let vault = vaultCap.borrow()!
+                        vault.deposit(from: <- self.bidVault.withdraw(amount: commission))
+                        emit Earned(auctionID: self.auctionID, amount: commission, owner: key)
+                    } else {
+                        emit FailEarned(auctionID: self.auctionID, amount: commission, owner: key)
+                    }            
                 }                
             }
 
-            let platformCap = self.platformVaultCap.borrow() ?? panic("Could not borrow platform vault reference")    
+            if ( self.bidVault.balance > 0.0) {
 
-            let balanceBidVault = self.bidVault.balance   
-            
-            platformCap.deposit(from: <- self.bidVault.withdraw(amount: self.bidVault.balance))
+            }
 
-            emit Earned(auctionID: self.auctionID, amount: balanceBidVault, owner: platformCap.owner!.address)
+          
 
             self.sendNFT(self.recipientCollectionCap!)
          
@@ -550,7 +550,7 @@ pub contract Auction {
         pub fun getAuctionStatus(_ id:UInt64): AuctionStatus {
             pre {
                 self.auctionItems[id] != nil:
-                    "NFT doesn't exist"
+                    "Auction doesn't exist"
             }
 
             // Get the auction item resources

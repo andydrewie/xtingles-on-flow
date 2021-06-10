@@ -1,12 +1,11 @@
-//emulator
-import Royalty from 0xf8d6e0586b0a20c7
+import Edition from 0x2695ea898b04f0c0
 import FungibleToken from 0xee82856bf20e2aa6
 
 transaction(id: UInt64) {
-    let client: &Royalty.RoyaltyCollection
+    let client: &Edition.EditionCollection
     
     prepare(account: AuthAccount) {
-        self.client = account.borrow<&Royalty.RoyaltyCollection>(from: /storage/royaltyCollection) ?? panic("could not load admin")
+        self.client = account.borrow<&Edition.EditionCollection>(from: /storage/royaltyCollection) ?? panic("could not get edition reference")
     }  
 
     execute {      
