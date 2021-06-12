@@ -4,6 +4,8 @@ flow accounts create --key 4267a5ef429dbc569172013021563b73466121394448f3360d146
 flow transactions send --code ./transactions/emulator/SetupFUSD.cdc --signer emulator-account
 flow transactions send --code ./transactions/emulator/SetupFUSD.cdc --signer second-account
 flow transactions send --code ./transactions/emulator/SetupFUSD.cdc --signer third-account
+flow transactions send --code ./transactions/emulator/SetupNFTStorage.cdc --signer second-account
+flow transactions send --code ./transactions/emulator/SetupNFTStorage.cdc --signer third-account
 flow transactions send --code ./transactions/emulator/MintFUSD.cdc --args-json '[{"type": "UFix64","value": "5000.00"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}]' --signer emulator-account
 flow transactions send --code ./transactions/emulator/MintFUSD.cdc --args-json '[{"type": "UFix64","value": "1000.00"}, {"type": "Address","value": "0x01cf0e2f2f715450"}]' --signer emulator-account
 flow transactions send --code ./transactions/emulator/MintFUSD.cdc --args-json '[{"type": "UFix64","value": "500.00"}, {"type": "Address","value": "0x179b6b1cb6755e31"}]' --signer emulator-account

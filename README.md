@@ -8,7 +8,7 @@ A. emulator example
   flow scripts execute ./scripts/emulator/FUSDBalance.cdc --arg Address:"0x01cf0e2f2f715450"
   flow scripts execute ./scripts/emulator/FUSDBalance.cdc --arg Address:"0x179b6b1cb6755e31"
 5. create auction transaction:
-  flow transactions send --code ./transactions/emulator/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1623244136.00"},{"type": "UFix64","value": "1000.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer emulator-account
+  flow transactions send --code ./transactions/emulator/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1623440139.00"},{"type": "UFix64","value": "1000.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer emulator-account
 
   Need to replace time to actual (something similar). easy to use fro this purpose https://www.unixtimestamp.com/.
 
@@ -67,3 +67,6 @@ flow transactions send --code ./transactions/emulator/CreateEdition.cdc --args-j
   flow transactions send --code ./transactions/trancations/BuyNFTFromSale.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UInt64","value": "1"}]' --signer second-account
 
   flow transactions send --code ./transactions/emulator/BuyNFTFromSale.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UInt64","value": "1"}]' --signer third-account
+
+
+  flow transactions send --code ./transactions/emulator/CancelAuction.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UInt64","value": "1"}]' --signer emulator-account

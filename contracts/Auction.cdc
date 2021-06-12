@@ -22,8 +22,7 @@ pub contract Auction {
         pub let completed: Bool
         pub let expired: Bool
         pub let cancelled: Bool
-        pub let currentLenght: UFix64
-        pub let maxLenght: UFix64
+        pub let currentLenght: UFix64     
      
         init(
             id:UInt64, 
@@ -41,8 +40,7 @@ pub contract Auction {
             completed: Bool,
             expired:Bool, 
             cancelled: Bool,
-            currentLenght: UFix64,
-            maxLenght: UFix64
+            currentLenght: UFix64       
         ) {
             self.id = id
             self.price = currentPrice
@@ -59,8 +57,7 @@ pub contract Auction {
             self.completed = completed
             self.expired = expired
             self.cancelled = cancelled
-            self.currentLenght = currentLenght
-            self.maxLenght = maxLenght
+            self.currentLenght = currentLenght  
         }
     }
 
@@ -76,6 +73,7 @@ pub contract Auction {
     pub event Earned(auctionID: UInt64, amount: UFix64, owner: Address)  
     pub event FailEarned(auctionID: UInt64, amount: UFix64, owner: Address) 
     pub event Extend(auctionID: UInt64, auctionLengthFrom: UFix64, auctionLengthTo: UFix64) 
+    pub event BurnNFT(auctionID: UInt64, nftID: UInt64) 
 
     // AuctionItem contains the Resources and metadata for a single auction
     pub resource AuctionItem {
@@ -101,9 +99,6 @@ pub contract Auction {
         //The length in seconds for this auction
         priv var auctionLength: UFix64
 
-        //The max length in seconds for this auction
-        priv var maxAuctionLength: UFix64
-
         //The period of time to extend auction 
         priv var extendedLength: UFix64
 
@@ -125,9 +120,6 @@ pub contract Auction {
         //the capablity to send the escrow bidVault to if you are outbid
         priv var recipientVaultCap: Capability<&{FungibleToken.Receiver}>?
 
-        //the capability for the platform of the NFT to return the item to if the auction is cancelled
-        priv let platformCollectionCap: Capability<&{Collectible.CollectionPublic}>
-
         //the capability to pay the platform when the auction is done
         priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>
 
@@ -141,12 +133,10 @@ pub contract Auction {
             minimumBidIncrement: UFix64,
             auctionStartTime: UFix64,
             startPrice: UFix64, 
-            auctionLength: UFix64,
-            maxAuctionLength: UFix64,  
+            auctionLength: UFix64,         
             extendedLength: UFix64, 
             remainLengthToExtend: UFix64, 
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>,            
-            platformCollectionCap: Capability<&{Collectible.CollectionPublic}>,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>,         
             editionCap: Capability<&{Edition.EditionPublic}>
         ) {
             Auction.totalAuctions = Auction.totalAuctions + (1 as UInt64)
@@ -154,8 +144,7 @@ pub contract Auction {
             self.bidVault <- FUSD.createEmptyVault()
             self.auctionID = Auction.totalAuctions
             self.minimumBidIncrement = minimumBidIncrement
-            self.auctionLength = auctionLength
-            self.maxAuctionLength = maxAuctionLength
+            self.auctionLength = auctionLength            
             self.extendedLength = extendedLength
             self.remainLengthToExtend = remainLengthToExtend
             self.startPrice = startPrice
@@ -166,8 +155,7 @@ pub contract Auction {
             self.recipientVaultCap = nil         
             self.platformVaultCap = platformVaultCap
             self.numberOfBids = 0
-            self.platformCollectionCap = platformCollectionCap
-            self.auctionCancelled = false
+              self.auctionCancelled = false
             self.editionCap = editionCap
         }
 
@@ -177,13 +165,21 @@ pub contract Auction {
                 let NFT <- self.NFT <- nil
                 collectionRef.deposit(token: <-NFT!)
                 return
-            } 
+            }       
+        }
 
-            if let platformCollection = self.platformCollectionCap.borrow() {
-                let NFT <- self.NFT <- nil
-                platformCollection.deposit(token: <-NFT!)
-                return 
-            } 
+        access(contract) fun burnNFT() {   
+            pre {
+                self.NFT != nil: "NFT in auction does not exist" 
+            }
+
+            let nftId = self.NFT?.id!
+
+            let NFT <- self.NFT <- nil
+
+            emit BurnNFT(auctionID: self.auctionID, nftID: nftId) 
+
+            destroy NFT 
         }
         
         // sendBidTokens sends the bid tokens to the Vault Receiver belonging to the provided Capability
@@ -226,9 +222,10 @@ pub contract Auction {
                 self.isAuctionExpired() : "Auction has not completed yet"
             }
 
-            // return if there are no bids to settle
+            // burn token if there are no bids to settle
             if self.currentPrice == 0.0 {
-                self.returnAuctionItemToOwner()
+                self.burnNFT()
+                emit Settled(auctionID: self.auctionID, price: self.currentPrice)
                 return
             }       
 
@@ -256,25 +253,24 @@ pub contract Auction {
                 }                
             }
 
-            if ( self.bidVault.balance > 0.0) {
+            // If commission was not paid, this money get platform
 
-            }
+            if (self.bidVault.balance > 0.0) {
 
-          
+                let amount = self.bidVault.balance
+
+                let platformVault = self.platformVaultCap.borrow()!
+
+                platformVault.deposit(from: <- self.bidVault.withdraw(amount: amount))
+
+                emit Earned(auctionID: self.auctionID, amount: amount, owner: platformVault.owner!.address)
+            }          
 
             self.sendNFT(self.recipientCollectionCap!)
          
             self.auctionCompleted = true
             
             emit Settled(auctionID: self.auctionID, price: self.currentPrice)
-        }
-
-        pub fun returnAuctionItemToOwner() {
-
-            // release the bidder's tokens
-            self.releasePreviousBid()    
-
-            self.sendNFT(self.platformCollectionCap!)       
         }
 
         //this can be negative if is expired
@@ -308,12 +304,7 @@ pub contract Auction {
         pub fun extendAuction() {
             if(
                 //Auction time left is less than remainLengthToExtend
-
-                self.timeRemaining() < Fix64(self.remainLengthToExtend) 
-
-                // Auction length doesn't exceed maxAuctionLength after extend
-
-                && self.auctionLength <= self.maxAuctionLength - self.extendedLength
+                self.timeRemaining() < Fix64(self.remainLengthToExtend)     
             ) {
                 self.auctionLength = self.auctionLength + self.extendedLength
                 emit Extend(auctionID: self.auctionID, auctionLengthFrom: self.auctionLength - self.extendedLength, auctionLengthTo: self.auctionLength)
@@ -397,7 +388,7 @@ pub contract Auction {
                 active: !self.auctionCompleted && !self.isAuctionExpired(),
                 timeRemaining: self.timeRemaining(),
                 metadata: self.NFT?.metadata,
-               collectibleId: self.NFT?.id,
+                collectibleId: self.NFT?.id,
                 leader: leader,
                 bidIncrement: self.minimumBidIncrement,         
                 startTime: Fix64(self.auctionStartTime),
@@ -406,12 +397,12 @@ pub contract Auction {
                 completed: self.auctionCompleted,
                 expired: self.isAuctionExpired(),
                 cancelled: self.auctionCancelled,
-                currentLenght: self.auctionLength,
-                maxLenght: self.maxAuctionLength
+                currentLenght: self.auctionLength
             )
         }
 
         pub fun cancelAuction() {
+            self.releasePreviousBid()
             self.auctionCancelled = true
         }
 
@@ -443,14 +434,12 @@ pub contract Auction {
 
         pub fun createAuction(
             minimumBidIncrement: UFix64, 
-            auctionLength: UFix64, 
-            maxAuctionLength: UFix64,  
+            auctionLength: UFix64,           
             extendedLength: UFix64,  
             remainLengthToExtend: UFix64,
             auctionStartTime: UFix64,
             startPrice: UFix64, 
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>,           
-            platformCollectionCap: Capability<&{Collectible.CollectionPublic}>,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>,         
             editionCap: Capability<&{Edition.EditionPublic}>
         ): UInt64
 
@@ -486,14 +475,12 @@ pub contract Auction {
         // for the auction item
         pub fun createAuction(       
             minimumBidIncrement: UFix64, 
-            auctionLength: UFix64, 
-            maxAuctionLength: UFix64,
+            auctionLength: UFix64,           
             extendedLength: UFix64, 
             remainLengthToExtend: UFix64,
             auctionStartTime: UFix64,
             startPrice: UFix64,           
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>,
-            platformCollectionCap: Capability<&{Collectible.CollectionPublic}>,
+            platformVaultCap: Capability<&{FungibleToken.Receiver}>,         
             editionCap: Capability<&{Edition.EditionPublic}>
         ): UInt64 {
 
@@ -501,6 +488,8 @@ pub contract Auction {
                 auctionLength > 0.00 : "Auction lenght should be more then 0.00"
                 auctionStartTime > getCurrentBlock().timestamp : "Auction start time can't be in the past"
                 startPrice > 0.00 : "Start price should be more then 0.00"
+                minimumBidIncrement > 0.00 : "Minimum bid increment should be more then 0.00"
+                minimumBidIncrement > 0.00 : "Minimum bid increment should be more then 0.00"
             }
             
             // create a new auction items resource container
@@ -508,12 +497,10 @@ pub contract Auction {
                 minimumBidIncrement: minimumBidIncrement,
                 auctionStartTime: auctionStartTime,
                 startPrice: startPrice,
-                auctionLength: auctionLength,  
-                maxAuctionLength: maxAuctionLength,  
+                auctionLength: auctionLength,           
                 extendedLength: extendedLength,    
                 remainLengthToExtend:  remainLengthToExtend,                
                 platformVaultCap: platformVaultCap,
-                platformCollectionCap: platformCollectionCap,
                 editionCap: editionCap
             )
 
@@ -578,11 +565,10 @@ pub contract Auction {
 
         pub fun cancelAuction(_ id: UInt64) {
             pre {
-                self.auctionItems[id] != nil:
-                    "Auction does not exist"
+                self.auctionItems[id] != nil: "Auction does not exist"
             }
             let itemRef = &self.auctionItems[id] as &AuctionItem
-            itemRef.returnAuctionItemToOwner()
+            itemRef.burnNFT()
             itemRef.cancelAuction()
             emit Canceled(auctionID: id)
         }

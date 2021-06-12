@@ -5,7 +5,8 @@ transaction(
         name: String, 
         author: String,      
         description: String,        
-        edition: UInt64   
+        edition: UInt64,
+        editionNumber: UInt64
     ) {
         
     let receiverRef: &{Collectible.CollectionPublic}
@@ -34,7 +35,7 @@ transaction(
 
     execute {
               
-        let newNFT <- self.minterRef.mintNFT(metadata: self.metadata, editionNumber: 4)
+        let newNFT <- self.minterRef.mintNFT(metadata: self.metadata, editionNumber: editionNumber)
     
         self.receiverRef.deposit(token: <-newNFT)
 
