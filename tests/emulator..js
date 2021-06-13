@@ -243,6 +243,7 @@ describe("Contracts", () => {
     });
     
     expect(result.id).toBe(0);
+    
     expect(result.metadata).toEqual(
       {
         "link": "https://www.ya.ru", 

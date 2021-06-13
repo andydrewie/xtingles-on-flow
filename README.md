@@ -8,7 +8,7 @@ A. emulator example
   flow scripts execute ./scripts/emulator/FUSDBalance.cdc --arg Address:"0x01cf0e2f2f715450"
   flow scripts execute ./scripts/emulator/FUSDBalance.cdc --arg Address:"0x179b6b1cb6755e31"
 5. create auction transaction:
-  flow transactions send --code ./transactions/emulator/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1623440139.00"},{"type": "UFix64","value": "1000.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer emulator-account
+  flow transactions send --code ./transactions/emulator/CreateAuctionWithNFT.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1623440139.00"},{"type": "UFix64","value": "1000.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer emulator-account
 
   Need to replace time to actual (something similar). easy to use fro this purpose https://www.unixtimestamp.com/.
 
@@ -34,7 +34,7 @@ B. testnet example
 three accounts: testnet-account, testnet-second-account, testnet-third-account
 
 1. testnet create Auction: 
-  flow transactions send --code ./transactions/testnet/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1623248636.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-account --network=testnet
+  flow transactions send --code ./transactions/emulator/CreateAuctionWithNFT.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1623248636.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer second-account 
 
 2. see auction status: 
   flow scripts execute ./scripts/testnet/CheckAuctionStatus.cdc --arg Address:"0x2695ea898b04f0c0" --arg UInt64:2 --network=testnet
@@ -48,15 +48,11 @@ three accounts: testnet-account, testnet-second-account, testnet-third-account
 
 6. flow scripts execute ./scripts/testnet/FUSDBalance.cdc --arg Address:"0x616e69383b392700" --network=testnet
 
-
 flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x616e69383b392700"}, {"type": "UInt64","value": "6"}, {"type": "UFix64","value": "2.00"}]' --signer testnet-second-account --network=testnet
-
 
 flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "UInt64","value": "6"}, {"type": "UFix64","value": "2.00"}]' --signer testnet-second-account --network=testnet
 
-
 flow transactions send --code ./transactions/emulator/MintCollectible.cdc --args-json '[{"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "2"}]' --signer emulator-account
-
 
 flow transactions send --code ./transactions/emulator/SaleNFT.cdc --args-json '[{"type": "UInt64","value": "1"}, {"type": "UFix64","value": "33.0"}]' --signer emulator-account
 

@@ -73,6 +73,7 @@ pub contract Auction {
     pub event Earned(auctionID: UInt64, amount: UFix64, owner: Address)  
     pub event FailEarned(auctionID: UInt64, amount: UFix64, owner: Address) 
     pub event Extend(auctionID: UInt64, auctionLengthFrom: UFix64, auctionLengthTo: UFix64) 
+    pub event AddNFT(auctionID: UInt64, nftID: UInt64) 
     pub event BurnNFT(auctionID: UInt64, nftID: UInt64) 
 
     // AuctionItem contains the Resources and metadata for a single auction
@@ -340,11 +341,11 @@ pub contract Auction {
             let collectionAddress = collectionCap.borrow()!.owner!.address
 
             if bidderAddress != collectionAddress {
-              panic("you cannot make a bid and send the Collectible to somebody elses collection")
+              panic("you cannot make a bid and send the Collectible to somebody else collection")
             }
 
-            let amountYouAreBidding= bidTokens.balance + self.currentBidForUser(address: bidderAddress)
-            let minNextBid=self.minNextBid()
+            let amountYouAreBidding = bidTokens.balance + self.currentBidForUser(address: bidderAddress)
+            let minNextBid = self.minNextBid()
             if amountYouAreBidding < minNextBid {
                 panic("bid amount + (your current bid) must be larger or equal to the current price + minimum bid increment ".concat(amountYouAreBidding.toString()).concat(" < ").concat(minNextBid.toString()))
             }
@@ -411,7 +412,11 @@ pub contract Auction {
                 self.NFT == nil : "NFT in auction has already existed"
             }
 
+            let nftID = NFT.id
+
             self.NFT <-! NFT
+
+            emit AddNFT(auctionID: self.auctionID, nftID: nftID) 
         }
 
         destroy() {
@@ -485,11 +490,12 @@ pub contract Auction {
         ): UInt64 {
 
             pre {              
-                auctionLength > 0.00 : "Auction lenght should be more then 0.00"
+                auctionLength > 0.00 : "Auction lenght should be more than 0.00"
                 auctionStartTime > getCurrentBlock().timestamp : "Auction start time can't be in the past"
-                startPrice > 0.00 : "Start price should be more then 0.00"
-                minimumBidIncrement > 0.00 : "Minimum bid increment should be more then 0.00"
-                minimumBidIncrement > 0.00 : "Minimum bid increment should be more then 0.00"
+                startPrice > 0.00 : "Start price should be more than 0.00"
+                minimumBidIncrement > 0.00 : "Minimum bid increment should be more than 0.00"
+                extendedLength > 0.00 : "Extended length should be more than 0.00"
+                remainLengthToExtend > 0.0 : "Remain length to extend should be more than 0.00"
             }
             
             // create a new auction items resource container

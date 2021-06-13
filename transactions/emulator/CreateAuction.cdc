@@ -9,11 +9,7 @@ transaction(
         remainLengthToExtend: UFix64,
         auctionStartTime: UFix64,
         startPrice: UFix64, 
-        platformAddress: Address,
-        link: String,          
-        name: String, 
-        author: String,      
-        description: String    
+        platformAddress: Address   
     ) {
 
     let auctionCollectionRef: &Auction.AuctionCollection

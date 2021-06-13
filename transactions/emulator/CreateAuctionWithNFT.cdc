@@ -5,7 +5,6 @@ import Auction, Collectible, Edition from 0xf8d6e0586b0a20c7
 transaction(      
         minimumBidIncrement: UFix64, 
         auctionLength: UFix64,
-        maxAuctionLength: UFix64,
         extendedLength: UFix64, 
         remainLengthToExtend: UFix64,
         auctionStartTime: UFix64,
@@ -19,7 +18,6 @@ transaction(
 
     let auctionCollectionRef: &Auction.AuctionCollection
     let platformCap: Capability<&{FungibleToken.Receiver}>
-    let platformCollection: Capability<&{Collectible.CollectionPublic}>
     let minterRef: &Collectible.NFTMinter
     let editionCollectionRef: &Edition.EditionCollection
     let editionCap: Capability<&{Edition.EditionPublic}>
@@ -39,11 +37,10 @@ transaction(
         self.auctionCollectionRef = acct.borrow<&Auction.AuctionCollection>(from: /storage/auctionCollection)
             ?? panic("could not borrow minter reference")    
 
+     
         let platform = getAccount(platformAddress)
 
         self.platformCap = platform.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
-
-        self.platformCollection = platform.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
         self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: /storage/CollectibleMinter)
             ?? panic("could not borrow minter reference")
@@ -76,14 +73,12 @@ transaction(
      
         let auctionId = self.auctionCollectionRef.createAuction(          
             minimumBidIncrement: minimumBidIncrement,
-            auctionLength: auctionLength,
-            maxAuctionLength:  maxAuctionLength,
+            auctionLength: auctionLength,       
             extendedLength: extendedLength, 
             remainLengthToExtend: remainLengthToExtend,
             auctionStartTime: auctionStartTime,
             startPrice: startPrice,
             platformVaultCap: self.platformCap,
-            platformCollectionCap: self.platformCollection,
             editionCap: self.editionCap   
         )
 
