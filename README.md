@@ -66,3 +66,6 @@ flow transactions send --code ./transactions/emulator/CreateEdition.cdc --args-j
 
 
   flow transactions send --code ./transactions/emulator/CancelAuction.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UInt64","value": "1"}]' --signer emulator-account
+
+
+flow transactions send --code ./transactions/emulator/Bid.cdc --args-json '[ {"type": "UInt64","value": "1"}, {"type": "UFix64","value": "2.00"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}]' --signer second-account

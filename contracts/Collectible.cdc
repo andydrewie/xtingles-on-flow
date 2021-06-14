@@ -38,7 +38,7 @@ pub contract Collectible: NonFungibleToken {
             author: String,      
             description: String,        
             edition: UInt64, 
-            properties:AnyStruct
+            properties: AnyStruct
     )  {
             self.link = link             
             self.name = name
@@ -74,6 +74,7 @@ pub contract Collectible: NonFungibleToken {
 
     //Standard NFT collectionPublic interface that can also borrowArt as the correct type
     pub resource interface CollectionPublic {
+        pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT 
         pub fun deposit(token: @NonFungibleToken.NFT)
         pub fun getIDs(): [UInt64]
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT  
@@ -188,7 +189,7 @@ pub contract Collectible: NonFungibleToken {
                 metadata: Metadata(
                     link: metadata.link,          
                     name: metadata.name, 
-                    author: metadata.author,      
+                    author: metadata.name,      
                     description: metadata.description,        
                     edition: metadata.edition, 
                     properties: metadata.properties           
@@ -213,37 +214,21 @@ pub contract Collectible: NonFungibleToken {
         }
     }
 
-    // get info for all NFTs including metadata
-    pub fun getAllCollectible(address:Address) : [CollectibleData] {
+    // get info for NFT including metadata
+    pub fun getCollectible(address:Address) : [CollectibleData] {
 
         var collectibleData: [CollectibleData] = []
         let account = getAccount(address)
 
-        if let collectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&{Collectible.CollectionPublic}>()  {
-            for id in collectibleCollection.getIDs() {
-                var collectible = collectibleCollection.borrowCollectible(id: id) 
+        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&{Collectible.CollectionPublic}>()  {
+            for id in CollectibleCollection.getIDs() {
+                var collectible = CollectibleCollection.borrowCollectible(id: id) 
                 collectibleData.append(CollectibleData(
                     metadata: collectible!.metadata,
                     id: id
                 ))
             }
         }
-        return collectibleData
-    } 
-
-    // get info for NFT including metadata
-    pub fun getCollectible(address:Address, id: UInt64): CollectibleData {
-        let account = getAccount(address)
-
-        let collectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&{Collectible.CollectionPublic}>()    
-    
-        var collectible = collectibleCollection!.borrowCollectible(id: id) ?? panic("Collectible doesn't exist on this account")
-
-        let collectibleData = CollectibleData(
-            metadata: collectible.metadata,
-            id: id
-        )    
-           
         return collectibleData
     } 
 
@@ -254,7 +239,7 @@ pub contract Collectible: NonFungibleToken {
             metadata: Metadata(
                 link: metadata.link,          
                 name: metadata.name, 
-                author: metadata.author,      
+                author: metadata.name,      
                 description: metadata.description,        
                 edition: metadata.edition, 
                 properties: metadata.properties            
