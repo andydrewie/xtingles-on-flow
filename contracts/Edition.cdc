@@ -113,10 +113,6 @@ pub contract Edition {
             self.editionItems <- {}
         }
 
-        pub fun keys() : [UInt64] {
-            return self.editionItems.keys
-        }
-
         // add
         pub fun createEdition(
             royalty: { Address: CommissionStructure },
@@ -153,7 +149,11 @@ pub contract Edition {
         }
      
         pub fun getEdition(_ id: UInt64): EditionStatus {
-            // Get the auction item resources
+            pre {
+                self.editionItems[id] != nil : "Edition doesn't exist"
+            }
+
+            // Get the edition item resources
             let itemRef = &self.editionItems[id] as &EditionItem
             return itemRef.getEdition()
         }
@@ -163,11 +163,27 @@ pub contract Edition {
             id: UInt64,
             royalty: { Address: CommissionStructure }   
         ) {
+            pre {
+                self.editionItems[id] != nil: "Edition doesn't exist"
+            }
+          
+            var firstSummaryPercent = 0.00
+            var secondSummaryPercent = 0.00          
+
+            for key in royalty.keys {
+                firstSummaryPercent = firstSummaryPercent + royalty[key]!.firstSalePercent
+                secondSummaryPercent = secondSummaryPercent + royalty[key]!.secondSalePercent
+            }      
+
+            if firstSummaryPercent != 100.00 { panic("The first summary sale percent should be 100 %") }
+
+            if secondSummaryPercent >= 100.00 { panic("The second summary sale percent should be less than 100 %") }
+            
             let itemRef = &self.editionItems[id] as &EditionItem
+            
             itemRef.changeCommission(
                 royalty: royalty            
             )
-
         }
 
         // Change count of copies. This is used for Open Edition, because the eventual amount of copies are unknown 
@@ -175,6 +191,9 @@ pub contract Edition {
             id: UInt64,
             maxEdition: UInt64
         ) {
+            pre {
+                self.editionItems[id] != nil: "Edition doesn't exist"
+            }
             let itemRef = &self.editionItems[id] as &EditionItem
             itemRef.changeMaxEdition(
                 maxEdition: maxEdition        

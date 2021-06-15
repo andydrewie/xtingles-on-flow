@@ -4,8 +4,8 @@ import { testSuiteEdition } from "./edition"
 
 describe('sequentially run tests', () => {
    // testSuiteCollectible();
-    testSuiteEdition()
-  //  testSuiteCreateAuction();
+   // testSuiteEdition()
+   //  testSuiteCreateAuction();
    // testSuiteAddNFT();
-   // testSuiteBidAuction();
+   testSuiteBidAuction();
 })

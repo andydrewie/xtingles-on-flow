@@ -1,18 +1,15 @@
-import Auction from 0xf8d6e0586b0a20c7
+import Auction from 0x01cf0e2f2f715450
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken from 0xf8d6e0586b0a20c7
+import NonFungibleToken from 0x01cf0e2f2f715450
 
-transaction(
-        auction: Address,
+transaction(      
         id: UInt64
     ) {
 
     let auctionCollectionRef: &AnyResource{Auction.AuctionPublic}
 
     prepare(acct: AuthAccount) {
-        let auctionOwner = getAccount(auction)       
-
-        self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionPublic}>(/public/auctionCollection)
+        self.auctionCollectionRef = acct.getCapability<&AnyResource{Auction.AuctionPublic}>(/public/auctionCollection)
             .borrow()
             ?? panic("Could not borrow nft sale reference")
     }

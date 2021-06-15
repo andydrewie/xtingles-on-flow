@@ -292,7 +292,7 @@ pub contract Auction {
             return timeRemaining < Fix64(0.0)
         }
 
-        pub fun minNextBid() :UFix64 {
+        pub fun minNextBid() : UFix64 {
             //If there are bids then the next min bid is the current price plus the increment
             if self.currentPrice != 0.0 {
                 return self.currentPrice + self.currentPrice * self.minimumBidIncrement * 0.01
@@ -330,10 +330,9 @@ pub contract Auction {
         pub fun placeBid(bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Collectible.CollectionPublic}>) {
 
             pre {
-                !self.auctionCompleted : "The auction is already settled"
-                self.NFT != nil: "NFT in auction does not exist"
-                self.auctionStartTime < getCurrentBlock().timestamp : "The auction has not started yet"
                 !self.auctionCancelled : "Auction was cancelled"
+                self.NFT != nil: "NFT in auction does not exist"
+                self.auctionStartTime < getCurrentBlock().timestamp : "The auction has not started yet"             
                 !self.isAuctionExpired() : "Time expired"
             }
 
@@ -345,9 +344,11 @@ pub contract Auction {
             }
 
             let amountYouAreBidding = bidTokens.balance + self.currentBidForUser(address: bidderAddress)
+
             let minNextBid = self.minNextBid()
+
             if amountYouAreBidding < minNextBid {
-                panic("bid amount + (your current bid) must be larger or equal to the current price + minimum bid increment ".concat(amountYouAreBidding.toString()).concat(" < ").concat(minNextBid.toString()))
+                panic("Bid is less than min acceptable")
             }
 
             if self.bidder() != bidderAddress {
@@ -367,9 +368,9 @@ pub contract Auction {
 
             // Add the bidder's Vault and NFT receiver references
             self.recipientCollectionCap = collectionCap
-            self.numberOfBids=self.numberOfBids+(1 as UInt64)
+            self.numberOfBids = self.numberOfBids+(1 as UInt64)
 
-            // Extend auction according to max lenght, time left and extenede length
+            // Extend auction according to max lenght, time left and extened length
             self.extendAuction() 
 
             emit Bid(auctionID: self.auctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice)

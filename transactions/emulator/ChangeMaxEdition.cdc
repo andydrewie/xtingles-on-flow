@@ -1,12 +1,12 @@
 import Edition from 0x01cf0e2f2f715450
 
-transaction(maxEdition: UInt64) {
+transaction(id: UInt64, maxEdition: UInt64) {
 
     let editionCollectionRef: &Edition.EditionCollection
    
     prepare(acct: AuthAccount) {
 
-        let editionCap = acct.getCapability<&{Edition.EditionPublic}>(/public/editionCollection)
+         let editionCap = acct.getCapability<&{Edition.EditionPublic}>(/public/editionCollection)
 
         if !editionCap.check() {        
             let edition <- Edition.createEditionCollection()
@@ -16,17 +16,15 @@ transaction(maxEdition: UInt64) {
         }  
 
         self.editionCollectionRef = acct.borrow<&Edition.EditionCollection>(from: /storage/editionCollection)
-            ?? panic("could not borrow minter reference")            
+            ?? panic("could not edition reference")                     
    
     }
 
     execute {
 
-        let id = self.editionCollectionRef.createEdition(
-            royalty: RoyaltyVariable,
-            maxEdition: maxEdition
-        )       
-
-        log(id)
+        self.editionCollectionRef.changeMaxEdition(
+            id: id,
+            maxEdition: maxEdition 
+        )
     }
 }
