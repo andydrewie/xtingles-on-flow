@@ -22,7 +22,7 @@ pub contract Auction {
         pub let completed: Bool
         pub let expired: Bool
         pub let cancelled: Bool
-        pub let currentLenght: UFix64     
+        pub let currentLength: UFix64     
      
         init(
             id:UInt64, 
@@ -40,7 +40,7 @@ pub contract Auction {
             completed: Bool,
             expired:Bool, 
             cancelled: Bool,
-            currentLenght: UFix64       
+            currentLength: UFix64       
         ) {
             self.id = id
             self.price = currentPrice
@@ -57,7 +57,7 @@ pub contract Auction {
             self.completed = completed
             self.expired = expired
             self.cancelled = cancelled
-            self.currentLenght = currentLenght  
+            self.currentLength = currentLength  
         }
     }
 
@@ -170,22 +170,21 @@ pub contract Auction {
         }
 
         access(contract) fun burnNFT() {   
-            pre {
-                self.NFT != nil: "NFT in auction does not exist" 
-            }
+            
+            if(self.NFT == nil) { return }           
 
             let nftId = self.NFT?.id!
 
             let NFT <- self.NFT <- nil
 
-            emit BurnNFT(auctionID: self.auctionID, nftID: nftId) 
-
             destroy NFT 
+
+            emit BurnNFT(auctionID: self.auctionID, nftID: nftId)          
         }
         
-        // sendBidTokens sends the bid tokens to the Vault Receiver belonging to the provided Capability
+        // sendBidTokens sends the bid tokens to the previous bidder
         access(contract) fun sendBidTokens(_ capability: Capability<&{FungibleToken.Receiver}>) {
-            // borrow a reference to the owner's NFT receiver
+            // borrow a reference to the prevous bidder's vault
             if let vaultRef = capability.borrow() {
                 let bidVaultRef = &self.bidVault as &FungibleToken.Vault
 
@@ -195,6 +194,7 @@ pub contract Auction {
                 return
             }
 
+            //  platform vault get money in case the previous bidder vault is unreachable
             if let ownerRef = self.platformVaultCap.borrow() {
                 let bidVaultRef = &self.bidVault as &FungibleToken.Vault
                 if(bidVaultRef.balance > 0.0) {
@@ -204,7 +204,7 @@ pub contract Auction {
             }
         }
 
-        pub fun releasePreviousBid() {
+        priv fun releasePreviousBid() {
             if let vaultCap = self.recipientVaultCap {
                 self.sendBidTokens(self.recipientVaultCap!)
                 return
@@ -218,9 +218,10 @@ pub contract Auction {
         pub fun settleAuction()  {
 
             pre {
+                !self.auctionCancelled : "The auction was cancelled"
                 !self.auctionCompleted : "The auction is already settled"
                 self.NFT != nil: "NFT in auction does not exist"
-                self.isAuctionExpired() : "Auction has not completed yet"
+                self.isAuctionExpired() : "Auction has not completed yet"               
             }
 
             // burn token if there are no bids to settle
@@ -302,8 +303,8 @@ pub contract Auction {
             return self.startPrice
         }
 
-        pub fun extendAuction() {
-            if(
+        priv fun extendAuction() {
+            if (
                 //Auction time left is less than remainLengthToExtend
                 self.timeRemaining() < Fix64(self.remainLengthToExtend)     
             ) {
@@ -353,11 +354,12 @@ pub contract Auction {
 
             if self.bidder() != bidderAddress {
               if self.bidVault.balance != 0.0 {
+                // Return the previous bid 
                 self.sendBidTokens(self.recipientVaultCap!)
               }
             }
 
-            // Update the auction item
+            // Update the bidVault to store the current bid
             self.bidVault.deposit(from: <-bidTokens)
 
             //update the capability of the wallet for the address with the current highest bid
@@ -370,7 +372,7 @@ pub contract Auction {
             self.recipientCollectionCap = collectionCap
             self.numberOfBids = self.numberOfBids+(1 as UInt64)
 
-            // Extend auction according to max lenght, time left and extened length
+            // Extend auction according to time left and extened length
             self.extendAuction() 
 
             emit Bid(auctionID: self.auctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice)
@@ -399,12 +401,13 @@ pub contract Auction {
                 completed: self.auctionCompleted,
                 expired: self.isAuctionExpired(),
                 cancelled: self.auctionCancelled,
-                currentLenght: self.auctionLength
+                currentLength: self.auctionLength
             )
         }
 
         pub fun cancelAuction() {
             self.releasePreviousBid()
+            self.burnNFT()
             self.auctionCancelled = true
         }
 
@@ -566,6 +569,10 @@ pub contract Auction {
         // settleAuction sends the auction item to the highest bidder
         // and deposits the FungibleTokens into the auction owner's account
         pub fun settleAuction(_ id: UInt64) {
+            pre {
+                self.auctionItems[id] != nil: "Auction does not exist"
+            }
+
             let itemRef = &self.auctionItems[id] as &AuctionItem
             itemRef.settleAuction()
         }
@@ -574,8 +581,7 @@ pub contract Auction {
             pre {
                 self.auctionItems[id] != nil: "Auction does not exist"
             }
-            let itemRef = &self.auctionItems[id] as &AuctionItem
-            itemRef.burnNFT()
+            let itemRef = &self.auctionItems[id] as &AuctionItem           
             itemRef.cancelAuction()
             emit Canceled(auctionID: id)
         }

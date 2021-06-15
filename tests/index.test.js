@@ -1,4 +1,8 @@
-import { testSuiteCreateAuction, testSuiteBidAuction, testSuiteAddNFT } from './auction';
+import { 
+   testSuiteCreateAuction, testSuiteBidAuction, testSuiteAddNFT,
+   testSuiteSendBidTokens, testSuiteCancelAuction,   
+   testSuiteExtendAuction, testSuitSettlelAuction
+} from './auction';
 import { testSuiteCollectible } from "./collectible"
 import { testSuiteEdition } from "./edition"
 
@@ -7,5 +11,9 @@ describe('sequentially run tests', () => {
    // testSuiteEdition()
    //  testSuiteCreateAuction();
    // testSuiteAddNFT();
-   testSuiteBidAuction();
+   //testSuiteBidAuction();
+   //testSuiteSendBidTokens();
+  // testSuiteCancelAuction();
+  // testSuiteExtendAuction();
+   testSuitSettlelAuction();
 })

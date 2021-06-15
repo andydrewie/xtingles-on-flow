@@ -453,5 +453,91 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     expect(error).toMatch(/Bid is less than min acceptable/);  
   });
 
+  test("successfull bid case", async () => { 
+    let error;
+    try {
+      const admin = await getAccountAddress("admin");  
+
+      const commission = `{
+        Address(0xf8d6e0586b0a20c7) : Edition.CommissionStructure(
+            firstSalePercent: 1.00,
+            secondSalePercent: 2.00,
+            description: "xxx"
+        ),
+        Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
+            firstSalePercent: 99.00,
+            secondSalePercent: 7.00,
+            description: "xxx"
+        )
+      }`;
+
+      const auctionParameters = [
+        ["10.00", t.UFix64],  
+
+        // Auction length  
+        ["1000.00", t.UFix64],   
+        
+        ["1300.00", t.UFix64],  
+        ["1300.00", t.UFix64],   
+        
+        // Start time
+        [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+
+        ["50.00", t.UFix64],
+        ["0x01cf0e2f2f715450", t.Address]   
+      ];
+
+      const createdAuctionWithNFT = await sendTransaction({
+        code: createAuctionTransactionWithNFT.replace('RoyaltyVariable', commission),
+        args: [
+          ...auctionParameters,
+          ["xxx", t.String],
+          ["xxx", t.String],
+          ["xxx", t.String],
+          ["xxx", t.String],
+          [1, t.UInt64],
+        ], 
+        signers: [admin],
+      }); 
+
+      const { events } = createdAuctionWithNFT;
+
+      const auctionId = events[0].data.auctionID;
+
+      await new Promise((r) => setTimeout(r, 3000));
+
+      await sendTransaction({
+        code: tickTransaction,
+        args: [], 
+        signers: [admin],
+      }); 
+
+      const result = await sendTransaction({
+        code: placeBidTransaction,
+        args: [      
+          [auctionId, t.UInt64],
+          ["50.00", t.UFix64],
+          [admin, t.Address],   
+        ], 
+        signers: [admin],
+      }); 
+
+      const { events: sucessfullBidEvents } = result;
+
+      const bidEvent = sucessfullBidEvents.filter(event => event.type === `A.${admin.substr(2)}.Auction.Bid`)
+
+      expect(result.errorMessage).toEqual('')
+
+      expect(bidEvent.data).toMatchObject({
+        auctionID: auctionId,     
+        bidPrice: '50.00000000'
+      })
+    } catch(e) {
+      error = e;
+    } 
+    console.log(error);
+    expect(error).toEqual(undefined);  
+  });
+
 
 })
