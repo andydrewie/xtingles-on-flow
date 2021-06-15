@@ -1,7 +1,4 @@
-import Collectible from 0xf8d6e0586b0a20c7
-import FungibleToken from 0xee82856bf20e2aa6
-import Edition from 0xf8d6e0586b0a20c7
-import NonFungibleToken from 0xf8d6e0586b0a20c7
+import Edition from 0x01cf0e2f2f715450
 
 transaction() {
 
@@ -26,19 +23,8 @@ transaction() {
     execute {
 
         let id = self.editionCollectionRef.createEdition(
-            royalty: {
-                Address(0xf8d6e0586b0a20c7) : Edition.CommissionStructure(
-                    firstSalePercent: 1.00,
-                    secondSalePercent: 2.00,
-                    description: "xxx"
-                ),
-                Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
-                    firstSalePercent: 5.00,
-                    secondSalePercent: 7.00,
-                    description: "xxx"
-                )          
-            },
-            maxEdition: 10
+            royalty: RoyaltyVariable,
+            maxEdition: 0
         )       
 
         log(id)

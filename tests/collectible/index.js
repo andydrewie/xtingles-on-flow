@@ -2,16 +2,19 @@ import path from "path";
 import * as fs from "fs";
 import * as t from "@onflow/types";
 
-const EMULATOR_ACCOUNT = '0xf8d6e0586b0a20c7';
-const SECOND_ACCOUNT = '0x01cf0e2f2f715450';
-const THIRD_ACCOUNT = '0x179b6b1cb6755e31';
-const { exec } = require('child_process');
+import { sendTransaction, executeScript, mintFlow, getAccountAddress, init, emulator, deployContractByName  } from "flow-js-testing";
 
-import { sendTransaction, executeScript, init } from "flow-js-testing";
-import { ZERO_UFIX64, defaultAuctionParameters } from "../constants";
+const editionNumber = 3;
 
 export const testSuiteCollectible = () => describe("Collectible", () => {
-  let  mintCollectibleTransaction, checkCollectibleScript, checkAllCollectibleScript, getNFTIdsScript, mintedId;
+  let mintCollectibleTransaction,
+      checkCollectibleScript,
+      checkCollectibleStorageScript,
+      checkAllCollectibleScript,
+      getNFTIdsScript,
+      checkEditionNumberNFTScript,
+      transferCollectibleTransaction,
+      initializeNFTStorageTransaction;
 
   beforeAll(async () => {
     init(path.resolve(__dirname, "../"));
@@ -47,11 +50,77 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
       ),
       "utf8"    
     ); 
-  
+
+    checkCollectibleStorageScript = fs.readFileSync(
+      path.join(
+        __dirname,
+        `../../scripts/emulator/CheckCollectibleStorage.cdc`
+      ),
+      "utf8"    
+    );
+
+    checkEditionNumberNFTScript = fs.readFileSync(
+      path.join(
+        __dirname,
+        `../../scripts/emulator/CheckEditionNumberNFT.cdc`
+      ),
+      "utf8"    
+    );    
+
+    transferCollectibleTransaction = fs.readFileSync(
+      path.join(
+        __dirname,
+        `../../transactions/emulator/TransferNFT.cdc`
+      ),
+      "utf8"    
+    );
+
+    initializeNFTStorageTransaction = fs.readFileSync(
+      path.join(
+        __dirname,
+        `../../transactions/emulator/InitializeNFTStorage.cdc`
+      ),
+      "utf8"    
+    );
+  });
+
+  beforeEach(async (done) => {
+		const basePath = path.resolve(__dirname, "../../");
+		const port = 8081;
+		init(basePath, port);
+
+		await emulator.start(port, false);
+    const admin = await getAccountAddress("admin");
+    await mintFlow(admin, "10.0");
+
+    const addressMap = { NonFungibleToken: admin };
+
+    await deployContractByName({ to: admin, name: "NonFungibleToken" });    
+    await deployContractByName({ to: admin, name: "Collectible", addressMap });
+		done();
+	});
+
+	// Stop emulator, so it could be restarted
+	afterEach(async (done) => {
+		await emulator.stop();
+		done();
+	});
+
+  test("check NFT storage. check collection capability", async () => { 
+    const admin = await getAccountAddress("admin");
+    const result = await executeScript({
+      code: checkCollectibleStorageScript,
+      args: [
+        [admin, t.Address]
+      ] 
+    });
+
+    expect(result).toBe(true);   
   });
 
   test("check mint function", async () => { 
     try {
+      const admin = await getAccountAddress("admin");
       const result = await sendTransaction({
         code: mintCollectibleTransaction,
         args: [
@@ -62,69 +131,58 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
           [1, t.UInt64],
           [3, t.UInt64],
         ], 
-        signers: [EMULATOR_ACCOUNT],
+        signers: [admin],
       });
       const { events } = result; 
-      expect(events[0].type).toEqual('A.f8d6e0586b0a20c7.Collectible.Created');
-      mintedId = events[1].data.id;
-      expect(events[1].type).toEqual('A.f8d6e0586b0a20c7.Collectible.Deposit');
-      expect(events[1].data).toEqual({ id: mintedId, to: '0xf8d6e0586b0a20c7' });
+      expect(events[0].type).toEqual(`A.${admin.substr(2)}.Collectible.Created`);
+      expect(events[1].type).toEqual(`A.${admin.substr(2)}.Collectible.Deposit`);
+      expect(events[1].data).toEqual({ id: 1, to: admin });
     } catch (e) {
       console.error(e);
     }    
   }); 
 
-  test("check NFT storages", async () => { 
-
-    const checkCollectibleStorageScript = fs.readFileSync(
-      path.join(
-        __dirname,
-        `../../scripts/emulator/CheckCollectibleStorage.cdc`
-      ),
-      "utf8"    
-    );
-
-    const result1 = await executeScript({
-      code: checkCollectibleStorageScript,
+  test("check getIDs function", async () => {  
+    const admin = await getAccountAddress("admin"); 
+    await sendTransaction({
+      code: mintCollectibleTransaction,
       args: [
-        [EMULATOR_ACCOUNT, t.Address]
-      ] 
-    });
-
-    const result2 = await executeScript({
-      code: checkCollectibleStorageScript,
-      args: [
-        [SECOND_ACCOUNT, t.Address]
-      ] 
-    });
-
-    const result3 = await executeScript({
-      code: checkCollectibleStorageScript,
-      args: [
-        [THIRD_ACCOUNT, t.Address]
-      ] 
-    });
-
-    expect(result1).toBe(true);   
-    expect(result2).toBe(true); 
-    expect(result3).toBe(true); 
-  }); 
-
-  test("check NFT's keys", async () => {      
+        ["https://www.ya.ru", t.String],    
+        ["Great NFT!", t.String], 
+        ["Brad Pitt", t.String], 
+        ["Awesome", t.String],         
+        [1, t.UInt64],
+        [3, t.UInt64],
+      ], 
+      signers: [admin],
+    });   
     const result = await executeScript({
       code: getNFTIdsScript,
       args: [
-        [EMULATOR_ACCOUNT, t.Address]
+        [admin, t.Address]
       ] 
     });
-    expect(result.includes(mintedId)).toBe(true);   
+    expect(result).toEqual([1]);   
   }); 
 
-  test("check all collectibles in NFT storage", async () => {  
+  test("check getAllCollectible function", async () => {  
+    const admin = await getAccountAddress("admin"); 
+    await sendTransaction({
+      code: mintCollectibleTransaction,
+      args: [
+        ["https://www.ya.ru", t.String],    
+        ["Great NFT!", t.String], 
+        ["Brad Pitt", t.String], 
+        ["Awesome", t.String],         
+        [1, t.UInt64],
+        [3, t.UInt64],
+      ], 
+      signers: [admin],
+    });   
     const result = await executeScript({
       code: checkAllCollectibleScript,
       args: [
-        [EMULATOR_ACCOUNT, t.Address]
+        [admin, t.Address]
       ] 
     });
     expect(result[0].metadata).toEqual(
@@ -138,17 +196,29 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
       })
   }); 
 
-  test("check collectible in NFT storage by id", async () => {  
-
+  test("check getCollectible function. check metadata", async () => {  
+    const admin = await getAccountAddress("admin"); 
+    await sendTransaction({
+      code: mintCollectibleTransaction,
+      args: [
+        ["https://www.ya.ru", t.String],    
+        ["Great NFT!", t.String], 
+        ["Brad Pitt", t.String], 
+        ["Awesome", t.String],         
+        [1, t.UInt64],
+        [3, t.UInt64],
+      ], 
+      signers: [admin],
+    });   
     const result = await executeScript({
       code: checkCollectibleScript,
       args: [
-        [EMULATOR_ACCOUNT, t.Address],
-        [mintedId, t.UInt64],
+        [admin, t.Address],
+        [1, t.UInt64],
       ] 
     });
     
-    expect(result.id).toBe(mintedId);
+    expect(result.id).toBe(1);
     
     expect(result.metadata).toEqual(
       {
@@ -161,44 +231,68 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
       })
   }); 
 
-  test("check editionNumber", async () => {    
-    const checkEditionNumberNFTScript = fs.readFileSync(
-      path.join(
-        __dirname,
-        `../../scripts/emulator/CheckEditionNumberNFT.cdc`
-      ),
-      "utf8"    
-    );  
+  test("check getEditionNumber", async () => {    
+    const editionNumber = 3;
+    const admin = await getAccountAddress("admin"); 
+    await sendTransaction({
+      code: mintCollectibleTransaction,
+      args: [
+        ["https://www.ya.ru", t.String],    
+        ["Great NFT!", t.String], 
+        ["Brad Pitt", t.String], 
+        ["Awesome", t.String],         
+        [1, t.UInt64],
+        [editionNumber, t.UInt64],
+      ], 
+      signers: [admin],
+    });   
     const result = await executeScript({
       code: checkEditionNumberNFTScript,
       args: [
-        [EMULATOR_ACCOUNT, t.Address],
-        [ mintedId, t.UInt64],
+        [admin, t.Address],
+        [1, t.UInt64],
       ] 
     });
-    expect(result).toBe(3);
+    expect(result).toBe(editionNumber);
   }); 
 
   test("transfer collectible", async () => {    
-    const transferCollectibleTransaction = fs.readFileSync(
-      path.join(
-        __dirname,
-        `../../transactions/emulator/TransferNFT.cdc`
-      ),
-      "utf8"    
-    );
+    const admin = await getAccountAddress("admin"); 
+
+    await sendTransaction({
+      code: mintCollectibleTransaction,
+      args: [
+        ["https://www.ya.ru", t.String],    
+        ["Great NFT!", t.String], 
+        ["Brad Pitt", t.String], 
+        ["Awesome", t.String],         
+        [1, t.UInt64],
+        [editionNumber, t.UInt64],
+      ], 
+      signers: [admin],
+    });   
+
+    const secondAccount = await getAccountAddress("secondAccount");
+  
+    await sendTransaction({
+      code: initializeNFTStorageTransaction,
+      args: [], 
+      signers: [secondAccount],
+    });
+
     const result = await sendTransaction({
       code: transferCollectibleTransaction,
       args: [
-        [SECOND_ACCOUNT, t.Address],    
-        [mintedId, t.UInt64]
+        [secondAccount, t.Address],    
+        [1, t.UInt64]
       ], 
-      signers: [EMULATOR_ACCOUNT],
+      signers: [admin],
     });
+
     const { events } = result;
-    expect(events[0].type).toEqual('A.f8d6e0586b0a20c7.Collectible.Withdraw');
-    expect(events[0].data).toEqual({ id: mintedId, from: '0xf8d6e0586b0a20c7' });
-    expect(events[1].type).toEqual('A.f8d6e0586b0a20c7.Collectible.Deposit');
-    expect(events[1].data).toEqual({ id: mintedId, to: '0x01cf0e2f2f715450' });
-  }); 
+    expect(events[0].type).toEqual(`A.${admin.substr(2)}.Collectible.Withdraw`);
+    expect(events[0].data).toEqual({ id: 1, from: admin });
+    expect(events[1].type).toEqual(`A.${admin.substr(2)}.Collectible.Deposit`);
+    expect(events[1].data).toEqual({ id: 1, to: secondAccount });
+  });
 });

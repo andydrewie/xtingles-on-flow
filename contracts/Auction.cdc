@@ -156,7 +156,7 @@ pub contract Auction {
             self.recipientVaultCap = nil         
             self.platformVaultCap = platformVaultCap
             self.numberOfBids = 0
-              self.auctionCancelled = false
+            self.auctionCancelled = false
             self.editionCap = editionCap
         }
 
