@@ -2,24 +2,28 @@ import path from "path";
 import * as fs from "fs";
 import * as t from "@onflow/types";
 
-const EMULATOR_ACCOUNT = '0xf8d6e0586b0a20c7';
-const SECOND_ACCOUNT = '0x01cf0e2f2f715450';
-const THIRD_ACCOUNT = '0x179b6b1cb6755e31';
-const { exec } = require('child_process');
-
-import { sendTransaction, executeScript, init } from "flow-js-testing";
+import { sendTransaction, executeScript, mintFlow, getAccountAddress, init, emulator, deployContractByName  } from "flow-js-testing";
 import { ZERO_UFIX64, defaultAuctionParameters } from "../constants";
 
 export const testSuiteCreateAuction = () => describe("Create auction", () => {
-  let createAuctionTransaction, checkAuctionStatusScript; 
+  let createAuctionTransaction, checkAuctionStatusScript, setupFUSDTransaction; 
 
   beforeAll(() => {
     init(path.resolve(__dirname, "../"));   
+    jest.setTimeout(30000);
 
     createAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
         `../../transactions/emulator/CreateAuction.cdc`
+      ),
+      "utf8"    
+    );
+
+    setupFUSDTransaction = fs.readFileSync(
+      path.join(
+        __dirname,
+        `../../transactions/emulator/SetupFUSD.cdc`
       ),
       "utf8"    
     );
@@ -31,17 +35,57 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
       ),
       "utf8"    
     );
+
+    setupFUSDTransaction = fs.readFileSync(
+      path.join(
+        __dirname,
+        `../../transactions/emulator/SetupFUSD.cdc`
+      ),
+      "utf8"    
+    );
   });
+
+  beforeEach(async (done) => {
+    const basePath = path.resolve(__dirname, "../../");
+    const port = 8081;
+    init(basePath, port);
+
+  	await emulator.start(port, false);
+
+    const admin = await getAccountAddress("admin");
+
+    await mintFlow(admin, "10.0");    
+    const addressMap = { 
+      NonFungibleToken: admin,
+      FUSD: admin,
+      Collectible: admin,
+      Edition: admin,      
+    };
+
+    await deployContractByName({ to: admin, name: "Edition" });
+    await deployContractByName({ to: admin, name: "NonFungibleToken" });    
+    await deployContractByName({ to: admin, name: "FUSD" }); 
+    await deployContractByName({ to: admin, name: "Collectible", addressMap });
+    await deployContractByName({ to: admin, name: "Auction", addressMap });
+		done();
+	});
+
+	// Stop emulator, so it could be restarted
+	afterEach(async (done) => {
+		await emulator.stop();
+		done();
+	});
  
-  test("Bid increment is 0.00", async () => { 
+  test("throw panic, when bid increment is 0.00", async () => { 
     let error;
     try {
+      const admin = await getAccountAddress("admin");
       const auctionParameters = [...defaultAuctionParameters];
       auctionParameters[0] = ZERO_UFIX64;
       await sendTransaction({
         code: createAuctionTransaction,
         args: auctionParameters, 
-        signers: [EMULATOR_ACCOUNT],
+        signers: [admin],
       }); 
     } catch(e) {
       error = e;
@@ -49,15 +93,16 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
     expect(error).toMatch(/Minimum bid increment should be more than 0.00/);  
   });
 
-  test("Auction length is 0.00", async () => { 
+ test("Auction length is 0.00", async () => { 
     let error;
     try {
+      const admin = await getAccountAddress("admin");
       const auctionParameters = [...defaultAuctionParameters];
       auctionParameters[1] = ZERO_UFIX64;
       await sendTransaction({
         code: createAuctionTransaction,
         args: auctionParameters, 
-        signers: [EMULATOR_ACCOUNT],
+        signers: [admin],
       }); 
     } catch(e) {
       error = e;
@@ -68,12 +113,13 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
   test("Extended length is 0.00", async () => { 
     let error;
     try {
+      const admin = await getAccountAddress("admin");
       const auctionParameters = [...defaultAuctionParameters];
       auctionParameters[2] = ZERO_UFIX64;
       await sendTransaction({
         code: createAuctionTransaction,
         args: auctionParameters, 
-        signers: [EMULATOR_ACCOUNT],
+        signers: [admin],
       }); 
     } catch(e) {
       error = e;
@@ -84,12 +130,13 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
   test("Remain length to extend is 0.00", async () => { 
     let error;
     try {
+      const admin = await getAccountAddress("admin");
       const auctionParameters = [...defaultAuctionParameters];
       auctionParameters[3] = ZERO_UFIX64;
       await sendTransaction({
         code: createAuctionTransaction,
         args: auctionParameters, 
-        signers: [EMULATOR_ACCOUNT],
+        signers: [admin],
       }); 
     } catch(e) {
       error = e;
@@ -100,12 +147,13 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
   test("Start time in the past", async () => { 
     let error;
     try {
+      const admin = await getAccountAddress("admin");
       const auctionParameters = [...defaultAuctionParameters];
       auctionParameters[4] = ["1623417982.00", t.UFix64];  
       await sendTransaction({
         code: createAuctionTransaction,
         args: auctionParameters, 
-        signers: [EMULATOR_ACCOUNT],
+        signers: [admin],
       }); 
     } catch(e) {
       error = e;
@@ -116,12 +164,13 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
   test("Start price is 0.00", async () => { 
     let error;
     try {
+      const admin = await getAccountAddress("admin");
       const auctionParameters = [...defaultAuctionParameters];
       auctionParameters[5] = ZERO_UFIX64;
       await sendTransaction({
         code: createAuctionTransaction,
         args: auctionParameters, 
-        signers: [EMULATOR_ACCOUNT],
+        signers: [admin],
       }); 
     } catch(e) {
       error = e;
@@ -131,27 +180,33 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
 
   test("Successfull creation auction", async () => { 
     try {
+      const admin = await getAccountAddress("admin");   
+      await sendTransaction({
+        code: setupFUSDTransaction,
+        args: [], 
+        signers: [admin],
+      }); 
 
       const result = await sendTransaction({
         code: createAuctionTransaction,
         args: defaultAuctionParameters, 
-        signers: [EMULATOR_ACCOUNT],
+        signers: [admin],
       }); 
 
       const { events } = result;
 
       const auction = await executeScript({
-        code:  checkAuctionStatusScript,
+        code: checkAuctionStatusScript,
         args: [
-          [EMULATOR_ACCOUNT, t.Address],
+          [admin, t.Address],
           [events[0].data.auctionID, t.UInt64],
         ] 
       });
 
-      expect(events[0].type).toEqual('A.f8d6e0586b0a20c7.Auction.Created');
+      expect(events[0].type).toEqual(`A.${admin.substr(2)}.Auction.Created`);
 
       expect(events[0].data).toMatchObject({   
-        owner: '0xf8d6e0586b0a20c7',
+        owner: admin,
         startPrice: '50.00000000',
         startTime: '5623417982.00000000'
       });     
@@ -179,48 +234,4 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
     } 
   });
 
- /* const tickTransaction = fs.readFileSync(
-    path.join(
-      __dirname,
-      `../../transactions/emulator/Tick.cdc`
-    ),
-    "utf8"    
-  );
-
-  const checkTimeScript = fs.readFileSync(
-    path.join(
-      __dirname,
-      `../../scripts/emulator/CheckTime.cdc`
-    ),
-    "utf8"    
-  );   
-  
-  test("Start time in past", async () => {   
-    await sendTransaction({
-      code: tickTransaction,
-      args: [], 
-      signers: [EMULATOR_ACCOUNT],
-    });       
-    console.log(process.env.FAKETIME);
-    const checkTime = await executeScript({
-      code: checkTimeScript,
-      args: [] 
-    });
-    expect(checkTime).toMatch('2016-03-23T09:56:00.000Z');  
-  }); 
-  test("Start time in future", async () => { 
-    const timestamp = '2035-03-23 19:57:33';
-  //  exec(`/bin/date --set="${timestamp}"`);
-    await sendTransaction({
-      code: tickTransaction,
-      args: [], 
-      signers: [EMULATOR_ACCOUNT],
-    }); 
-    console.log(process.env.FAKETIME);
-    const checkTime = await executeScript({
-      code: checkTimeScript,
-      args: [] 
-    });
-    expect(checkTime).toMatch('2016-03-23T09:56:00.000Z');  
-  }); */
 })

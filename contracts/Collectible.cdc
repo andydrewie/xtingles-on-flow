@@ -254,7 +254,7 @@ pub contract Collectible: NonFungibleToken {
 
     init() {
         // Initialize the total supply
-        self.totalSupply = 0
+        self.totalSupply = 1
         self.CollectionPublicPath = /public/CollectibleCollection
         self.CollectionStoragePath = /storage/CollectibleCollection
         self.MinterStoragePath = /storage/CollectibleMinter

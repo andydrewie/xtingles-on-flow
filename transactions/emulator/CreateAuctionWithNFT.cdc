@@ -1,6 +1,5 @@
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken from 0xf8d6e0586b0a20c7
-import Auction, Collectible, Edition from 0xf8d6e0586b0a20c7
+import Auction, Collectible, Edition, NonFungibleToken from 0x01cf0e2f2f715450
 
 transaction(      
         minimumBidIncrement: UFix64, 
@@ -13,7 +12,8 @@ transaction(
         link: String,          
         name: String, 
         author: String,      
-        description: String    
+        description: String,
+        maxEdition: UInt64    
     ) {
 
     let auctionCollectionRef: &Auction.AuctionCollection
@@ -83,19 +83,8 @@ transaction(
         )
 
         let editionId = self.editionCollectionRef.createEdition(
-            royalty: {
-                Address(0xf8d6e0586b0a20c7) : Edition.CommissionStructure(
-                    firstSalePercent: 1.00,
-                    secondSalePercent: 2.00,
-                    description: "Author"
-                ),
-                Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
-                    firstSalePercent: 5.00,
-                    secondSalePercent: 7.00,
-                    description: "Third party"
-                )
-            },
-            maxEdition: 1
+            royalty: RoyaltyVariable,
+            maxEdition: maxEdition
         )       
 
         let newNFT <- self.minterRef.mintNFT(metadata: self.metadata, editionNumber: editionId)

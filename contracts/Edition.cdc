@@ -1,5 +1,3 @@
-import FungibleToken from "./FungibleToken.cdc"
-
 // Edition is the batch of items with the almost same metadata. This is copies of one item
 pub contract Edition {
 
@@ -22,6 +20,11 @@ pub contract Edition {
             self.description = description
         }
     }
+
+    // Events  
+    pub event CreateEdition(editionId: UInt64, royalty: { Address: CommissionStructure }) 
+    pub event ChangeCommision(editionId: UInt64, royalty: { Address: CommissionStructure }) 
+    pub event ChangeMaxEdition(editionId: UInt64, maxEdition: UInt64) 
 
     // Info about editions
     pub struct EditionStatus {
@@ -69,7 +72,8 @@ pub contract Edition {
         pub fun changeCommission(      
            royalty: { Address: CommissionStructure }     
         ) {
-            self.royalty = royalty         
+            self.royalty = royalty
+            emit ChangeCommision(editionId: self.editionId, royalty: royalty)
         }
 
         // Change count of copies. This is used for Open Edition, because the eventual amount of copies are unknown        
@@ -81,7 +85,9 @@ pub contract Edition {
                self.maxEdition < UInt64(1) : "You could not change max edition" 
             }
 
-            self.maxEdition = maxEdition       
+            self.maxEdition = maxEdition      
+
+            emit ChangeMaxEdition(editionId: self.editionId, maxEdition: maxEdition) 
         }
        
         destroy() {
@@ -92,11 +98,6 @@ pub contract Edition {
     // EditionPublic is a resource interface that restricts users to
     // retreiving the edition information
     pub resource interface EditionPublic {
-
-        pub fun createEdition(
-            royalty: { Address: CommissionStructure },
-            maxEdition: UInt64     
-        ): UInt64
 
         pub fun getEdition(_ id: UInt64): EditionStatus
     }
@@ -112,19 +113,23 @@ pub contract Edition {
             self.editionItems <- {}
         }
 
-        pub fun keys() : [UInt64] {
-            return self.editionItems.keys
-        }
-
         // add
         pub fun createEdition(
             royalty: { Address: CommissionStructure },
             maxEdition: UInt64        
         ): UInt64 {
+           
+            var firstSummaryPercent = 0.00
+            var secondSummaryPercent = 0.00          
 
-            pre {              
-            
-            }            
+            for key in royalty.keys {
+                firstSummaryPercent = firstSummaryPercent + royalty[key]!.firstSalePercent
+                secondSummaryPercent = secondSummaryPercent + royalty[key]!.secondSalePercent
+            }      
+
+            if firstSummaryPercent != 100.00 { panic("The first summary sale percent should be 100 %") }
+
+            if secondSummaryPercent >= 100.00 { panic("The second summary sale percent should be less than 100 %") }
            
             let item <- create EditionItem(
                 royalty: royalty,
@@ -138,11 +143,17 @@ pub contract Edition {
             
             destroy oldItem
 
+            emit CreateEdition(editionId: id, royalty: royalty) 
+
             return id
         }
      
         pub fun getEdition(_ id: UInt64): EditionStatus {
-            // Get the auction item resources
+            pre {
+                self.editionItems[id] != nil : "Edition doesn't exist"
+            }
+
+            // Get the edition item resources
             let itemRef = &self.editionItems[id] as &EditionItem
             return itemRef.getEdition()
         }
@@ -152,7 +163,24 @@ pub contract Edition {
             id: UInt64,
             royalty: { Address: CommissionStructure }   
         ) {
+            pre {
+                self.editionItems[id] != nil: "Edition doesn't exist"
+            }
+          
+            var firstSummaryPercent = 0.00
+            var secondSummaryPercent = 0.00          
+
+            for key in royalty.keys {
+                firstSummaryPercent = firstSummaryPercent + royalty[key]!.firstSalePercent
+                secondSummaryPercent = secondSummaryPercent + royalty[key]!.secondSalePercent
+            }      
+
+            if firstSummaryPercent != 100.00 { panic("The first summary sale percent should be 100 %") }
+
+            if secondSummaryPercent >= 100.00 { panic("The second summary sale percent should be less than 100 %") }
+            
             let itemRef = &self.editionItems[id] as &EditionItem
+            
             itemRef.changeCommission(
                 royalty: royalty            
             )
@@ -163,6 +191,9 @@ pub contract Edition {
             id: UInt64,
             maxEdition: UInt64
         ) {
+            pre {
+                self.editionItems[id] != nil: "Edition doesn't exist"
+            }
             let itemRef = &self.editionItems[id] as &EditionItem
             itemRef.changeMaxEdition(
                 maxEdition: maxEdition        
