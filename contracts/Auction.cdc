@@ -70,11 +70,12 @@ pub contract Auction {
     pub event Bid(auctionID: UInt64, bidderAddress: Address, bidPrice: UFix64)
     pub event Settled(auctionID: UInt64, price: UFix64)
     pub event Canceled(auctionID: UInt64)
-    pub event Earned(auctionID: UInt64, amount: UFix64, owner: Address)  
-    pub event FailEarned(auctionID: UInt64, amount: UFix64, owner: Address) 
+    pub event Earned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
+    pub event FailEarned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
     pub event Extend(auctionID: UInt64, auctionLengthFrom: UFix64, auctionLengthTo: UFix64) 
     pub event AddNFT(auctionID: UInt64, nftID: UInt64) 
     pub event BurnNFT(auctionID: UInt64, nftID: UInt64) 
+    pub event SendNFT(auctionID: UInt64, nftID: UInt64, to: Address)   
 
     // AuctionItem contains the Resources and metadata for a single auction
     pub resource AuctionItem {
@@ -163,10 +164,14 @@ pub contract Auction {
         // sendNFT sends the NFT to the Collection belonging to the provided Capability
         access(contract) fun sendNFT(_ capability: Capability<&{Collectible.CollectionPublic}>) {
             if let collectionRef = capability.borrow() {
+                let nftId = self.NFT?.id!
                 let NFT <- self.NFT <- nil
                 collectionRef.deposit(token: <-NFT!)
+                emit SendNFT(auctionID: self.auctionID, nftID: nftId, to: collectionRef.owner!.address)  
                 return
-            }       
+            }     
+            
+            self.burnNFT()
         }
 
         access(contract) fun burnNFT() {   
@@ -215,21 +220,7 @@ pub contract Auction {
             return self.NFT?.editionNumber
         }
 
-        pub fun settleAuction()  {
-
-            pre {
-                !self.auctionCancelled : "The auction was cancelled"
-                !self.auctionCompleted : "The auction is already settled"
-                self.NFT != nil: "NFT in auction does not exist"
-                self.isAuctionExpired() : "Auction has not completed yet"               
-            }
-
-            // burn token if there are no bids to settle
-            if self.currentPrice == 0.0 {
-                self.burnNFT()
-                emit Settled(auctionID: self.auctionID, price: self.currentPrice)
-                return
-            }       
+        priv fun sendCommissionPayment() {
 
             let editionNumber = self.NFT?.editionNumber ?? panic("Could not find edition number") 
 
@@ -248,9 +239,9 @@ pub contract Auction {
                     if (vaultCap.check()) {
                         let vault = vaultCap.borrow()!
                         vault.deposit(from: <- self.bidVault.withdraw(amount: commission))
-                        emit Earned(auctionID: self.auctionID, amount: commission, owner: key)
+                        emit Earned(nftID: self.NFT?.id!, amount: commission, owner: key, type: "primary")
                     } else {
-                        emit FailEarned(auctionID: self.auctionID, amount: commission, owner: key)
+                        emit FailEarned(nftID: self.NFT?.id!, amount: commission, owner: key, type: "primary")
                     }            
                 }                
             }
@@ -265,9 +256,29 @@ pub contract Auction {
 
                 platformVault.deposit(from: <- self.bidVault.withdraw(amount: amount))
 
-                emit Earned(auctionID: self.auctionID, amount: amount, owner: platformVault.owner!.address)
-            }          
+                emit Earned(nftID: self.NFT?.id!, amount: amount, owner: platformVault.owner!.address, type: "primary")
+            }
+        }
 
+        pub fun settleAuction()  {
+
+            pre {
+                !self.auctionCancelled : "The auction was cancelled"
+                !self.auctionCompleted : "The auction has been already settled"
+                self.NFT != nil: "NFT in auction does not exist"
+                self.isAuctionExpired() : "Auction has not completed yet"               
+            }
+
+            // burn token if there are no bids to settle
+            if self.currentPrice == 0.0 {
+                self.burnNFT()
+                self.auctionCompleted = true
+                emit Settled(auctionID: self.auctionID, price: self.currentPrice)
+                return
+            }       
+
+            self.sendCommissionPayment()
+           
             self.sendNFT(self.recipientCollectionCap!)
          
             self.auctionCompleted = true
@@ -331,6 +342,7 @@ pub contract Auction {
         pub fun placeBid(bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Collectible.CollectionPublic}>) {
 
             pre {
+                collectionCap.check() : "NFT storage is not initialized on account"
                 !self.auctionCancelled : "Auction was cancelled"
                 self.NFT != nil: "NFT in auction does not exist"
                 self.auctionStartTime < getCurrentBlock().timestamp : "The auction has not started yet"             

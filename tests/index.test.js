@@ -1,7 +1,8 @@
-import { 
+import {
    testSuiteCreateAuction, testSuiteBidAuction, testSuiteAddNFT,
-   testSuiteSendBidTokens, testSuiteCancelAuction,   
-   testSuiteExtendAuction, testSuitSettlelAuction
+   testSuiteSendBidTokens, testSuiteCancelAuction,
+   testSuiteExtendAuction, testSuitSettlelAuction,
+   testSuitePayCommission
 } from './auction';
 import { testSuiteCollectible } from "./collectible"
 import { testSuiteEdition } from "./edition"
@@ -9,11 +10,12 @@ import { testSuiteEdition } from "./edition"
 describe('sequentially run tests', () => {
    // testSuiteCollectible();
    // testSuiteEdition()
-   //  testSuiteCreateAuction();
-   // testSuiteAddNFT();
-   //testSuiteBidAuction();
-   //testSuiteSendBidTokens();
-  // testSuiteCancelAuction();
-  // testSuiteExtendAuction();
-   testSuitSettlelAuction();
+   // testSuiteCreateAuction();
+   //   testSuiteAddNFT();
+   testSuiteBidAuction();
+   //   testSuiteSendBidTokens();
+   //  testSuiteCancelAuction();
+   //  testSuiteExtendAuction();
+   //  testSuitSettlelAuction(); 
+   //testSuitePayCommission();
 })

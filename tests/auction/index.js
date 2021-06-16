@@ -5,6 +5,7 @@ import { testSuiteSendBidTokens } from './sendBidTokens';
 import { testSuiteCancelAuction } from './cancelAuction';
 import { testSuiteExtendAuction } from './extendAuction';
 import { testSuitSettlelAuction } from './settleAuction';
+import { testSuitePayCommission } from './payCommission';
 
 export {
     testSuiteCreateAuction,
@@ -13,5 +14,6 @@ export {
     testSuiteSendBidTokens,
     testSuiteCancelAuction,
     testSuiteExtendAuction,
-    testSuitSettlelAuction 
+    testSuitSettlelAuction,
+    testSuitePayCommission
 }
