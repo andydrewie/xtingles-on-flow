@@ -6,6 +6,7 @@ import { testSuiteCancelAuction } from './cancelAuction';
 import { testSuiteExtendAuction } from './extendAuction';
 import { testSuitSettlelAuction } from './settleAuction';
 import { testSuitePayCommission } from './payCommission';
+import { testSuiteAuctionStatus } from './auctionStatus';
 
 export {
     testSuiteCreateAuction,
@@ -15,5 +16,6 @@ export {
     testSuiteCancelAuction,
     testSuiteExtendAuction,
     testSuitSettlelAuction,
-    testSuitePayCommission
+    testSuitePayCommission,
+    testSuiteAuctionStatus
 }

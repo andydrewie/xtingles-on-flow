@@ -342,6 +342,7 @@ pub contract Auction {
         pub fun placeBid(bidTokens: @FungibleToken.Vault, vaultCap: Capability<&{FungibleToken.Receiver}>, collectionCap: Capability<&{Collectible.CollectionPublic}>) {
 
             pre {
+                vaultCap.check() : "Fungible token storage is not initialized on account"
                 collectionCap.check() : "NFT storage is not initialized on account"
                 !self.auctionCancelled : "Auction was cancelled"
                 self.NFT != nil: "NFT in auction does not exist"
@@ -382,7 +383,7 @@ pub contract Auction {
 
             // Add the bidder's Vault and NFT receiver references
             self.recipientCollectionCap = collectionCap
-            self.numberOfBids = self.numberOfBids+(1 as UInt64)
+            self.numberOfBids = self.numberOfBids + (1 as UInt64)
 
             // Extend auction according to time left and extened length
             self.extendAuction() 
@@ -393,6 +394,7 @@ pub contract Auction {
         pub fun getAuctionStatus() : AuctionStatus {
 
             var leader : Address? = nil
+            
             if let recipient = self.recipientVaultCap {
                 leader = recipient.borrow()!.owner!.address
             }
@@ -465,10 +467,9 @@ pub contract Auction {
         ): UInt64
 
         pub fun getAuctionStatuses(): {UInt64: AuctionStatus}
-        pub fun getAuctionStatus(_ id:UInt64): AuctionStatus
-        pub fun getTimeLeft(_ id: UInt64): Fix64
-        pub fun cancelAuction(_ id: UInt64)
-
+        pub fun getAuctionStatus(_ id:UInt64): AuctionStatus?
+        pub fun getTimeLeft(_ id: UInt64): Fix64?
+     
         pub fun placeBid(
             id: UInt64, 
             bidTokens: @FungibleToken.Vault, 
@@ -542,9 +543,9 @@ pub contract Auction {
 
         // getAuctionPrices returns a dictionary of available NFT IDs with their current price
         pub fun getAuctionStatuses(): {UInt64: AuctionStatus} {
-            pre {
-                self.auctionItems.keys.length > 0: "There are no auction items"
-            }
+           
+            if self.auctionItems.keys.length == 0 { return {} }
+           
 
             let priceList: {UInt64: AuctionStatus} = {}
 
@@ -556,22 +557,17 @@ pub contract Auction {
             return priceList
         }
 
-        pub fun getAuctionStatus(_ id:UInt64): AuctionStatus {
-            pre {
-                self.auctionItems[id] != nil:
-                    "Auction doesn't exist"
-            }
+        pub fun getAuctionStatus(_ id:UInt64): AuctionStatus? {
+    
+            if  self.auctionItems[id] == nil { return  nil }        
 
             // Get the auction item resources
             let itemRef = &self.auctionItems[id] as &AuctionItem
             return itemRef.getAuctionStatus()
         }
 
-        pub fun getTimeLeft(_ id: UInt64): Fix64 {
-            pre {
-                self.auctionItems[id] != nil:
-                    "Auction doesn't exist"
-            }
+        pub fun getTimeLeft(_ id: UInt64): Fix64? {
+            if(self.auctionItems[id] == nil) { return nil }
 
             // Get the auction item resources
             let itemRef = &self.auctionItems[id] as &AuctionItem

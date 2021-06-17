@@ -34,10 +34,10 @@ B. testnet example
 three accounts: testnet-account, testnet-second-account, testnet-third-account
 
 1. testnet create Auction: 
-  flow transactions send --code ./transactions/emulator/CreateAuctionWithNFT.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1623248636.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer second-account 
+  flow transactions send --code ./transactions/emulator/CreateAuctionWithNFT.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "3623248636.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"}]' --signer emulator-account 
 
 2. see auction status: 
-  flow scripts execute ./scripts/testnet/CheckAuctionStatus.cdc --arg Address:"0x2695ea898b04f0c0" --arg UInt64:2 --network=testnet
+  flow scripts execute ./scripts/emulator/CheckAuctionStatus.cdc --arg Address:"0xf8d6e0586b0a20c7" --arg UInt64:1 --network=testnet
 
 3. flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"},
     {"type": "UInt64","value": "2"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-second-account --network=testnet
