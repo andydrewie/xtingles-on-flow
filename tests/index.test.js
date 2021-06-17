@@ -6,19 +6,23 @@ import {
 } from './auction';
 import { testSuiteCollectible } from "./collectible"
 import { testSuiteEdition } from "./edition"
-import { testSuiteMarketPlace } from "./marketPlace";
+import { 
+   testSuiteMarketPlacePuchase,
+   testSuiteMarketPlaceCommon
+} from "./marketPlace";
 
 describe('sequentially run tests', () => {
-   // testSuiteCollectible();
-   // testSuiteEdition()
-   // testSuiteCreateAuction();
-   //   testSuiteAddNFT();
-   //testSuiteBidAuction();
-   //   testSuiteSendBidTokens();
-   //  testSuiteCancelAuction();
-   //  testSuiteExtendAuction();
-   //  testSuitSettlelAuction(); 
-   //testSuitePayCommission();
-   //testSuiteAuctionStatus();
-   testSuiteMarketPlace();
+  // testSuiteCollectible();
+  // testSuiteEdition()
+   testSuiteCreateAuction();
+   /*testSuiteAddNFT();
+   testSuiteBidAuction();
+   testSuiteSendBidTokens();
+   testSuiteCancelAuction();
+   testSuiteExtendAuction();
+   testSuitSettlelAuction(); 
+   testSuitePayCommission();
+   testSuiteAuctionStatus();
+   testSuiteMarketPlacePuchase();
+   testSuiteMarketPlaceCommon();*/
 })

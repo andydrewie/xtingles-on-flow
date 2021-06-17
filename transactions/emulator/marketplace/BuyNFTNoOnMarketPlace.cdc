@@ -1,6 +1,6 @@
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken from 0xf8d6e0586b0a20c7
-import Collectible, MarketPlace from 0xf8d6e0586b0a20c7
+import NonFungibleToken from 0x01cf0e2f2f715450
+import MarketPlace, Collectible from 0x01cf0e2f2f715450
 
 transaction(
     marketplace: Address,
@@ -42,10 +42,10 @@ transaction(
             .borrow()
             ?? panic("Could not borrow nft sale reference")
         
-        let amount = acctsaleRef.idPrice(tokenID: tokenId) ?? panic("Price cannot be nil")
+       // let amount = acctsaleRef.idPrice(tokenID: tokenId) ?? panic("Price cannot be nil")
 
         // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: amount)
+        self.temporaryVault <- vaultRef.withdraw(amount: 10.00)
     }
 
     execute {

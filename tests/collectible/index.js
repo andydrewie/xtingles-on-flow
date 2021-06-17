@@ -17,6 +17,7 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
     initializeNFTStorageTransaction;
 
   beforeAll(async () => {
+    jest.setTimeout(60000);
     init(path.resolve(__dirname, "../"));
 
     mintCollectibleTransaction = fs.readFileSync(

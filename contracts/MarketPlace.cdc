@@ -26,7 +26,9 @@ pub contract MarketPlace {
     // Event that is emitted when a seller withdraws their NFT from the sale
     pub event SaleWithdrawn(id: UInt64, owner: Address)
 
-    pub event MarketplaceEarned(amount:UFix64, owner: Address, description: String)
+    // Secondary commission events
+    pub event Earned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
+    pub event FailEarned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
 
     pub resource interface SalePublic {
         pub fun purchase(
@@ -75,6 +77,10 @@ pub contract MarketPlace {
 
             emit SaleWithdrawn(id: tokenID, owner: vaultRef.owner!.address)
             return <-token
+        }
+
+        priv fun payCommision() {
+            
         }
 
         // listForSale lists an NFT for sale in this collection
@@ -138,25 +144,24 @@ pub contract MarketPlace {
             buyTokens: @FungibleToken.Vault
         ) {
             pre {
-                self.forSale[tokenID] != nil && self.prices[tokenID] != nil:
-                    "No token matching this ID for sale!"
-                buyTokens.balance >= (self.prices[tokenID] ?? 0.0):
-                    "Not enough tokens to by the NFT!"
+                self.forSale[tokenID] != nil && self.prices[tokenID] != nil: "No token matching this ID for sale!"
+                buyTokens.balance == (self.prices[tokenID] ?? 0.0): "Not exact amount tokens to buy the NFT!"
             }
 
-            let recipient = recipientCap.borrow()!
+            let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
+
+            let recipient = recipientCap.borrow() ?? panic("Could not borrow reference to recipient NFT stoarge")
 
             // get the value out of the optional
             let price = self.prices[tokenID]!
             
             self.prices[tokenID] = nil
 
-            let editionNumber = self.getEditionNumber(id: tokenID) ?? panic("Could not find edition number")           
-
-            let vaultRef = self.ownerVault.borrow()
-                ?? panic("Could not borrow reference to owner token vault")
+            let editionNumber = self.getEditionNumber(id: tokenID) ?? panic("Could not find edition number")     
             
             let token <- self.withdraw(tokenID: tokenID)
+
+            let tokenId = token.id
                       
             let royaltyRef = MarketPlace.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow() 
                 ?? panic("Could not borrow Edition reference")     
@@ -168,10 +173,17 @@ pub contract MarketPlace {
 
                 let account = getAccount(key) 
 
-                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver).borrow() ?? panic("Could not borrow vault reference")       
-                vaultCap.deposit(from: <- buyTokens.withdraw(amount: commission))
+                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
 
-                emit MarketplaceEarned(amount: commission, owner: vaultCap.owner!.address, description: royaltyStatus.royalty[key]!.description)
+                if(vaultCap.check()) {
+                    let vaultCommissionRecepientRef = vaultCap.borrow()!
+
+                    vaultCommissionRecepientRef.deposit(from: <- buyTokens.withdraw(amount: commission))
+
+                    emit Earned(nftID: tokenId, amount: commission, owner: key, type: "secondary")                   
+                } else {
+                   emit FailEarned(nftID: tokenId, amount: commission, owner: key, type: "secondary")
+                }             
             }
 
             // deposit the purchasing tokens into the owners vault
@@ -180,7 +192,7 @@ pub contract MarketPlace {
             // deposit the NFT into the buyers collection
             recipient.deposit(token: <- token)
 
-            emit TokenPurchased(id: tokenID, price: price, from: vaultRef.owner!.address, to:  recipient.owner!.address)
+            emit TokenPurchased(id: tokenID, price: price, from: vaultRef.owner!.address, to: recipient.owner!.address)
         }      
 
         destroy() {
