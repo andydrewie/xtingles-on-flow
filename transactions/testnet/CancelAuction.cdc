@@ -11,6 +11,6 @@ transaction(id: UInt64) {
     }
 
     execute {
-        self.client.settleAuction(id)
+        self.client.cancelAuction(id)
     }
 }

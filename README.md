@@ -42,7 +42,7 @@ three accounts: testnet-account, testnet-second-account, testnet-third-account
 3. flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"},
     {"type": "UInt64","value": "2"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-second-account --network=testnet
 
-4. flow transactions send --code ./transactions/Settle.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-account --network=testnet
+4. flow transactions send --code ./transactions/testnet/Settle.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-account --network=testnet
 
 5. check NFTs on account: flow scripts execute ./scripts/testnet/CheckCollectible.cdc --arg Address:"0x2695ea898b04f0c0" --network=testnet
 
@@ -50,7 +50,7 @@ three accounts: testnet-account, testnet-second-account, testnet-third-account
 
 flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x616e69383b392700"}, {"type": "UInt64","value": "6"}, {"type": "UFix64","value": "2.00"}]' --signer testnet-second-account --network=testnet
 
-flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "UInt64","value": "6"}, {"type": "UFix64","value": "2.00"}]' --signer testnet-second-account --network=testnet
+flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "UInt64","value": "1"}, {"type": "UFix64","value": "2.00"}]' --signer testnet-second-account --network=testnet
 
 flow transactions send --code ./transactions/emulator/MintCollectible.cdc --args-json '[{"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "2"}]' --signer emulator-account
 
@@ -69,3 +69,13 @@ flow transactions send --code ./transactions/emulator/CreateEdition.cdc --args-j
 
 
   flow transactions send --code ./transactions/emulator/ChangeCommission.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer emulator-account
+
+
+
+  //
+
+  flow transactions send --code ./transactions/testnet/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1623915827.00"},{"type": "UFix64","value": "10.0"}, {"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-account --network=testnet
+
+  flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "UInt64","value": "2"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-account --network=testnet
+
+    flow scripts execute ./scripts/testnet/CheckAuctionStatus.cdc --arg Address:"0x2695ea898b04f0c0" --arg UInt64:2 --network=testnet

@@ -59,8 +59,6 @@ pub contract MarketPlace {
         // Dictionary of the prices for each NFT by ID
         pub var prices: {UInt64: UFix64}
 
-        priv let contractsAccountAddress: Address
-
         // The fungible token vault of the owner of this sale.
         // When someone buys a token, this resource can deposit
         // tokens into their account.
@@ -70,7 +68,6 @@ pub contract MarketPlace {
             self.forSale <- {}
             self.ownerVault = vault
             self.prices = {}
-            self.contractsAccountAddress = Address(0xf8d6e0586b0a20c7)
         }
 
         // withdraw gives the owner the opportunity to remove a sale from the collection
