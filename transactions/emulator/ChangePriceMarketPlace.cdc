@@ -28,9 +28,7 @@ transaction(tokenId: UInt64, price: UFix64) {
 
     execute {    
 
-        let token <- self.collectionRef.withdraw(withdrawID: tokenId) as! @Collectible.NFT
-
-        self.saleRef.listForSale(token: <-token, price: price)
+        self.saleRef.changePrice(tokenID: tokenId, newPrice: price)
 
     }
 }

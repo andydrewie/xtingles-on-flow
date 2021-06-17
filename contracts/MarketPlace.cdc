@@ -15,16 +15,16 @@ pub contract MarketPlace {
     pub let CollectionPublicPath: PublicPath
 
     // Event that is emitted when a new NFT is put up for sale
-    pub event ForSale(id: UInt64, price: UFix64)
+    pub event ForSale(id: UInt64, owner: Address, price: UFix64)
 
     // Event that is emitted when the price of an NFT changes
-    pub event PriceChanged(id: UInt64, newPrice: UFix64)
-    
+    pub event PriceChanged(id: UInt64, owner: Address, newPrice: UFix64)    
+
     // Event that is emitted when a token is purchased
     pub event TokenPurchased(id: UInt64, price: UFix64, from:Address, to:Address)
 
     // Event that is emitted when a seller withdraws their NFT from the sale
-    pub event SaleWithdrawn(id: UInt64)
+    pub event SaleWithdrawn(id: UInt64, owner: Address)
 
     pub event MarketplaceEarned(amount:UFix64, owner: Address, description: String)
 
@@ -36,14 +36,7 @@ pub contract MarketPlace {
         )
         pub fun idPrice(tokenID: UInt64): UFix64?
         pub fun getIDs(): [UInt64]
-        pub fun borrowCollectible(id: UInt64): &Collectible.NFT? {
-            // If the result isn't nil, the id of the returned reference
-            // should be the same as the argument to the function
-            post {
-                (result == nil) || (result?.id == id):
-                    "Cannot borrow collectible reference: The id of the returned reference is incorrect."
-            }
-        }
+        pub fun borrowCollectible(id: UInt64): &Collectible.NFT?
     }
 
     // SaleCollection
@@ -74,9 +67,13 @@ pub contract MarketPlace {
         pub fun withdraw(tokenID: UInt64): @Collectible.NFT {
             // remove the price
             self.prices.remove(key: tokenID)
+            
             // remove and return the token
             let token <- self.forSale.remove(key: tokenID) ?? panic("missing NFT")
-            emit SaleWithdrawn(id: tokenID)
+
+            let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
+
+            emit SaleWithdrawn(id: tokenID, owner: vaultRef.owner!.address)
             return <-token
         }
 
@@ -91,17 +88,25 @@ pub contract MarketPlace {
             let oldToken <- self.forSale[id] <- token
             destroy oldToken
 
-            emit ForSale(id: id, price: price)
+            let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
+
+            emit ForSale(id: id, owner: vaultRef.owner!.address, price: price)
         }
 
         // changePrice changes the price of a token that is currently for sale
         pub fun changePrice(tokenID: UInt64, newPrice: UFix64) {
+            pre {
+                self.prices[tokenID] != nil : "NFT does not exist on sale"        
+            }
+
             self.prices[tokenID] = newPrice
 
-            emit PriceChanged(id: tokenID, newPrice: newPrice)
+            let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
+
+            emit PriceChanged(id: tokenID, owner: vaultRef.owner!.address, newPrice: newPrice)
         }
 
-          // idPrice returns the price of a specific token in the sale
+        // idPrice returns the price of a specific token in the sale
         pub fun idPrice(tokenID: UInt64): UFix64? {
             return self.prices[tokenID]
         }
@@ -122,6 +127,7 @@ pub contract MarketPlace {
 
         pub fun getEditionNumber(id: UInt64): UInt64? {
             let ref = self.borrowCollectible(id: id) 
+            if ref == nil { return nil }
             return ref!.getEditionNumber()
         }
 

@@ -2,10 +2,11 @@ import {
    testSuiteCreateAuction, testSuiteBidAuction, testSuiteAddNFT,
    testSuiteSendBidTokens, testSuiteCancelAuction,
    testSuiteExtendAuction, testSuitSettlelAuction,
-   testSuitePayCommission, testSuiteAuctionStatus
+   testSuitePayCommission, testSuiteAuctionStatus,
 } from './auction';
 import { testSuiteCollectible } from "./collectible"
 import { testSuiteEdition } from "./edition"
+import { testSuiteMarketPlace } from "./marketPlace";
 
 describe('sequentially run tests', () => {
    // testSuiteCollectible();
@@ -18,5 +19,6 @@ describe('sequentially run tests', () => {
    //  testSuiteExtendAuction();
    //  testSuitSettlelAuction(); 
    //testSuitePayCommission();
-   testSuiteAuctionStatus();
+   //testSuiteAuctionStatus();
+   testSuiteMarketPlace();
 })

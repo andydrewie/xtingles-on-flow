@@ -67,7 +67,7 @@ pub contract Auction {
     // Events
     pub event CollectionCreated()
     pub event Created(auctionID: UInt64, owner: Address, startPrice: UFix64, startTime: UFix64)
-    pub event Bid(auctionID: UInt64, bidderAddress: Address, bidPrice: UFix64)
+    pub event Bid(auctionID: UInt64, bidderAddress: Address, bidPrice: UFix64, placedAt: Fix64)
     pub event Settled(auctionID: UInt64, price: UFix64)
     pub event Canceled(auctionID: UInt64)
     pub event Earned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
@@ -388,7 +388,7 @@ pub contract Auction {
             // Extend auction according to time left and extened length
             self.extendAuction() 
 
-            emit Bid(auctionID: self.auctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice)
+            emit Bid(auctionID: self.auctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice, placedAt: Fix64(getCurrentBlock().timestamp))
         }
 
         pub fun getAuctionStatus() : AuctionStatus {
