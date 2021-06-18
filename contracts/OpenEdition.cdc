@@ -138,7 +138,11 @@ pub contract OpenEdition {
             return remaining
         }
 
-         pub fun isAuctionExpired(): Bool {
+        pub fun getPrice(): UFix64  {
+            return self.price
+        }
+
+        pub fun isAuctionExpired(): Bool {
             let timeRemaining = self.timeRemaining()
             return timeRemaining < Fix64(0.0)
         }
@@ -239,6 +243,7 @@ pub contract OpenEdition {
 
         pub fun getOpenEditionStatuses(): {UInt64: OpenEditionStatus}?
         pub fun getOpenEditionStatus(_ id : UInt64):  OpenEditionStatus?
+        pub fun getPrice(_ id:UInt64): UFix64? 
 
         pub fun purchase(
             id: UInt64, 
@@ -331,6 +336,17 @@ pub contract OpenEdition {
             return itemRef.getAuctionStatus()
         }
 
+        pub fun getPrice(_ id:UInt64): UFix64  {
+            pre {
+                self.openEditionsItems[id] != nil:
+                    "Open Edition doesn't exist"
+            }
+
+            // Get the open edition item resources
+            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
+            return itemRef.getPrice()
+        }
+
         // settleAuction sends the auction item to the highest bidder
         // and deposits the FungibleTokens into the auction owner's account
         pub fun settleOpenEdition(id: UInt64, clientRoyalty: &Edition.EditionCollection) {
@@ -355,11 +371,13 @@ pub contract OpenEdition {
             collectionCap: Capability<&{Collectible.CollectionPublic}>       
         ) {
             pre {
-                self.openEditionsItems[id] != nil:
-                    "Open Edition does not exist"
+                self.openEditionsItems[id] != nil:"Open Edition does not exist"
+                collectionCap.check(): "NFT storage does not exist"
             }
+
             // Get the auction item resources
             let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
+            
             itemRef.purchase(
                 buyerTokens: <- buyerTokens,
                 buyerCollectionCap: collectionCap,

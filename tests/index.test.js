@@ -14,7 +14,8 @@ import {
 import {
    testSuiteCreateOpenEdition,
    testSuiteOpenEditionStatus,
-   testSuiteCancelOpenEdition
+   testSuiteCancelOpenEdition,
+   testSuitePurchaseOpenEdition
 } from "./openedition";
 
 describe('sequentially run tests', () => {
@@ -33,5 +34,6 @@ describe('sequentially run tests', () => {
    //testSuiteMarketPlaceCommon();
   // testSuiteCreateOpenEdition();
   // testSuiteOpenEditionStatus();
-   testSuiteCancelOpenEdition();
+   //testSuiteCancelOpenEdition();
+   testSuitePurchaseOpenEdition();
 })
