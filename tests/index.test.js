@@ -6,15 +6,21 @@ import {
 } from './auction';
 import { testSuiteCollectible } from "./collectible"
 import { testSuiteEdition } from "./edition"
-import { 
+import {
    testSuiteMarketPlacePuchase,
    testSuiteMarketPlaceCommon
 } from "./marketPlace";
 
+import {
+   testSuiteCreateOpenEdition,
+   testSuiteOpenEditionStatus,
+   testSuiteCancelOpenEdition
+} from "./openedition";
+
 describe('sequentially run tests', () => {
-  // testSuiteCollectible();
-  // testSuiteEdition()
-   testSuiteCreateAuction();
+   // testSuiteCollectible();
+   // testSuiteEdition()
+   // testSuiteCreateAuction();
    /*testSuiteAddNFT();
    testSuiteBidAuction();
    testSuiteSendBidTokens();
@@ -23,6 +29,9 @@ describe('sequentially run tests', () => {
    testSuitSettlelAuction(); 
    testSuitePayCommission();
    testSuiteAuctionStatus();
-   testSuiteMarketPlacePuchase();
-   testSuiteMarketPlaceCommon();*/
+   testSuiteMarketPlacePuchase();*/
+   //testSuiteMarketPlaceCommon();
+  // testSuiteCreateOpenEdition();
+  // testSuiteOpenEditionStatus();
+   testSuiteCancelOpenEdition();
 })
