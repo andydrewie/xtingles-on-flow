@@ -14,7 +14,7 @@ export const testSuiteCreateOpenEdition = () => describe("Create open edition", 
         commission;
 
     beforeAll(async () => {
-        jest.setTimeout(60000);
+        jest.setTimeout(90000);
         init(path.resolve(__dirname, "../"));
 
         createOpenEditionTransaction = fs.readFileSync(

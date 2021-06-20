@@ -6,7 +6,7 @@ transaction(
         id: UInt64
     ) {
 
-    let auctionCollectionRef: &AnyResource{Auction.AuctionPublic}
+    let client: &Auction.AuctionCollection
 
     prepare(acct: AuthAccount) {
 
@@ -19,12 +19,10 @@ transaction(
             log("Auction Collection Created for account")
         }  
 
-        self.auctionCollectionRef = acct.getCapability<&AnyResource{Auction.AuctionPublic}>(/public/auctionCollection)
-            .borrow()
-            ?? panic("Could not borrow auction collection reference")
+        self.client = acct.borrow<&Auction.AuctionCollection>(from: /storage/auctionCollection) ?? panic("could not load admin storage for auction")
     }
 
     execute {    
-        self.auctionCollectionRef.cancelAuction(id)       
+        self.client.cancelAuction(id)       
     }
 }

@@ -16,16 +16,17 @@ export const testSuitePayCommission = () => describe("Pay commissions", () => {
         cancelAuctionTransaction,
         createAuctionTransaction,
         checkAuctionStatusScript,
-        settleAuctionTransaction;
+        settleAuctionTransaction,
+        unlinkFUSDVault;
 
     beforeAll(async () => {
-        jest.setTimeout(30000);
+        jest.setTimeout(120000);
         init(path.resolve(__dirname, "../"));
 
         createAuctionTransactionWithNFT = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/CreateAuctionWithNFT.cdc`
+                `../../transactions/emulator/auction/CreateAuctionWithNFT.cdc`
             ),
             "utf8"
         );
@@ -33,7 +34,7 @@ export const testSuitePayCommission = () => describe("Pay commissions", () => {
         placeBidTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/Bid.cdc`
+                `../../transactions/emulator/auction/Bid.cdc`
             ),
             "utf8"
         );
@@ -49,7 +50,7 @@ export const testSuitePayCommission = () => describe("Pay commissions", () => {
         cancelAuctionTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/CancelAuction.cdc`
+                `../../transactions/emulator/auction/CancelAuction.cdc`
             ),
             "utf8"
         );
@@ -57,7 +58,7 @@ export const testSuitePayCommission = () => describe("Pay commissions", () => {
         settleAuctionTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/SettleAuction.cdc`
+                `../../transactions/emulator/auction/SettleAuction.cdc`
             ),
             "utf8"
         );
@@ -81,7 +82,7 @@ export const testSuitePayCommission = () => describe("Pay commissions", () => {
         createAuctionTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/CreateAuction.cdc`
+                `../../transactions/emulator/auction/CreateAuction.cdc`
             ),
             "utf8"
         );
@@ -89,11 +90,18 @@ export const testSuitePayCommission = () => describe("Pay commissions", () => {
         checkAuctionStatusScript = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../scripts/emulator/CheckAuctionStatus.cdc`
+                `../../scripts/emulator/auction/CheckAuctionStatus.cdc`
             ),
             "utf8"
         );
 
+        unlinkFUSDVault = fs.readFileSync(
+            path.join(
+                __dirname,
+                `../../transactions/emulator/UnlinkFUSDVault.cdc`
+            ),
+            "utf8"
+        ); 
     });
 
     beforeEach(async (done) => {
@@ -106,6 +114,7 @@ export const testSuitePayCommission = () => describe("Pay commissions", () => {
         const admin = await getAccountAddress("admin");
         const second = await getAccountAddress("second");
         const third = await getAccountAddress("third");
+        const fourth = await getAccountAddress("fourth");
 
         await mintFlow(admin, "10.0");
 
@@ -166,6 +175,22 @@ export const testSuitePayCommission = () => describe("Pay commissions", () => {
             code: mintFUSDTransaction,
             args: [
                 ["500.00", t.UFix64], [third, t.Address]
+            ],
+            signers: [admin],
+        });
+
+        // Setup FUSD Vault for the third account
+        await sendTransaction({
+            code: setupFUSDTransaction,
+            args: [],
+            signers: [fourth],
+        });
+
+        // Mint FUSD for Vault and sent to the third account
+        await sendTransaction({
+            code: mintFUSDTransaction,
+            args: [
+                ["500.00", t.UFix64], [fourth, t.Address]
             ],
             signers: [admin],
         });
@@ -309,10 +334,10 @@ export const testSuitePayCommission = () => describe("Pay commissions", () => {
             const admin = await getAccountAddress("admin");
             const second = await getAccountAddress("second");
             const third = await getAccountAddress("third");
-            const fakeAccount = "0x01cf0e2f2f715457";
-
+            const fourth = await getAccountAddress("fourth");
+          
             const commission = `{
-                Address(${fakeAccount}) : Edition.CommissionStructure(
+                Address(${fourth}) : Edition.CommissionStructure(
                     firstSalePercent: 1.00,
                     secondSalePercent: 2.00,
                     description: "xxx"
@@ -396,6 +421,13 @@ export const testSuitePayCommission = () => describe("Pay commissions", () => {
                 args: [],
                 signers: [admin],
             });
+
+            // Unlink the fourth account FUSD vault to check failed payment events
+            await sendTransaction({
+                code: unlinkFUSDVault,
+                args: [], 
+                signers: [fourth],
+            }); 
 
             // Settle
             const result = await sendTransaction({

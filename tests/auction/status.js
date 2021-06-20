@@ -18,29 +18,18 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
     checkAuctionStatusScript,
     settleAuctionTransaction,
     checkAuctionStatusesScript,
-    getAuctionTimeLeft;
+    getAuctionTimeLeft,
+    commission;
 
-  let commission = `{
-        Address(0xf8d6e0586b0a20c7) : Edition.CommissionStructure(
-            firstSalePercent: 1.00,
-            secondSalePercent: 2.00,
-            description: "xxx"
-        ),
-        Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
-            firstSalePercent: 99.00,
-            secondSalePercent: 7.00,
-            description: "xxx"
-        )
-    }`;
 
   beforeAll(async () => {
-    jest.setTimeout(30000);
+    jest.setTimeout(120000);
     init(path.resolve(__dirname, "../"));
 
     createAuctionTransactionWithNFT = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CreateAuctionWithNFT.cdc`
+        `../../transactions/emulator/auction/CreateAuctionWithNFT.cdc`
       ),
       "utf8"
     );
@@ -48,7 +37,7 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
     placeBidTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/Bid.cdc`
+        `../../transactions/emulator/auction/Bid.cdc`
       ),
       "utf8"
     );
@@ -64,7 +53,7 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
     cancelAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CancelAuction.cdc`
+        `../../transactions/emulator/auction/CancelAuction.cdc`
       ),
       "utf8"
     );
@@ -72,7 +61,7 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
     settleAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/SettleAuction.cdc`
+        `../../transactions/emulator/auction/SettleAuction.cdc`
       ),
       "utf8"
     );
@@ -96,7 +85,7 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
     createAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CreateAuction.cdc`
+        `../../transactions/emulator/auction/CreateAuction.cdc`
       ),
       "utf8"
     );
@@ -104,7 +93,7 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
     checkAuctionStatusScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/CheckAuctionStatus.cdc`
+        `../../scripts/emulator/auction/CheckAuctionStatus.cdc`
       ),
       "utf8"
     );
@@ -112,7 +101,7 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
     checkAuctionStatusesScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/CheckAuctionStatuses.cdc`
+        `../../scripts/emulator/auction/CheckAuctionStatuses.cdc`
       ),
       "utf8"
     );
@@ -120,7 +109,7 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
     getAuctionTimeLeft = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/GetAuctionTimeLeft.cdc`
+        `../../scripts/emulator/auction/GetAuctionTimeLeft.cdc`
       ),
       "utf8"
     );
@@ -137,6 +126,19 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
     const admin = await getAccountAddress("admin");
     const second = await getAccountAddress("second");
     const third = await getAccountAddress("third");
+
+    commission = `{
+      Address(${second}) : Edition.CommissionStructure(
+          firstSalePercent: 1.00,
+          secondSalePercent: 5.00,
+          description: "xxx"
+      ),
+      Address(${third}) : Edition.CommissionStructure(
+          firstSalePercent: 99.00,
+          secondSalePercent: 6.00,
+          description: "xxx"
+      )          
+    }`;
 
     await mintFlow(admin, "10.0");
 
@@ -224,6 +226,7 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
   });
 
     test("getAuctionStatus return nil, when auction does not exist", async () => {
+        let error;
         try {
             const admin = await getAccountAddress("admin");
 
@@ -264,11 +267,13 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
             expect(auction).toEqual(null);
 
         } catch (e) {           
-            expect(e).toEqual('');
+          error = e;
         }
+        expect(error).toEqual(undefined);
     });
 
     test("getTimeLeft return nil, when auction does not exist", async () => {
+      let error;
       try {
           const admin = await getAccountAddress("admin");
 
@@ -309,11 +314,13 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
           expect(auction).toEqual(null);
 
       } catch (e) {           
-          expect(e).toEqual('');
+         error = e;
       } 
+      expect(error).toEqual(undefined);
     });
 
     test("getTimeLeft return positive value if auction does not expire", async () => {
+      let error;
       try {
           const admin = await getAccountAddress("admin");
 
@@ -375,11 +382,13 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
           expect(auctionStatus.expired).toBeFalsy();
 
       } catch (e) {           
-          expect(e).toEqual('');
+         error = e;
       } 
+      expect(error).toEqual(undefined);
     });   
 
     test("getTimeLeft return negative value if auction expired", async () => {
+      let error;
       try {
           const admin = await getAccountAddress("admin");
 
@@ -419,6 +428,13 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
             signers: [admin],
           });
 
+          // Sample transaction to change last block time
+          await sendTransaction({
+            code: tickTransaction,
+            args: [],
+            signers: [admin],
+          });
+
           const timeLeft = await executeScript({
               code: getAuctionTimeLeft,
               args: [
@@ -436,13 +452,13 @@ export const testSuiteAuctionStatus = () => describe("Auction", () => {
                 [events[0].data.auctionID, t.UInt64],
             ]
           });
-          console.log(auctionStatus)
 
           expect(parseFloat(timeLeft, 10)).toBeLessThan(0);
-          expect(auctionStatus.expired).toBeTrue();
+          expect(auctionStatus.expired).toBe(true);
 
       } catch (e) {           
-          expect(e).toEqual('');
+          error = e;
       } 
+      expect(error).toEqual(undefined);
     });   
 })

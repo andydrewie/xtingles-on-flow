@@ -196,15 +196,13 @@ export const testSuiteMarketPlaceCommon = () => describe("MarketPlace Common", (
         "utf8"
       );
   });
-
  
   beforeEach(async (done) => {
     const basePath = path.resolve(__dirname, "../../");
     const port = 8081;
     init(basePath, port);
 
-    await emulator.start(port, false);
-   
+    await emulator.start(port, false);   
 
     const admin = await getAccountAddress("admin");
     const second = await getAccountAddress("second");

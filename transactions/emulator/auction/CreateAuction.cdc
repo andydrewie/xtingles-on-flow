@@ -33,7 +33,6 @@ transaction(
         let platform = getAccount(platformAddress)
 
         self.platformCap = platform.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
-
    
         let editionCap = acct.getCapability<&{Edition.EditionPublic}>(/public/editionCollection)
 

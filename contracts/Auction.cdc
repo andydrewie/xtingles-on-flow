@@ -171,6 +171,7 @@ pub contract Auction {
                 return
             }     
             
+            // This NFT will be burned if the recipien storage is unavaliable
             self.burnNFT()
         }
 
@@ -222,11 +223,11 @@ pub contract Auction {
 
         priv fun sendCommissionPayment() {
 
-            let editionNumber = self.NFT?.editionNumber ?? panic("Could not find edition number") 
+            let editionNumber = self.NFT?.editionNumber!
 
-            let editionRef = self.editionCap.borrow() ?? panic("Could not borrow edition reference")     
+            let editionRef = self.editionCap.borrow()!   
 
-            let editionStatus = editionRef.getEdition(editionNumber)  
+            let editionStatus = editionRef.getEdition(editionNumber)!  
 
             for key in editionStatus.royalty.keys {
                 if (editionStatus.royalty[key]!.firstSalePercent > 0.0) {
@@ -326,13 +327,17 @@ pub contract Auction {
 
         pub fun bidder() : Address? {
             if let vaultCap = self.recipientVaultCap {
+                // Check possible situation, where vault was unlinked after bid
+                // Test this case in automated test
+                if !vaultCap.check() { return nil }
+
                 return vaultCap.borrow()!.owner!.address
             }
             return nil
         }
 
-        pub fun currentBidForUser(address:Address): UFix64 {
-             if(self.bidder() == address) {
+        pub fun currentBidForUser(address:Address): UFix64 {            
+            if(self.bidder() == address) {
                 return self.bidVault.balance
             }
             return 0.0
@@ -420,6 +425,10 @@ pub contract Auction {
         }
 
         pub fun cancelAuction() {
+            pre {
+                !self.auctionCancelled : "The auction has been already cancelled"
+                !self.auctionCompleted : "The auction was settled"           
+            }
             self.releasePreviousBid()
             self.burnNFT()
             self.auctionCancelled = true

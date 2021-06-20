@@ -3,19 +3,19 @@ import * as fs from "fs";
 import * as t from "@onflow/types";
 
 import { sendTransaction, executeScript, mintFlow, getAccountAddress, init, emulator, deployContractByName  } from "flow-js-testing";
-import { ZERO_UFIX64, defaultAuctionParameters } from "../constants";
+import { ZERO_UFIX64, defaultAuctionParameters } from "./constants";
 
 export const testSuiteCreateAuction = () => describe("Create auction", () => {
   let createAuctionTransaction, checkAuctionStatusScript, setupFUSDTransaction; 
 
   beforeAll(() => {
     init(path.resolve(__dirname, "../"));   
-    jest.setTimeout(30000);
+    jest.setTimeout(120000);
 
     createAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CreateAuction.cdc`
+        `../../transactions/emulator/auction/CreateAuction.cdc`
       ),
       "utf8"    
     );
@@ -31,7 +31,7 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
     checkAuctionStatusScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/CheckAuctionStatus.cdc`
+        `../../scripts/emulator/auction/CheckAuctionStatus.cdc`
       ),
       "utf8"    
     );
@@ -76,7 +76,7 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
 		done();
 	});
  
-  test("throw panic, when bid increment is 0.00", async () => { 
+  test("createAuction throws panic, when bid increment is 0.00", async () => { 
     let error;
     try {
       const admin = await getAccountAddress("admin");
@@ -93,7 +93,7 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
     expect(error).toMatch(/Minimum bid increment should be more than 0.00/);  
   });
 
- test("Auction length is 0.00", async () => { 
+ test("createAuction throws panic, when auction length is 0.00", async () => { 
     let error;
     try {
       const admin = await getAccountAddress("admin");
@@ -110,7 +110,7 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
     expect(error).toMatch(/Auction lenght should be more than 0.00/);  
   });
 
-  test("Extended length is 0.00", async () => { 
+  test("createAuction throws panic, when extended length is 0.00", async () => { 
     let error;
     try {
       const admin = await getAccountAddress("admin");
@@ -127,7 +127,7 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
     expect(error).toMatch(/Extended length should be more than 0.00/);  
   });
 
-  test("Remain length to extend is 0.00", async () => { 
+  test("createAuction throws panic, when remain length to extend is 0.00", async () => { 
     let error;
     try {
       const admin = await getAccountAddress("admin");
@@ -144,7 +144,7 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
     expect(error).toMatch(/Remain length to extend should be more than 0.00/);  
   });
 
-  test("Start time in the past", async () => { 
+  test("createAuction throws panic, when start time in the past", async () => { 
     let error;
     try {
       const admin = await getAccountAddress("admin");
@@ -161,7 +161,7 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
     expect(error).toMatch(/(Auction start time can't be in the past)/);  
   });
 
-  test("Start price is 0.00", async () => { 
+  test("createAuction throws panic, when start price is 0.00", async () => { 
     let error;
     try {
       const admin = await getAccountAddress("admin");
@@ -178,7 +178,8 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
     expect(error).toMatch(/Start price should be more than 0.00/);  
   });
 
-  test("Successfull creation auction", async () => { 
+  test("createAuction check events", async () => { 
+    let error;
     try {
       const admin = await getAccountAddress("admin");   
       await sendTransaction({
@@ -207,31 +208,24 @@ export const testSuiteCreateAuction = () => describe("Create auction", () => {
 
       expect(events[0].data).toMatchObject({   
         owner: admin,
-        startPrice: '50.00000000',
-        startTime: '5623417982.00000000'
       });     
 
       expect(auction).toMatchObject({
-          id: events[0].data.auctionID,
-          price: '0.00000000',
-          bidIncrement: '10.00000000',
+          id: events[0].data.auctionID,         
           bids: 0,
-          active: true,
-          endTime: '5623419282.00000000',
-          startTime: '5623417982.00000000',
+          active: true,         
           metadata: null,
           collectibleId: null,
-          leader: null,
-          minNextBid: '50.00000000',
+          leader: null,       
           completed: false,
           expired: false,
-          cancelled: false,
-          currentLenght: '1300.00000000'
+          cancelled: false
       });   
 
     } catch(e) {
-      console.error(e);
+      error = e;
     } 
+    expect(error).toEqual(undefined);
   });
 
 })

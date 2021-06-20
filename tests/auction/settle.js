@@ -7,7 +7,7 @@ import {
   init, emulator, deployContractByName, executeScript
 } from "flow-js-testing";
 
-export const testSuitSettlelAuction = () => describe("Settle auction", () => {
+export const testSuitSettleAuction = () => describe("Settle auction", () => {
   let placeBidTransaction,
     createAuctionTransactionWithNFT,
     setupFUSDTransaction,
@@ -16,29 +16,17 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
     cancelAuctionTransaction,
     createAuctionTransaction,
     checkAuctionStatusScript,
-    settleAuctionTransaction;
-
-  let commission = `{
-        Address(0xf8d6e0586b0a20c7) : Edition.CommissionStructure(
-            firstSalePercent: 1.00,
-            secondSalePercent: 2.00,
-            description: "xxx"
-        ),
-        Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
-            firstSalePercent: 99.00,
-            secondSalePercent: 7.00,
-            description: "xxx"
-        )
-    }`;
+    settleAuctionTransaction,
+    commission;
 
   beforeAll(async () => {
-    jest.setTimeout(30000);
+    jest.setTimeout(120000);
     init(path.resolve(__dirname, "../"));
 
     createAuctionTransactionWithNFT = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CreateAuctionWithNFT.cdc`
+        `../../transactions/emulator/auction/CreateAuctionWithNFT.cdc`
       ),
       "utf8"
     );
@@ -46,7 +34,7 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
     placeBidTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/Bid.cdc`
+        `../../transactions/emulator/auction/Bid.cdc`
       ),
       "utf8"
     );
@@ -62,7 +50,7 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
     cancelAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CancelAuction.cdc`
+        `../../transactions/emulator/auction/CancelAuction.cdc`
       ),
       "utf8"
     );
@@ -70,7 +58,7 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
     settleAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/SettleAuction.cdc`
+        `../../transactions/emulator/auction/SettleAuction.cdc`
       ),
       "utf8"
     );
@@ -94,7 +82,7 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
     createAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CreateAuction.cdc`
+        `../../transactions/emulator/auction/CreateAuction.cdc`
       ),
       "utf8"
     );
@@ -102,7 +90,7 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
     checkAuctionStatusScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/CheckAuctionStatus.cdc`
+        `../../scripts/emulator/auction/CheckAuctionStatus.cdc`
       ),
       "utf8"
     );
@@ -119,6 +107,19 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
     const admin = await getAccountAddress("admin");
     const second = await getAccountAddress("second");
     const third = await getAccountAddress("third");
+
+    commission = `{
+      Address(${second}) : Edition.CommissionStructure(
+          firstSalePercent: 1.00,
+          secondSalePercent: 5.00,
+          description: "xxx"
+      ),
+      Address(${third}) : Edition.CommissionStructure(
+          firstSalePercent: 99.00,
+          secondSalePercent: 6.00,
+          description: "xxx"
+      )          
+    }`;
 
     await mintFlow(admin, "10.0");
 
@@ -183,19 +184,6 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
       signers: [admin],
     });
 
-    commission = `{
-      Address(${second}) : Edition.CommissionStructure(
-          firstSalePercent: 1.00,
-          secondSalePercent: 2.00,
-          description: "xxx"
-      ),
-      Address(${third}) : Edition.CommissionStructure(
-          firstSalePercent: 99.00,
-          secondSalePercent: 7.00,
-          description: "xxx"
-      )
-  }`;
-
     done();
   });
 
@@ -205,11 +193,12 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
     done();
   });
 
-  test("throw error, when auction does not exist", async () => {
+  test("settleAuction throws error, when auction does not exist", async () => {
+    let error;
     try {
       const admin = await getAccountAddress("admin");
 
-      await sendTransaction({
+      const result = await sendTransaction({
         code: settleAuctionTransaction,
         args: [
           [1, t.UInt64]
@@ -217,12 +206,16 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
         signers: [admin],
       });
 
+      expect(result).toEqual(undefined);
+
     } catch (e) {
-      expect(e).toMatch(/Auction does not exist/);
+      error = e;
     }
+    expect(error).toMatch(/Auction does not exist/);
   });
 
-  test("throw error, when auction without NFT", async () => {
+  test("settleAuction throws error, when auction without NFT", async () => {
+    let error;
     try {
       const admin = await getAccountAddress("admin");
 
@@ -259,14 +252,15 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
         signers: [admin],
       });
 
-      expect(result).toEqual(null);
-
+      expect(result).toEqual('');
     } catch (e) {
-      expect(e).toMatch(/NFT in auction does not exist/);
+      error = e;
     }
+    expect(error).toMatch(/NFT in auction does not exist/);
   });
 
-  test("throw error, when auction time is not expired", async () => {
+  test("settleAuction throws error, when auction time is not expired", async () => {
+    let error;
     try {
       const admin = await getAccountAddress("admin");
 
@@ -327,14 +321,16 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
         signers: [admin],
       });
 
-      expect(result).toEqual(null);
+      expect(result).toEqual('');
 
     } catch (e) {
-      expect(e).toMatch(/Auction has not completed yet/);
+      error = e;
     }
+    expect(error).toMatch(/Auction has not completed yet/);
   });
 
-  test("throw error, because auction was cancelled", async () => {
+  test("settleAuction throws error, because auction was cancelled", async () => {
+    let error;
     try {
       const admin = await getAccountAddress("admin");
 
@@ -404,13 +400,15 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
         signers: [admin],
       });
 
-      expect(result).toEqual(null);
+      expect(result).toEqual('');
     } catch (e) {
-      expect(e).toMatch(/The auction was cancelled/);
+      error = e;
     }
+    expect(error).toMatch(/The auction was cancelled/);
   });
 
-  test("throw error, because auction was settled earlier", async () => {
+  test("settleAuction throws error, because auction has been already settled", async () => {
+    let error;
     try {
       const admin = await getAccountAddress("admin");
 
@@ -481,13 +479,15 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
         signers: [admin],
       });
 
-      expect(result).toEqual(null);
+      expect(result).toEqual('');
     } catch (e) {
-      expect(e).toMatch(/The auction has been already settled/);
+      error = e;
     }
+    expect(error).toMatch(/The auction has been already settled/);
   });
 
-  test("check events, when auction was settled without bids", async () => {
+  test("settleAuction check events, when auction was settled without bids", async () => {
+    let error;
     try {
       const admin = await getAccountAddress("admin");
 
@@ -562,11 +562,13 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
       expect(setlleEvents[1].type).toEqual(`A.${admin.substr(2)}.Auction.Settled`);
 
     } catch (e) {
-      expect(e).toEqual('');
+      error = e;
     }
+    expect(error).toEqual(undefined);
   });
 
-  test("check events, when auction was settled with bids", async () => {
+  test("settleAuction check events, when auction was settled with bids", async () => {
+    let error;
     try {
       const admin = await getAccountAddress("admin");
       const second = await getAccountAddress("second");
@@ -680,7 +682,8 @@ export const testSuitSettlelAuction = () => describe("Settle auction", () => {
       expect(earnedAuctionEvents.length).toBe(2);
 
     } catch (e) {
-      expect(e).toEqual('');
+      error = e;
     }
+    expect(error).toEqual(undefined);
   });
 })

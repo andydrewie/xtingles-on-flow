@@ -1,4 +1,5 @@
 import NonFungibleToken from "./NonFungibleToken.cdc"
+import Edition from "./Edition.cdc"
 
 pub contract Collectible: NonFungibleToken {
     // Named Paths   
@@ -20,17 +21,25 @@ pub contract Collectible: NonFungibleToken {
     pub resource interface Public {
         pub let id: UInt64
         pub let metadata: Metadata
+        // Common number for all copies of the item
         pub let editionNumber: UInt64
+        // Common number for all copies of the item
         pub fun getEditionNumber(): UInt64
     }
 
     pub struct Metadata {
-        pub let link: String     
+        // Link to IPFS file
+        pub let link: String   
+        // Name  
         pub let name: String
+        // Author name
         pub let author: String
+        // Description
         pub let description: String
+        // Number of copy
         pub (set) var edition: UInt64  
-        pub let properties: AnyStruct     
+        // Additional properties to use in future
+        pub let properties: { String: AnyStruct }    
 
         init(
             link:String,          
@@ -38,7 +47,7 @@ pub contract Collectible: NonFungibleToken {
             author: String,      
             description: String,        
             edition: UInt64, 
-            properties: AnyStruct
+            properties: { String: AnyStruct }
     )  {
             self.link = link             
             self.name = name
@@ -57,6 +66,7 @@ pub contract Collectible: NonFungibleToken {
 
         pub let metadata: Metadata
 
+        // Common number for all copies of the item
         pub let editionNumber: UInt64
 
         // initializer
@@ -86,7 +96,8 @@ pub contract Collectible: NonFungibleToken {
                     "Cannot borrow collectible reference: The id of the returned reference is incorrect."
             }
         }
-        pub fun getEditionNumber(id: UInt64): UInt64
+        // Common number for all copies of the item
+        pub fun getEditionNumber(id: UInt64): UInt64?
     }
 
     // Collection
@@ -133,12 +144,15 @@ pub contract Collectible: NonFungibleToken {
             return self.ownedNFTs.keys
         }
 
-        pub fun getNFT(id: UInt64): &Collectible.NFT {
+        pub fun getNFT(id: UInt64): &Collectible.NFT {        
             let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
             return ref as! &Collectible.NFT     
         }
   
-        pub fun getEditionNumber(id: UInt64): UInt64 {
+        // Common number for all copies of the item
+        pub fun getEditionNumber(id: UInt64): UInt64? {
+            if self.ownedNFTs[id] == nil { return nil }
+
             let ref = self.getNFT(id: id)
 
             return ref.getEditionNumber()
@@ -184,12 +198,17 @@ pub contract Collectible: NonFungibleToken {
     pub resource NFTMinter {
   
         pub fun mintNFT(metadata: Metadata, editionNumber: UInt64): @NFT {
+            let editionRef = Collectible.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow()! 
+
+            // Check edition info in contract Edition in order to manage commission and all amount of copies of the same item
+            if editionRef.getEdition(editionNumber) == nil { panic("Edition does not exist") }
+        
             var newNFT <- create NFT(
                 initID: Collectible.totalSupply,
                 metadata: Metadata(
                     link: metadata.link,          
                     name: metadata.name, 
-                    author: metadata.name,      
+                    author: metadata.author,      
                     description: metadata.description,        
                     edition: metadata.edition, 
                     properties: metadata.properties           
@@ -232,7 +251,7 @@ pub contract Collectible: NonFungibleToken {
         return collectibleData
     } 
 
-    // mint NFT from other contract (auction or fix price)
+    // mint NFT from other contract
     access(account) fun mint(metadata: Metadata, editionNumber: UInt64) : @Collectible.NFT {
         var newNFT <- create NFT(
             initID: Collectible.totalSupply,

@@ -1,12 +1,13 @@
 import { testSuiteCreateAuction } from './createAuction';
-import { testSuiteBidAuction } from './bidAuction';
+import { testSuiteBidAuction } from './bid';
 import { testSuiteAddNFT } from './addNFT';
 import { testSuiteSendBidTokens } from './sendBidTokens';
-import { testSuiteCancelAuction } from './cancelAuction';
-import { testSuiteExtendAuction } from './extendAuction';
-import { testSuitSettlelAuction } from './settleAuction';
+import { testSuiteCancelAuction } from './cancel';
+import { testSuiteExtendAuction } from './extend';
+import { testSuitSettleAuction } from './settle';
 import { testSuitePayCommission } from './payCommission';
-import { testSuiteAuctionStatus } from './auctionStatus';
+import { testSuiteAuctionStatus } from './status';
+import { testSuiteSendNFT } from './sendNFT';
 
 export {
     testSuiteCreateAuction,
@@ -15,7 +16,8 @@ export {
     testSuiteSendBidTokens,
     testSuiteCancelAuction,
     testSuiteExtendAuction,
-    testSuitSettlelAuction,
+    testSuitSettleAuction,
     testSuitePayCommission,
-    testSuiteAuctionStatus
+    testSuiteAuctionStatus,
+    testSuiteSendNFT
 }

@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as t from "@onflow/types";
 
 import { sendTransaction, mintFlow, getAccountAddress, init, emulator, deployContractByName, executeScript } from "flow-js-testing";
-import { defaultAuctionParameters } from "../constants";
+import { defaultAuctionParameters } from "./constants";
 
 export const testSuiteBidAuction = () => describe("Bid auction", () => {
   let createAuctionTransaction,
@@ -18,29 +18,17 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     cancelAuctionTransaction,
     placeBidWithoutNFTStorageTransaction,
     bidWithFakeReturnVaultCapTransaction,
-    bidWithVaultAndCollectionStorageDifferentOwner;
-  
-  const commission = `{
-    Address(0xf8d6e0586b0a20c7) : Edition.CommissionStructure(
-        firstSalePercent: 1.00,
-        secondSalePercent: 2.00,
-        description: "xxx"
-    ),
-    Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
-        firstSalePercent: 99.00,
-        secondSalePercent: 7.00,
-        description: "xxx"
-    )
-  }`;
+    bidWithVaultAndCollectionStorageDifferentOwner,
+    commission;
 
   beforeAll(async () => {
-    jest.setTimeout(60000);
+    jest.setTimeout(120000);
     init(path.resolve(__dirname, "../"));
 
     createAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CreateAuction.cdc`
+        `../../transactions/emulator/auction/CreateAuction.cdc`
       ),
       "utf8"
     );
@@ -48,7 +36,7 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     createAuctionTransactionWithNFT = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CreateAuctionWithNFT.cdc`
+        `../../transactions/emulator/auction/CreateAuctionWithNFT.cdc`
       ),
       "utf8"
     );
@@ -56,7 +44,7 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     checkAuctionStatusScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/CheckAuctionStatus.cdc`
+        `../../scripts/emulator/auction/CheckAuctionStatus.cdc`
       ),
       "utf8"
     );
@@ -64,7 +52,7 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     placeBidTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/Bid.cdc`
+        `../../transactions/emulator/auction/Bid.cdc`
       ),
       "utf8"
     );
@@ -73,7 +61,7 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     placeBidWithoutNFTStorageTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/BidWithoutNFTStorage.cdc`
+        `../../transactions/emulator/auction/BidWithoutNFTStorage.cdc`
       ),
       "utf8"
     );
@@ -89,7 +77,7 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     cancelAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CancelAuction.cdc`
+        `../../transactions/emulator/auction/CancelAuction.cdc`
       ),
       "utf8"
     );
@@ -113,7 +101,7 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     bidWithFakeReturnVaultCapTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/BidWithFakeReturnVaultCap.cdc`
+        `../../transactions/emulator/auction/BidWithFakeReturnVaultCap.cdc`
       ),
       "utf8"
     );
@@ -121,7 +109,7 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     bidWithVaultAndCollectionStorageDifferentOwner = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/BidWithVaultAndCollectionStorageDifferentOwner.cdc`
+        `../../transactions/emulator/auction/BidWithVaultAndCollectionStorageDifferentOwner.cdc`
       ),
       "utf8"
     );
@@ -137,6 +125,19 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     const admin = await getAccountAddress("admin");
     const second = await getAccountAddress("second");
     const third = await getAccountAddress("third");
+
+    commission = `{
+      Address(${second}) : Edition.CommissionStructure(
+          firstSalePercent: 1.00,
+          secondSalePercent: 5.00,
+          description: "xxx"
+      ),
+      Address(${admin}) : Edition.CommissionStructure(
+          firstSalePercent: 99.00,
+          secondSalePercent: 6.00,
+          description: "xxx"
+      )          
+    }`;
 
     await mintFlow(admin, "10.0");
     await mintFlow(second, "10.0");
@@ -273,7 +274,7 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     expect(error).toMatch(/NFT in auction does not exist/);
   });
 
-  test("throw error, when bidder provides wrong vault's capabity", async () => {
+  test("placeBid throws error, when bidder provides wrong vault's capabity", async () => {
     let error;
     try {
       const admin = await getAccountAddress("admin");
@@ -328,7 +329,7 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     expect(error).toMatch(/Fungible token storage is not initialized on account/);
   });
 
-  test("throw error, when bidder does not have NFT storage", async () => {
+  test("placeBid throws error, when bidder does not have NFT storage", async () => {
     let error;
     try {
       const admin = await getAccountAddress("admin");
@@ -384,7 +385,7 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
     expect(error).toMatch(/NFT storage is not initialized on account/);
   });
 
-  test("throw error, when the auction has not started yet", async () => {
+  test("placeBid throws error, when the auction has not started yet", async () => {
     let error;
 
     try {
@@ -394,10 +395,15 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
         code: createAuctionTransactionWithNFT.replace('RoyaltyVariable', commission),
         args: [
           ...defaultAuctionParameters,
+          // link to video
           ["xxx", t.String],
+          // name
           ["xxx", t.String],
+          // author
           ["xxx", t.String],
+          // description
           ["xxx", t.String],
+          // number of copies in one edition
           [1, t.UInt64],
         ],
         signers: [admin],
@@ -408,8 +414,11 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
       await sendTransaction({
         code: placeBidTransaction,
         args: [
+          // Auction id
           [events[0].data.auctionID, t.UInt64],
+          // Bid amount
           ["50.00", t.UFix64],
+          // Address storage, where auction stores
           [admin, t.Address],
         ],
         signers: [admin],
@@ -427,18 +436,19 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
       const admin = await getAccountAddress("admin");
     
       const auctionParameters = [
+        // Min bid increment in percent
         ["10.00", t.UFix64],
-
         // Auction length  
         ["1.00", t.UFix64],
-
+        // Time until finish, when auction could be extended
         ["1300.00", t.UFix64],
+        // Time lenght to extend auction      
         ["1300.00", t.UFix64],
-
         // Start time
         [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
-
+        // Initial price
         ["50.00", t.UFix64],
+        // Platform vault address
         ["0x01cf0e2f2f715450", t.Address]
       ];
 
@@ -446,10 +456,15 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
         code: createAuctionTransactionWithNFT.replace('RoyaltyVariable', commission),
         args: [
           ...auctionParameters,
+          // link to video
           ["xxx", t.String],
+          // name
           ["xxx", t.String],
+          // author
           ["xxx", t.String],
+          // description
           ["xxx", t.String],
+          // number of copies in one edition
           [1, t.UInt64],
         ],
         signers: [admin],
@@ -468,8 +483,11 @@ export const testSuiteBidAuction = () => describe("Bid auction", () => {
       await sendTransaction({
         code: placeBidTransaction,
         args: [
+          // Auction id
           [events[0].data.auctionID, t.UInt64],
+          // Bid amount
           ["50.00", t.UFix64],
+          // Address storage, where auction stores
           [admin, t.Address],
         ],
         signers: [admin],

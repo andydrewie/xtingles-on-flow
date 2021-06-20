@@ -2,9 +2,12 @@ import path from "path";
 import * as fs from "fs";
 import * as t from "@onflow/types";
 
-import { sendTransaction, mintFlow, getAccountAddress, init, emulator, deployContractByName, executeScript } from "flow-js-testing";
+import {
+  sendTransaction, mintFlow, getAccountAddress,
+  init, emulator, deployContractByName, executeScript
+} from "flow-js-testing";
 
-export const testSuiteCancelAuction = () => describe("Cancel auction", () => {
+export const testSuiteSendNFT = () => describe("Send NFT", () => {
   let placeBidTransaction,
     createAuctionTransactionWithNFT,
     setupFUSDTransaction,
@@ -12,29 +15,19 @@ export const testSuiteCancelAuction = () => describe("Cancel auction", () => {
     mintFUSDTransaction,
     cancelAuctionTransaction,
     createAuctionTransaction,
-    checkAuctionStatusScript;
-
-  const commission = `{
-    Address(0xf8d6e0586b0a20c7) : Edition.CommissionStructure(
-        firstSalePercent: 1.00,
-        secondSalePercent: 2.00,
-        description: "xxx"
-    ),
-    Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
-        firstSalePercent: 99.00,
-        secondSalePercent: 7.00,
-        description: "xxx"
-    )
-  }`;
+    checkAuctionStatusScript,
+    settleAuctionTransaction,
+    unlinkCollectible,
+    commission;
 
   beforeAll(async () => {
-    jest.setTimeout(30000);
+    jest.setTimeout(120000);
     init(path.resolve(__dirname, "../"));
 
     createAuctionTransactionWithNFT = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CreateAuctionWithNFT.cdc`
+        `../../transactions/emulator/auction/CreateAuctionWithNFT.cdc`
       ),
       "utf8"
     );
@@ -42,7 +35,7 @@ export const testSuiteCancelAuction = () => describe("Cancel auction", () => {
     placeBidTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/Bid.cdc`
+        `../../transactions/emulator/auction/Bid.cdc`
       ),
       "utf8"
     );
@@ -58,7 +51,15 @@ export const testSuiteCancelAuction = () => describe("Cancel auction", () => {
     cancelAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CancelAuction.cdc`
+        `../../transactions/emulator/auction/CancelAuction.cdc`
+      ),
+      "utf8"
+    );
+
+    settleAuctionTransaction = fs.readFileSync(
+      path.join(
+        __dirname,
+        `../../transactions/emulator/auction/SettleAuction.cdc`
       ),
       "utf8"
     );
@@ -82,7 +83,7 @@ export const testSuiteCancelAuction = () => describe("Cancel auction", () => {
     createAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/CreateAuction.cdc`
+        `../../transactions/emulator/auction/CreateAuction.cdc`
       ),
       "utf8"
     );
@@ -90,10 +91,18 @@ export const testSuiteCancelAuction = () => describe("Cancel auction", () => {
     checkAuctionStatusScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/CheckAuctionStatus.cdc`
+        `../../scripts/emulator/auction/CheckAuctionStatus.cdc`
       ),
       "utf8"
     );
+
+    unlinkCollectible = fs.readFileSync(
+      path.join(
+          __dirname,
+          `../../transactions/emulator/UnlinkCollectible.cdc`
+      ),
+      "utf8"
+  ); 
 
   });
 
@@ -107,6 +116,19 @@ export const testSuiteCancelAuction = () => describe("Cancel auction", () => {
     const admin = await getAccountAddress("admin");
     const second = await getAccountAddress("second");
     const third = await getAccountAddress("third");
+
+    commission = `{
+      Address(${second}) : Edition.CommissionStructure(
+          firstSalePercent: 1.00,
+          secondSalePercent: 5.00,
+          description: "xxx"
+      ),
+      Address(${third}) : Edition.CommissionStructure(
+          firstSalePercent: 99.00,
+          secondSalePercent: 6.00,
+          description: "xxx"
+      )          
+    }`;
 
     await mintFlow(admin, "10.0");
 
@@ -180,199 +202,22 @@ export const testSuiteCancelAuction = () => describe("Cancel auction", () => {
     done();
   });
 
-  test("throw error, when auction does not exist", async () => {
-    try {
-      const admin = await getAccountAddress("admin");
 
-      await sendTransaction({
-        code: cancelAuctionTransaction,
-        args: [
-          [1, t.UInt64]
-        ],
-        signers: [admin],
-      });
-
-    } catch (e) {
-      expect(e).toMatch(/Auction does not exist/);
-    }
-  });
-
-  test("check cancel auction without NFT and bids", async () => {
-    try {
-      const admin = await getAccountAddress("admin");
-
-      const auctionParameters = [
-        // Min bid increment in percent
-        ["10.00", t.UFix64],
-        // Initial auction length  
-        ["1000.00", t.UFix64],
-        // Time until finish, when auction could be extended
-        ["120.00", t.UFix64],
-        // Time lenght to extend auction
-        ["120.00", t.UFix64],
-        // Start time
-        [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
-        // Initial price
-        ["50.00", t.UFix64],
-        // Platform vault address
-        ["0x01cf0e2f2f715450", t.Address]
-      ];
-      const createdAuction = await sendTransaction({
-        code: createAuctionTransaction.replace('RoyaltyVariable', commission),
-        args: [
-          ...auctionParameters
-        ],
-        signers: [admin],
-      });
-
-      const { events } = createdAuction;
-
-      // Id of created auction
-      const auctionId = events[0].data.auctionID;
-
-      const auctionBeforeCancel = await executeScript({
-        code: checkAuctionStatusScript,
-        args: [
-          [admin, t.Address],
-          [auctionId, t.UInt64],
-        ]
-      });
-
-      const resultCancel = await sendTransaction({
-        code: cancelAuctionTransaction,
-        args: [
-          [events[0].data.auctionID, t.UInt64]
-        ],
-        signers: [admin],
-      });
-
-      const auctionAfterCancel = await executeScript({
-        code: checkAuctionStatusScript,
-        args: [
-          [admin, t.Address],
-          [auctionId, t.UInt64],
-        ]
-      });
-
-      const { events: cancelEvents } = resultCancel;
-
-      // The only one event
-      expect(cancelEvents.length).toEqual(1);
-      expect(cancelEvents[0].type).toEqual(`A.${admin.substr(2)}.Auction.Canceled`);
-      expect(cancelEvents[0].data.auctionID).toEqual(auctionId);
-      expect(auctionBeforeCancel).toMatchObject({ cancelled: false });
-      expect(auctionAfterCancel).toMatchObject({ cancelled: true });
-    } catch (e) {
-      expect(e).toEqual('');
-    }
-  });
-
-  test("check cancel auction with NFT and without bids", async () => {
-    try {
-      const admin = await getAccountAddress("admin");
-
-      const auctionParameters = [
-        // Min bid increment in percent
-        ["10.00", t.UFix64],
-        // Initial auction length  
-        ["1000.00", t.UFix64],
-        // Time until finish, when auction could be extended
-        ["120.00", t.UFix64],
-        // Time lenght to extend auction
-        ["120.00", t.UFix64],
-        // Start time
-        [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
-        // Initial price
-        ["50.00", t.UFix64],
-        // Platform vault address
-        ["0x01cf0e2f2f715450", t.Address]
-      ];
-
-      const createdAuctionWithNFT = await sendTransaction({
-        code: createAuctionTransactionWithNFT.replace('RoyaltyVariable', commission),
-        args: [
-          ...auctionParameters,
-          // Link to NFT
-          ["xxx", t.String],
-          // name
-          ["xxx", t.String],
-          // author
-          ["xxx", t.String],
-          // description
-          ["xxx", t.String],
-          // Number of copy in one edition
-          [1, t.UInt64],
-        ],
-        signers: [admin],
-      });
-
-      const { events } = createdAuctionWithNFT;
-
-      // Id of created auction
-      const auctionId = events[0].data.auctionID;
-
-      await new Promise((r) => setTimeout(r, 3000));
-
-      // Sample transaction to change last block time
-      await sendTransaction({
-        code: tickTransaction,
-        args: [],
-        signers: [admin],
-      });
-
-      const auctionBeforeCancel = await executeScript({
-        code: checkAuctionStatusScript,
-        args: [
-          [admin, t.Address],
-          [auctionId, t.UInt64],
-        ]
-      });
-
-      const resultCancel = await sendTransaction({
-        code: cancelAuctionTransaction,
-        args: [
-          [events[0].data.auctionID, t.UInt64]
-        ],
-        signers: [admin],
-      });
-
-      const auctionAfterCancel = await executeScript({
-        code: checkAuctionStatusScript,
-        args: [
-          [admin, t.Address],
-          [auctionId, t.UInt64],
-        ]
-      });
-
-      const { events: cancelEvents } = resultCancel;
-
-      // Only two events
-      expect(cancelEvents.length).toEqual(2);
-      expect(cancelEvents[0].type).toEqual(`A.${admin.substr(2)}.Auction.BurnNFT`);
-      expect(cancelEvents[0].data.auctionID).toEqual(auctionId);
-      expect(cancelEvents[1].type).toEqual(`A.${admin.substr(2)}.Auction.Canceled`);
-      expect(auctionBeforeCancel).toMatchObject({ cancelled: false });
-      expect(auctionAfterCancel).toMatchObject({ cancelled: true });
-    } catch (e) {
-      console.log(e);
-      expect(e).toEqual('');
-    }
-  });
-
-  test("check cancel auction with NFT and with bids", async () => {
+  test("sendNFT check events, when recepient capability is unavaliable", async () => {
+    let error;
     try {
       const admin = await getAccountAddress("admin");
       const second = await getAccountAddress("second");
-
+ 
       const auctionParameters = [
         // Min bid increment in percent
         ["10.00", t.UFix64],
         // Initial auction length  
-        ["1000.00", t.UFix64],
+        ["4.00", t.UFix64],
         // Time until finish, when auction could be extended
-        ["120.00", t.UFix64],
+        ["0.01", t.UFix64],
         // Time lenght to extend auction
-        ["120.00", t.UFix64],
+        ["0.01", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
         // Initial price
@@ -404,7 +249,8 @@ export const testSuiteCancelAuction = () => describe("Cancel auction", () => {
       // Id of created auction
       const auctionId = events[0].data.auctionID;
 
-      await new Promise((r) => setTimeout(r, 3000));
+      // timeout to start auction
+      await new Promise((r) => setTimeout(r, 2000));
 
       // Sample transaction to change last block time
       await sendTransaction({
@@ -414,7 +260,7 @@ export const testSuiteCancelAuction = () => describe("Cancel auction", () => {
       });
 
       // Bid from the second account
-      const resultBid = await sendTransaction({
+      await sendTransaction({
         code: placeBidTransaction,
         args: [
           // Auction id     
@@ -427,58 +273,169 @@ export const testSuiteCancelAuction = () => describe("Cancel auction", () => {
         signers: [second],
       });
 
-      const auctionBeforeCancel = await executeScript({
-        code: checkAuctionStatusScript,
-        args: [
-          [admin, t.Address],
-          [auctionId, t.UInt64],
-        ]
+      await new Promise((r) => setTimeout(r, 3000));
+
+      // Sample transaction to change last block time
+      await sendTransaction({
+        code: tickTransaction,
+        args: [],
+        signers: [admin],
       });
 
-      const resultCancel = await sendTransaction({
-        code: cancelAuctionTransaction,
+      // Unlink the NFT storage of the second account
+      await sendTransaction({
+          code: unlinkCollectible,
+          args: [], 
+          signers: [second],
+      }); 
+
+      // Settle
+      const result = await sendTransaction({
+        code: settleAuctionTransaction,
         args: [
-          [events[0].data.auctionID, t.UInt64]
+          [auctionId, t.UInt64]
         ],
         signers: [admin],
       });
 
-      const auctionAfterCancel = await executeScript({
+      const { events: setlleEvents } = result;
+
+      const auction = await executeScript({
         code: checkAuctionStatusScript,
         args: [
           [admin, t.Address],
-          [auctionId, t.UInt64],
+          [events[0].data.auctionID, t.UInt64],
         ]
       });
 
-      const { events: cancelEvents } = resultCancel;
+      const collectibleDepositEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.Collectible.Deposit`);
+      const burnNFTEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.Auction.BurnNFT`); 
 
-      // Only four events
-      expect(cancelEvents.length).toEqual(4);
+      // There are no events to deposit NFT to leader
+      expect(collectibleDepositEvents.length).toEqual(0);
+      // This event is burn NFT
+      expect(burnNFTEvents.length).toEqual(1);
 
-      // The cancel
-      // 1. TokensWithdrawn from the admin account. Return the previous bid
-      expect(cancelEvents[0].type).toEqual(`A.${admin.substr(2)}.FUSD.TokensWithdrawn`);
-      expect(cancelEvents[0].data.from).toEqual(admin);
-      expect(parseInt(cancelEvents[0].data.amount, 10)).toEqual(50);
-
-      // 2. TokensDeposited to the second account. Return the previous bid
-      expect(cancelEvents[1].type).toEqual(`A.${admin.substr(2)}.FUSD.TokensDeposited`);
-      expect(cancelEvents[1].data.to).toEqual(second);
-      expect(parseInt(cancelEvents[1].data.amount, 10)).toEqual(50);
-
-      // 3. Burn NFT
-      expect(cancelEvents[2].type).toEqual(`A.${admin.substr(2)}.Auction.BurnNFT`);
-      expect(cancelEvents[2].data.auctionID).toEqual(auctionId);
-
-      // 4. Auction cancel
-      expect(cancelEvents[3].type).toEqual(`A.${admin.substr(2)}.Auction.Canceled`);
-
-      expect(auctionBeforeCancel).toMatchObject({ cancelled: false });
-      expect(auctionAfterCancel).toMatchObject({ cancelled: true });
     } catch (e) {
-      console.log(e);
-      expect(e).toEqual('');
+      error = e;
     }
+    expect(error).toEqual(undefined);
+  });
+
+  test("sendNFT check events, when recepient capability is avaliable", async () => {
+    let error;
+    try {
+      const admin = await getAccountAddress("admin");
+      const second = await getAccountAddress("second");
+ 
+      const auctionParameters = [
+        // Min bid increment in percent
+        ["10.00", t.UFix64],
+        // Initial auction length  
+        ["4.00", t.UFix64],
+        // Time until finish, when auction could be extended
+        ["0.01", t.UFix64],
+        // Time lenght to extend auction
+        ["0.01", t.UFix64],
+        // Start time
+        [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+        // Initial price
+        ["50.00", t.UFix64],
+        // Platform vault address
+        ["0x01cf0e2f2f715450", t.Address]
+      ];
+
+      const createdAuctionWithNFT = await sendTransaction({
+        code: createAuctionTransactionWithNFT.replace('RoyaltyVariable', commission),
+        args: [
+          ...auctionParameters,
+          // Link to NFT
+          ["xxx", t.String],
+          // name
+          ["xxx", t.String],
+          // author
+          ["xxx", t.String],
+          // description
+          ["xxx", t.String],
+          // Number of copy in one edition
+          [1, t.UInt64],
+        ],
+        signers: [admin],
+      });
+
+      const { events } = createdAuctionWithNFT;
+
+      // Id of created auction
+      const auctionId = events[0].data.auctionID;
+
+      // timeout to start auction
+      await new Promise((r) => setTimeout(r, 2000));
+
+      // Sample transaction to change last block time
+      await sendTransaction({
+        code: tickTransaction,
+        args: [],
+        signers: [admin],
+      });
+
+      // Bid from the second account
+      await sendTransaction({
+        code: placeBidTransaction,
+        args: [
+          // Auction id     
+          [auctionId, t.UInt64],
+          // Bid amount
+          ["50.00", t.UFix64],
+          // Platform address
+          [admin, t.Address],
+        ],
+        signers: [second],
+      });
+
+      await new Promise((r) => setTimeout(r, 3000));
+
+      // Sample transaction to change last block time
+      await sendTransaction({
+        code: tickTransaction,
+        args: [],
+        signers: [admin],
+      });
+
+      // Settle
+      const result = await sendTransaction({
+        code: settleAuctionTransaction,
+        args: [
+          [auctionId, t.UInt64]
+        ],
+        signers: [admin],
+      });
+
+      const { events: setlleEvents } = result;
+
+      const auction = await executeScript({
+        code: checkAuctionStatusScript,
+        args: [
+          [admin, t.Address],
+          [events[0].data.auctionID, t.UInt64],
+        ]
+      });
+
+      const { leader } = auction;    
+ 
+      const collectibleDepositEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.Collectible.Deposit`);
+      const burnNFTEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.Auction.BurnNFT`); 
+
+      // This event is to deposit NFT to winner
+      expect(collectibleDepositEvents.length).toEqual(1);
+      // Deposit collectible to winner. In case of finished auction is leader
+      expect(collectibleDepositEvents[0].data.to).toEqual(leader);
+
+      // No event with burn NFT
+      expect(burnNFTEvents.length).toEqual(0);
+
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toEqual(undefined);
   });
 })
