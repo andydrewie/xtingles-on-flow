@@ -27,7 +27,7 @@ export const testSuiteOpenEditionStatus = () => describe("Open edition status", 
     }`;
 
     beforeAll(async () => {
-        jest.setTimeout(60000);
+        jest.setTimeout(90000);
         init(path.resolve(__dirname, "../"));
 
         createOpenEditionTransaction = fs.readFileSync(
@@ -217,7 +217,7 @@ export const testSuiteOpenEditionStatus = () => describe("Open edition status", 
                 [price.toFixed(2), t.UFix64],
                 // Start time
                 [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
-                // Initial auction length  
+                // Initial sale length  
                 ["1000.00", t.UFix64],
                 // Platftom address
                 [admin, t.Address]
@@ -300,7 +300,7 @@ export const testSuiteOpenEditionStatus = () => describe("Open edition status", 
                 [price.toFixed(2), t.UFix64],
                 // Start time
                 [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
-                // Initial auction length  
+                // Initial sale length  
                 ["1000.00", t.UFix64],
                 // Platftom address
                 [admin, t.Address]
@@ -336,6 +336,127 @@ export const testSuiteOpenEditionStatus = () => describe("Open edition status", 
                 expired: false,
                 cancelled: false
             });              
+
+        } catch(e) {
+            error = e;
+        } 
+        expect(error).toEqual(undefined);  
+    });
+
+    test("timeRemaining positive and expired is false if open edition has not expired yet", async () => { 
+        let error;
+        try {
+            const admin = await getAccountAddress("admin");
+            const price = 10;
+
+            const openEditionParameters = [
+                // Link to IPFS
+                ["https://www.ya.ru", t.String],
+                // Name
+                ["Great NFT!", t.String],
+                // Author
+                ["Brad Pitt", t.String],
+                // Description
+                ["Awesome", t.String],
+                // Initial price
+                [price.toFixed(2), t.UFix64],
+                // Start time
+                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+                // Initial sale length  
+                ["1000.00", t.UFix64],
+                // Platftom address
+                [admin, t.Address]
+            ];            
+            
+            await sendTransaction({
+                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
+                args: openEditionParameters, 
+                signers: [admin],
+            }); 
+
+            await new Promise((r) => setTimeout(r, 3000));
+
+            // The transaction to change add block with the last timestamp
+            await sendTransaction({
+                code: tickTransaction,
+                args: [], 
+                signers: [admin],
+            }); 
+
+            const status = await executeScript({
+                code: openEditionStatusScript,
+                args: [
+                  [admin, t.Address],     
+                  [1, t.UInt64]  
+                ]
+            });    
+
+            expect(status.expired).toEqual(false);
+            expect(parseFloat(status.timeRemaining, 10)).toBeGreaterThan(0); 
+
+        } catch(e) {
+            error = e;
+        } 
+        expect(error).toEqual(undefined);  
+    });
+
+    test("timeRemaining negative and expired is true if open edition expired", async () => { 
+        let error;
+        try {
+            const admin = await getAccountAddress("admin");
+            const price = 10;
+
+            const openEditionParameters = [
+                // Link to IPFS
+                ["https://www.ya.ru", t.String],
+                // Name
+                ["Great NFT!", t.String],
+                // Author
+                ["Brad Pitt", t.String],
+                // Description
+                ["Awesome", t.String],
+                // Initial price
+                [price.toFixed(2), t.UFix64],
+                // Start time
+                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+                // Initial sale length  
+                ["1.00", t.UFix64],
+                // Platftom address
+                [admin, t.Address]
+            ];            
+            
+            await sendTransaction({
+                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
+                args: openEditionParameters, 
+                signers: [admin],
+            }); 
+         
+            await (new Promise((r) => setTimeout(r, 5000)));
+
+            // The transaction to change add block with the last timestamp
+            await sendTransaction({
+                code: tickTransaction,
+                args: [], 
+                signers: [admin],
+            }); 
+
+            // The transaction to change add block with the last timestamp
+            await sendTransaction({
+                code: tickTransaction,
+                args: [], 
+                signers: [admin],
+            }); 
+            
+            const status = await executeScript({
+                code: openEditionStatusScript,
+                args: [
+                  [admin, t.Address],     
+                  [1, t.UInt64]  
+                ]
+            });    
+
+            expect(status.expired).toEqual(true);
+            expect(parseFloat(status.timeRemaining, 10)).toBeLessThan(0); 
 
         } catch(e) {
             error = e;

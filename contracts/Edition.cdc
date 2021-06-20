@@ -1,4 +1,6 @@
-// Edition is the batch of items with the almost same metadata. This is copies of one item
+import FungibleToken from "./FungibleToken.cdc"
+
+// Common information for all copies of the same item
 pub contract Edition {
 
     // The total amount of editions that have been created
@@ -26,7 +28,7 @@ pub contract Edition {
     pub event ChangeCommision(editionId: UInt64, royalty: { Address: CommissionStructure }) 
     pub event ChangeMaxEdition(editionId: UInt64, maxEdition: UInt64) 
 
-    // Info about editions
+    // Edition's status(commission and amount copies of the same item)
     pub struct EditionStatus {
         pub let royalty: { Address: CommissionStructure }  
         pub let editionId: UInt64  
@@ -39,14 +41,16 @@ pub contract Edition {
         ) {
             self.royalty = royalty                    
             self.editionId = editionId
+            // Amount copies of the same item
             self.maxEdition = maxEdition
         }
     }
 
-    // Attributes one edition, where stores royalty and count of copies in editions
+    // Attributes one edition, where stores royalty and amount of copies
     pub resource EditionItem {
         pub let editionId: UInt64
         pub var royalty: { Address: CommissionStructure }
+        // Amount copies of the same item
         priv var maxEdition: UInt64  
 
         init(
@@ -98,7 +102,6 @@ pub contract Edition {
     // EditionPublic is a resource interface that restricts users to
     // retreiving the edition information
     pub resource interface EditionPublic {
-
         pub fun getEdition(_ id: UInt64): EditionStatus
     }
 
@@ -113,23 +116,41 @@ pub contract Edition {
             self.editionItems <- {}
         }
 
-        // add
-        pub fun createEdition(
-            royalty: { Address: CommissionStructure },
-            maxEdition: UInt64        
-        ): UInt64 {
-           
+        // Validate royalty
+        priv fun validateRoyalty(       
+            royalty: { Address: CommissionStructure }   
+        ) {
             var firstSummaryPercent = 0.00
             var secondSummaryPercent = 0.00          
 
             for key in royalty.keys {
+
                 firstSummaryPercent = firstSummaryPercent + royalty[key]!.firstSalePercent
+
                 secondSummaryPercent = secondSummaryPercent + royalty[key]!.secondSalePercent
+
+                let account = getAccount(key)
+
+                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)  
+
+                if !vaultCap.check() { 
+                    let panicMessage = "Account ".concat(key.toString()).concat(" does not provide fusd vault capability")
+                    panic(panicMessage) 
+                }
             }      
 
             if firstSummaryPercent != 100.00 { panic("The first summary sale percent should be 100 %") }
 
-            if secondSummaryPercent >= 100.00 { panic("The second summary sale percent should be less than 100 %") }
+            if secondSummaryPercent >= 100.00 { panic("The second summary sale percent should be less than 100 %") }            
+        }
+
+        // Create edition (common information for all copies of the same item)
+        pub fun createEdition(
+            royalty: { Address: CommissionStructure },
+            maxEdition: UInt64        
+        ): UInt64 {
+
+            self.validateRoyalty(royalty: royalty)            
            
             let item <- create EditionItem(
                 royalty: royalty,
@@ -167,17 +188,7 @@ pub contract Edition {
                 self.editionItems[id] != nil: "Edition doesn't exist"
             }
           
-            var firstSummaryPercent = 0.00
-            var secondSummaryPercent = 0.00          
-
-            for key in royalty.keys {
-                firstSummaryPercent = firstSummaryPercent + royalty[key]!.firstSalePercent
-                secondSummaryPercent = secondSummaryPercent + royalty[key]!.secondSalePercent
-            }      
-
-            if firstSummaryPercent != 100.00 { panic("The first summary sale percent should be 100 %") }
-
-            if secondSummaryPercent >= 100.00 { panic("The second summary sale percent should be less than 100 %") }
+            self.validateRoyalty(royalty: royalty) 
             
             let itemRef = &self.editionItems[id] as &EditionItem
             

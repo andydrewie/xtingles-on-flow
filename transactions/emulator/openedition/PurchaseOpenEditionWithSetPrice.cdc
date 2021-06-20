@@ -38,12 +38,9 @@ transaction(
    
         let vaultRef = acct.borrow<&FungibleToken.Vault>(from: /storage/fusdVault)
             ?? panic("Could not borrow owner's Vault reference")
-
-        let amount = self.openEditionCollectionRef.getPrice(id)!
         
          // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: amount)
-
+        self.temporaryVault <- vaultRef.withdraw(amount: 10.00) 
     }
 
     execute {

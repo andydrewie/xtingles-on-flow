@@ -16,7 +16,7 @@ transaction(maxEdition: UInt64) {
         }  
 
         self.editionCollectionRef = acct.borrow<&Edition.EditionCollection>(from: /storage/editionCollection)
-            ?? panic("could not borrow minter reference")            
+            ?? panic("could not borrow edition reference")            
    
     }
 

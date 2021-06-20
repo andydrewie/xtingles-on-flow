@@ -4,7 +4,7 @@ import * as t from "@onflow/types";
 
 import { sendTransaction, mintFlow, getAccountAddress, init, emulator, deployContractByName, executeScript } from "flow-js-testing";
 
-export const testSuitePurchaseOpenEdition = () => describe("Purchase open edition", () => {
+export const testSuiteSettleOpenEdition = () => describe("Settle open edition", () => {
     let createOpenEditionTransaction,
         checkAuctionStatusScript,
         createdAuction,
@@ -14,17 +14,16 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
         setupFUSDTransaction,
         tickTransaction,
         mintFUSDTransaction,
+        cancelTransaction,
+        openEditionStatusScript,
         createOpenEditionWithFakePlatformVault,
         createOpenEditionWithoutCommissionInfo,
         cancelAuctionTransaction,
         placeBidWithoutNFTStorageTransaction,
         bidWithFakeReturnVaultCapTransaction,
         bidWithVaultAndCollectionStorageDifferentOwner,
-        purchaseTransaction,
-        createOpenEditionResourceTransaction,
-        purchaseOpenEditionWithoutNFTCollectionCapability,
-        cancelTransaction,
-        purchaseWithSetPriceTransaction;
+        settleTransaction, 
+        createOpenEditionResourceTransaction;
     
     const commission = `{
         Address(0xf8d6e0586b0a20c7) : Edition.CommissionStructure(
@@ -40,7 +39,7 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
     }`;
 
     beforeAll(async () => {
-        jest.setTimeout(90000);
+        jest.setTimeout(60000);
         init(path.resolve(__dirname, "../"));
 
         createOpenEditionTransaction = fs.readFileSync(
@@ -51,22 +50,6 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
             "utf8"
         );   
 
-        purchaseTransaction = fs.readFileSync(
-            path.join(
-                __dirname,
-                `../../transactions/emulator/openedition/PurchaseOpenEdition.cdc`
-            ),
-            "utf8"
-        );   
-
-        purchaseWithSetPriceTransaction = fs.readFileSync(
-            path.join(
-                __dirname,
-                `../../transactions/emulator/openedition/PurchaseOpenEditionWithSetPrice.cdc`
-            ),
-            "utf8"
-        );
-
         createOpenEditionResourceTransaction = fs.readFileSync(
             path.join(
                 __dirname,
@@ -75,13 +58,21 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
             "utf8"
         ); 
 
-        purchaseOpenEditionWithoutNFTCollectionCapability = fs.readFileSync(
+        cancelTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/openedition/PurchaseOpenEditionWithoutNFTCollectionCapability.cdc`
+                `../../transactions/emulator/openedition/CancelOpenEdition.cdc`
             ),
             "utf8"
-        ); 
+        );   
+                
+        settleTransaction = fs.readFileSync(
+            path.join(
+                __dirname,
+                `../../transactions/emulator/openedition/SettleOpenEdition.cdc`
+            ),
+            "utf8"
+        );  
 
         setupFUSDTransaction = fs.readFileSync(
             path.join(
@@ -105,15 +96,15 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
                 `../../transactions/emulator/Tick.cdc`
             ),
             "utf8"
-        ); 
-                
-        cancelTransaction = fs.readFileSync(
+        );  
+
+        openEditionStatusScript = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/openedition/CancelOpenEdition.cdc`
+                `../../scripts/emulator/openedition/OpenEditionStatus.cdc`
             ),
             "utf8"
-        ); 
+        );
     });
 
     beforeEach(async (done) => {
@@ -208,21 +199,15 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
         done();
     });
 
-    test("purchase throws error, when open edition does not exist", async () => { 
+    test("throw error, when open edition does not exist", async () => { 
         let error;
         try {
-            const admin = await getAccountAddress("admin");    
-            const second = await getAccountAddress("second");       
-            
+            const admin = await getAccountAddress("admin");
+                      
             const result  = await sendTransaction({
-                code: purchaseWithSetPriceTransaction,
-                args: [
-                    // Platftom address
-                    [admin, t.Address],
-                    // Open edtion id
-                    [1, t.UInt64]
-                ], 
-                signers: [second],
+                code: settleTransaction,
+                args: [[1, t.UInt64]], 
+                signers: [admin],
             }); 
 
             expect(result).toEqual('')
@@ -230,14 +215,12 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
             error = e;
         } 
         expect(error).toMatch(/Open Edition does not exist/);  
-    }); 
+    });
 
-    test("purchase throws error, because open edition has not started yet", async () => { 
+    test("settle OpenEdition throws error, because open edition was cancelled", async () => { 
         let error;
         try {
-            const admin = await getAccountAddress("admin");    
-            const second = await getAccountAddress("second");    
-            
+            const admin = await getAccountAddress("admin");
             const price = 10;
 
             const openEditionParameters = [
@@ -252,94 +235,53 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
                 // Initial price
                 [price.toFixed(2), t.UFix64],
                 // Start time
-                [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
+                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
                 // Initial auction length  
                 ["1000.00", t.UFix64],
                 // Platftom address
                 [admin, t.Address]
             ];            
             
+            // Create Open edition
             await sendTransaction({
                 code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
                 args: openEditionParameters, 
                 signers: [admin],
             }); 
-            
-            const result  = await sendTransaction({
-                code: purchaseTransaction,
-                args: [
-                    // Platftom address
-                    [admin, t.Address],
-                    // Open edtion id
-                    [1, t.UInt64]
-                ], 
-                signers: [second],
-            }); 
 
-            expect(result).toEqual('')
-        } catch(e) {
-            error = e;
-        } 
-        expect(error).toMatch(/The open edition has not started yet/);  
-    }); 
-
-    test("purchase throws error, because NFT collection capability is not provided", async () => { 
-        let error;
-        try {
-            const admin = await getAccountAddress("admin");    
-            const second = await getAccountAddress("second");    
-            
-            const price = 10;
-
-            const openEditionParameters = [
-                // Link to IPFS
-                ["https://www.ya.ru", t.String],
-                // Name
-                ["Great NFT!", t.String],
-                // Author
-                ["Brad Pitt", t.String],
-                // Description
-                ["Awesome", t.String],
-                // Initial price
-                [price.toFixed(2), t.UFix64],
-                // Start time
-                [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
-                // Initial auction length  
-                ["1000.00", t.UFix64],
-                // Platftom address
-                [admin, t.Address]
-            ];            
-            
+            // Cancel Open Edition
             await sendTransaction({
-                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
+                code: cancelTransaction,
+                args: [[1, t.UInt64]], 
                 signers: [admin],
             }); 
-            
-            const result  = await sendTransaction({
-                code: purchaseOpenEditionWithoutNFTCollectionCapability,
-                args: [
-                    // Platftom address
-                    [admin, t.Address],
-                    // Open edtion id
-                    [1, t.UInt64]
-                ], 
-                signers: [second],
+
+            await new Promise((r) => setTimeout(r, 3000));
+
+            // The transaction to change add block with the last timestamp
+            await sendTransaction({
+                code: tickTransaction,
+                args: [], 
+                signers: [admin],
             }); 
 
-            expect(result).toEqual('')
+            const result  = await sendTransaction({
+                code: settleTransaction,
+                args: [[1, t.UInt64]], 
+                signers: [admin],
+            }); 
+      
+            expect(result).toEqual('')         
         } catch(e) {
             error = e;
         } 
-        expect(error).toMatch(/NFT storage does not exist on the account/);  
-    }); 
+        expect(error).toMatch(/Open edition was cancelled/);  
+    });
 
-    test("purchase throws error, because open editon is expired", async () => { 
+    test("settle OpenEdition throws error, because open edition has been settled earlier", async () => { 
         let error;
         try {
-            const admin = await getAccountAddress("admin");    
-            const second = await getAccountAddress("second");    
-            
+            const admin = await getAccountAddress("admin");
             const price = 10;
 
             const openEditionParameters = [
@@ -361,11 +303,12 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
                 [admin, t.Address]
             ];            
             
+            // Create Open edition
             await sendTransaction({
                 code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
                 args: openEditionParameters, 
                 signers: [admin],
-            }); 
+            });          
 
             await new Promise((r) => setTimeout(r, 3000));
 
@@ -375,31 +318,32 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
                 args: [], 
                 signers: [admin],
             }); 
-            
-            const result  = await sendTransaction({
-                code: purchaseTransaction,
-                args: [
-                    // Platftom address
-                    [admin, t.Address],
-                    // Open edtion id
-                    [1, t.UInt64]
-                ], 
-                signers: [second],
+
+            // First settle
+            await sendTransaction({
+                code: settleTransaction,
+                args: [[1, t.UInt64]], 
+                signers: [admin],
             }); 
 
-            expect(result).toEqual('')
+            // Next settle
+            const result = await sendTransaction({
+                code: settleTransaction,
+                args: [[1, t.UInt64]], 
+                signers: [admin],
+            }); 
+    
+            expect(result).toEqual('')         
         } catch(e) {
             error = e;
         } 
-        expect(error).toMatch(/The open edition time expired/);  
-    }); 
-   
-    test("purchase throws error, because open editon was cancelled", async () => { 
+        expect(error).toMatch(/The open edition has already settled/);  
+    });
+
+    test("settle OpenEdition throws error, because open edition time has not expired yet", async () => { 
         let error;
         try {
-            const admin = await getAccountAddress("admin");    
-            const second = await getAccountAddress("second");    
-            
+            const admin = await getAccountAddress("admin");
             const price = 10;
 
             const openEditionParameters = [
@@ -421,11 +365,12 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
                 [admin, t.Address]
             ];            
             
+            // Create Open edition
             await sendTransaction({
                 code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
                 args: openEditionParameters, 
                 signers: [admin],
-            }); 
+            });          
 
             await new Promise((r) => setTimeout(r, 3000));
 
@@ -436,114 +381,24 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
                 signers: [admin],
             }); 
 
-            // Cancel Open Edition
-            await sendTransaction({
-                code: cancelTransaction,
+            // Next settle
+            const result = await sendTransaction({
+                code: settleTransaction,
                 args: [[1, t.UInt64]], 
                 signers: [admin],
             }); 
-            
-            const result  = await sendTransaction({
-                code: purchaseTransaction,
-                args: [
-                    // Platftom address
-                    [admin, t.Address],
-                    // Open edtion id
-                    [1, t.UInt64]
-                ], 
-                signers: [second],
-            }); 
-
-            expect(result).toEqual('')
+    
+            expect(result).toEqual('')         
         } catch(e) {
             error = e;
         } 
-        expect(error).toMatch(/Open edition was cancelled/);  
-    }); 
+        expect(error).toMatch(/Open edtion time has not expired yet/);  
+    });
 
-    test("purchase throws error, because purchase balance is less than price", async () => { 
+    test("settle check events in successfull case", async () => { 
         let error;
         try {
-            const admin = await getAccountAddress("admin");    
-            const second = await getAccountAddress("second");    
-            const third = await getAccountAddress("third");    
-            
-            const price = 15;
-
-            const openEditionParameters = [
-                // Link to IPFS
-                ["https://www.ya.ru", t.String],
-                // Name
-                ["Great NFT!", t.String],
-                // Author
-                ["Brad Pitt", t.String],
-                // Description
-                ["Awesome", t.String],
-                // Initial price
-                [price.toFixed(2), t.UFix64],
-                // Start time
-                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
-                // Initial auction length  
-                ["1000.00", t.UFix64],
-                // Platftom address
-                [admin, t.Address]
-            ];     
-            
-            const commission = `{
-                Address(${third}) : Edition.CommissionStructure(
-                    firstSalePercent: 1.00,
-                    secondSalePercent: 2.00,
-                    description: "xxx"
-                ),
-                Address(${admin}) : Edition.CommissionStructure(
-                    firstSalePercent: 99.00,
-                    secondSalePercent: 7.00,
-                    description: "xxx"
-                )
-            }`;
-            
-            await sendTransaction({
-                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
-                signers: [admin],
-            }); 
-
-            await new Promise((r) => setTimeout(r, 3000));
-
-            // The transaction to change add block with the last timestamp
-            await sendTransaction({
-                code: tickTransaction,
-                args: [], 
-                signers: [admin],
-            }); 
-            
-            const result  = await sendTransaction({
-                code: purchaseWithSetPriceTransaction,
-                args: [
-                    // Platftom address
-                    [admin, t.Address],
-                    // Open edtion id
-                    [1, t.UInt64]
-                ], 
-                signers: [second],
-            });        
-
-            expect(result.errorMessage).toEqual("");
-
-        } catch(e) {
-            error = e;
-        } 
-
-        expect(error).toMatch(/Not exact amount tokens to buy the NFT/);  
-    });    
-
-    test("purchase check events during succesfull case", async () => { 
-        let error;
-        try {
-            const admin = await getAccountAddress("admin");    
-            const second = await getAccountAddress("second");    
-            const third = await getAccountAddress("third");    
-            
+            const admin = await getAccountAddress("admin");
             const price = 10;
 
             const openEditionParameters = [
@@ -560,29 +415,17 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
                 // Start time
                 [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
                 // Initial auction length  
-                ["1000.00", t.UFix64],
+                ["1.00", t.UFix64],
                 // Platftom address
                 [admin, t.Address]
-            ];     
+            ];            
             
-            const commission = `{
-                Address(${third}) : Edition.CommissionStructure(
-                    firstSalePercent: 1.00,
-                    secondSalePercent: 2.00,
-                    description: "xxx"
-                ),
-                Address(${admin}) : Edition.CommissionStructure(
-                    firstSalePercent: 99.00,
-                    secondSalePercent: 7.00,
-                    description: "xxx"
-                )
-            }`;
-            
+            // Create Open edition
             await sendTransaction({
                 code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
                 args: openEditionParameters, 
                 signers: [admin],
-            }); 
+            });          
 
             await new Promise((r) => setTimeout(r, 3000));
 
@@ -592,39 +435,48 @@ export const testSuitePurchaseOpenEdition = () => describe("Purchase open editio
                 args: [], 
                 signers: [admin],
             }); 
-            
-            const result  = await sendTransaction({
-                code: purchaseTransaction,
+
+            const statusBefore = await executeScript({
+                code: openEditionStatusScript,
                 args: [
-                    // Platftom address
-                    [admin, t.Address],
-                    // Open edtion id
-                    [1, t.UInt64]
-                ], 
-                signers: [second],
-            }); 
+                  [admin, t.Address],     
+                  [1, t.UInt64]  
+                ]
+            });
+
+            // Settle
+            const result = await sendTransaction({
+                code: settleTransaction,
+                args: [[1, t.UInt64]], 
+                signers: [admin],
+            });
+
+            const statusAfter = await executeScript({
+                code: openEditionStatusScript,
+                args: [
+                  [admin, t.Address],     
+                  [1, t.UInt64]  
+                ]
+            });
 
             const { events } = result;
+            
+            // Change final amount of copies event
+            expect(events[0].type).toEqual(`A.${admin.substr(2)}.Edition.ChangeMaxEdition`);
 
-            const sentNFTevents = events.filter(event => event.type === `A.${admin.substr(2)}.Collectible.Deposit`);
-            const openEditionEarnedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.OpenEdition.Earned`);
-            const openEditionPurchaseEvents = events.filter(event => event.type === `A.${admin.substr(2)}.OpenEdition.Purchase`);
+            // Settle event
+            expect(events[1].type).toEqual(`A.${admin.substr(2)}.OpenEdition.Settled`);
+            expect(parseFloat(events[1].data.price, 10)).toEqual(price);
 
-            // NFT sent to buyer events
-            expect(sentNFTevents[0].data.to).toEqual(second);
+            
+            expect(statusBefore.completed).toBe(false);
+            expect(statusAfter.completed).toBe(true);
 
-            // Commission payments events
-            expect(openEditionEarnedEvents[0].data.owner).toEqual(third);
-            expect(openEditionEarnedEvents[1].data.owner).toEqual(admin);
-
-            // Purchase events
-            expect(openEditionPurchaseEvents[0].data.buyer).toEqual(second);
-            expect(parseFloat(openEditionPurchaseEvents[0].data.price, 10)).toEqual(price);  
-
+            expect(result.errorMessage).toEqual('')         
         } catch(e) {
             error = e;
         } 
 
         expect(error).toEqual(undefined);  
-    });    
+    });
 });

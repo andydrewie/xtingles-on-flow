@@ -43,46 +43,49 @@ pub contract OpenEdition {
         }
     }
 
-    // The total amount of AuctionItems that have been created
+    // The total amount of OpenEditions that have been created
     pub var totalOpenEditions: UInt64
 
     // Events
     pub event OpenEditionCollectionCreated()
     pub event Created(id: UInt64, price: UFix64, startTime: UFix64)
-    pub event Purchase(openEditionId: UInt64, buyerAddress: Address, price: UFix64, tokenID: UInt64, edition: UInt64)
-    pub event Earned(amount:UFix64, owner: Address, description: String)
+    pub event Purchase(openEditionId: UInt64, buyer: Address, price: UFix64, NFTid: UInt64, edition: UInt64)
+    pub event Earned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
+    pub event FailEarned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
     pub event Settled(id: UInt64, price: UFix64, amountMintedNFT: UInt64)
     pub event Canceled(id: UInt64)
 
-    // OpenEditionItem contains the Resources and metadata for a single auction
+    // OpenEditionItem contains the Resources and metadata for a single sale
     pub resource OpenEditionItem {
         
-        //Number of purchased NFTs
+        // Number of purchased NFTs
         priv var numberOfMintedNFT: UInt64
 
-        //The id of this individual open edition
+        // The id of this individual open edition
         pub let openEditionID: UInt64
 
-        //The minimum increment for a bid. This is an english auction style system where bids increase
+        // The current price
         pub let price: UFix64
 
-        //the time the acution should start at
+        // The time the open edition should start at
         priv var startTime: UFix64
 
-        //The length in seconds for this auction
+        // The length in seconds for this open edition
         priv var saleLength: UFix64
 
-        //Right now the dropitem is not moved from the collection when it ends, it is just marked here that it has ended 
+        // After settle open edition
         priv var completed: Bool
 
-        //This action was cncelled
+        // Set if an open edition will be cancelled
         priv var cancelled: Bool
 
+        // Common number for all copies one item
         priv let editionNumber: UInt64  
 
+        // Metadata for minted NFT
         priv let metadata: Collectible.Metadata
 
-        //the capability to pay the platform when the purchase is done
+        // The capability to pay commission to the platform when the purchase is done. 
         priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>   
 
         init(
@@ -106,27 +109,24 @@ pub contract OpenEdition {
             self.platformVaultCap = platformVaultCap
         }        
 
-        pub fun getEditionNumber(id: UInt64): UInt64 {             
-            return self.editionNumber
-        }
-
-        //This method should probably use preconditions more 
-        pub fun settleOpenEdition(clientRoyalty: &Edition.EditionCollection)  {
+        pub fun settleOpenEdition(clientEdition: &Edition.EditionCollection)  {
 
             pre {
-                !self.completed : "The open edition is already settled"            
-                self.isAuctionExpired() : "Auction has not completed yet"
+                !self.cancelled : "Open edition was cancelled"
+                !self.completed : "The open edition has already settled"            
+                self.isExpired() : "Open edtion time has not expired yet"
             }     
          
             self.completed = true  
 
-            clientRoyalty.changeMaxEdition(id: self.editionNumber, maxEdition: self.numberOfMintedNFT)
+            // Write final amount of copies for this NFT
+            clientEdition.changeMaxEdition(id: self.editionNumber, maxEdition: self.numberOfMintedNFT)
                       
             emit Settled(id: self.openEditionID, price: self.price, amountMintedNFT: self.numberOfMintedNFT)
         }
   
         //this can be negative if is expired
-        pub fun timeRemaining() : Fix64 {
+        priv fun timeRemaining() : Fix64 {
             let length = self.saleLength
 
             let startTime = self.startTime
@@ -142,60 +142,92 @@ pub contract OpenEdition {
             return self.price
         }
 
-        pub fun isAuctionExpired(): Bool {
+        priv fun isExpired(): Bool {
             let timeRemaining = self.timeRemaining()
             return timeRemaining < Fix64(0.0)
         }
 
-        // This method should probably use preconditions more
+        priv fun sendCommissionPayments(buyerTokens: @FungibleToken.Vault, tokenID: UInt64) {
+            // Capability to resource with commission information
+            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow()! 
+        
+            // Commission informaton for all copies of on item
+            let editionStatus = editionRef.getEdition(self.editionNumber)
+
+            // Vault for platform account
+            let platformVault = self.platformVaultCap.borrow()!
+
+            for key in editionStatus.royalty.keys {
+                // Commission is paid all recepient except platform
+                if (editionStatus.royalty[key]!.firstSalePercent > 0.0 && key != platformVault.owner!.address) {
+                    let commission = self.price * editionStatus.royalty[key]!.firstSalePercent * 0.01
+
+                    let account = getAccount(key) 
+
+                    let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)    
+
+                    // vaultCap was checked during creation of commission info on Edition contract, therefore this is extra check
+                    // if vault capability is not avaliable, the rest tokens will sent to platform vault                     
+                    if (vaultCap.check()) {
+                        let vault = vaultCap.borrow()!
+                        vault.deposit(from: <- buyerTokens.withdraw(amount: commission))
+                        emit Earned(nftID: tokenID, amount: commission, owner: key, type: "primary")
+                    } else {
+                        emit FailEarned(nftID: tokenID, amount: commission, owner: key, type: "primary")
+                    }            
+                }                
+            }
+
+            // Platform get the rest of Fungible tokens and tokens from failed transactions
+            let amount = buyerTokens.balance        
+
+            platformVault.deposit(from: <- buyerTokens)
+
+            emit Earned(nftID: tokenID, amount: amount, owner: platformVault.owner!.address, type: "primary")
+  
+        }
+   
         pub fun purchase(
             buyerTokens: @FungibleToken.Vault,
             buyerCollectionCap: Capability<&{Collectible.CollectionPublic}>,
             minterCap: Capability<&Collectible.NFTMinter>
         ) {
-            pre {
-                !self.completed : "The open edition has already settled"              
+            pre {              
                 self.startTime < getCurrentBlock().timestamp : "The open edition has not started yet"
-                !self.cancelled : "Open edition was cancelled"
-                !self.isAuctionExpired() : "The open edition time has finished"               
+                !self.isExpired() : "The open edition time expired"     
+                !self.cancelled : "Open edition was cancelled" 
+                buyerTokens.balance == self.price: "Not exact amount tokens to buy the NFT"                       
             }
 
-            let royaltyRef = OpenEdition.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow() 
-                ?? panic("Could not borrow royalty reference")     
-
-            let royaltyStatus = royaltyRef.getEdition(self.editionNumber)
-
-            for key in royaltyStatus.royalty.keys {
-                let commission = self.price * royaltyStatus.royalty[key]!.firstSalePercent * 0.01
-
-                let account = getAccount(key) 
-
-                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver).borrow() ?? panic("Could not borrow vault reference")     
-
-                vaultCap.deposit(from: <- buyerTokens.withdraw(amount: commission))
-
-                emit Earned(amount: commission, owner: vaultCap.owner!.address, description: royaltyStatus.royalty[key]!.description)
-            }
-
-            let minterRef = minterCap.borrow() ?? panic("Could not borrow minter reference")     
-
-            let platformValutCap = self.platformVaultCap.borrow() ?? panic("Could not borrow platform vault reference")   
-
-            platformValutCap.deposit(from: <- buyerTokens)
-
+            // Get minter reference to create NFT
+            let minterRef = minterCap.borrow()!    
+            
+            // Change amount of copies in this edition
             self.numberOfMintedNFT = self.numberOfMintedNFT + UInt64(1)
-
+ 
+            // Copy number for this NFT in metadata
             self.metadata.edition = self.numberOfMintedNFT
 
+            // Mint NFT
             let newNFT <- minterRef.mintNFT(metadata: self.metadata, editionNumber: self.editionNumber)
+            
+            // NFT number
+            let NFTid = newNFT.id  
 
-            let buyerNFTCollection = buyerCollectionCap.borrow() ?? panic("Could not borrow platform vault reference") 
+            // Get buyer's NFT Collection reference
+            let buyerNFTCollection = buyerCollectionCap.borrow()!
 
-            let tokenID = newNFT.id  
-    
-            buyerNFTCollection.deposit(token: <- newNFT)           
+            // Sent NFT to buyer    
+            buyerNFTCollection.deposit(token: <- newNFT)  
 
-            emit Purchase(openEditionId: self.openEditionID, buyerAddress: buyerCollectionCap.borrow()!.owner!.address, price: self.price, tokenID: tokenID, edition: self.numberOfMintedNFT)
+            // Pay commission to recipients
+            self.sendCommissionPayments(
+                buyerTokens: <- buyerTokens,
+                tokenID: NFTid
+            )         
+
+            // Purcahse event
+            emit Purchase(openEditionId: self.openEditionID, buyer: buyerCollectionCap.borrow()!.owner!.address, price: self.price, NFTid: NFTid, edition: self.numberOfMintedNFT)
         }
 
         pub fun getAuctionStatus() : OpenEditionStatus {       
@@ -203,27 +235,30 @@ pub contract OpenEdition {
             return OpenEditionStatus(
                 id: self.openEditionID,
                 price: self.price,             
-                active: !self.completed && !self.isAuctionExpired(),
+                active: !self.completed && !self.isExpired(),
                 timeRemaining: self.timeRemaining(),
                 metadata: self.metadata,             
                 startTime: Fix64(self.startTime),
                 endTime: Fix64(self.startTime + self.saleLength),            
                 completed: self.completed,
-                expired: self.isAuctionExpired(),
+                expired: self.isExpired(),
                 cancelled: self.cancelled           
             )
         }
 
-        pub fun cancelAuction() {
+        pub fun cancelAuction(clientEdition: &Edition.EditionCollection) {
             pre {
                 !self.completed : "The open edition has already settled"              
                 !self.cancelled : "Open edition has been cancelled earlier"   
-            }       
+            }     
+            // Write final amount of copies for this NFT
+            clientEdition.changeMaxEdition(id: self.editionNumber, maxEdition: self.numberOfMintedNFT)  
+            
             self.cancelled = true
         }
 
         destroy() {
-            log("destroy open editions")                       
+            log("destroy open editions")    
          
         }
     }   
@@ -287,8 +322,7 @@ pub contract OpenEdition {
                 platformVaultCap.check() : "Platform vault should be reachable"
             }     
 
-            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow() 
-                ?? panic("Could not borrow Edition reference")     
+            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow()! 
 
             // Check edition info in contract Edition in order to manage commission and all amount of copies of the same item
             // This error throws inside Edition contract. But I put this check for redundant
@@ -336,11 +370,8 @@ pub contract OpenEdition {
             return itemRef.getAuctionStatus()
         }
 
-        pub fun getPrice(_ id:UInt64): UFix64  {
-            pre {
-                self.openEditionsItems[id] != nil:
-                    "Open Edition doesn't exist"
-            }
+        pub fun getPrice(_ id:UInt64): UFix64?  {
+            if self.openEditionsItems[id] == nil { return nil }
 
             // Get the open edition item resources
             let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
@@ -349,18 +380,23 @@ pub contract OpenEdition {
 
         // settleAuction sends the auction item to the highest bidder
         // and deposits the FungibleTokens into the auction owner's account
-        pub fun settleOpenEdition(id: UInt64, clientRoyalty: &Edition.EditionCollection) {
+        pub fun settleOpenEdition(id: UInt64, clientEdition: &Edition.EditionCollection) {
+            pre {
+                self.openEditionsItems[id] != nil:
+                    "Open Edition does not exist"
+            }
+            
             let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
-            itemRef.settleOpenEdition(clientRoyalty: clientRoyalty)
+            itemRef.settleOpenEdition(clientEdition: clientEdition)
         }
 
-        pub fun cancelOpenEdition(_ id: UInt64) {
+        pub fun cancelOpenEdition(id: UInt64, clientEdition: &Edition.EditionCollection) {
             pre {
                 self.openEditionsItems[id] != nil:
                     "Open Edition does not exist"
             }
             let itemRef = &self.openEditionsItems[id] as &OpenEditionItem     
-            itemRef.cancelAuction()
+            itemRef.cancelAuction(clientEdition: clientEdition)
             emit Canceled(id: id)
         }
 
@@ -371,9 +407,9 @@ pub contract OpenEdition {
             collectionCap: Capability<&{Collectible.CollectionPublic}>       
         ) {
             pre {
-                self.openEditionsItems[id] != nil:"Open Edition does not exist"
-                collectionCap.check(): "NFT storage does not exist"
-            }
+                self.openEditionsItems[id] != nil: "Open Edition does not exist"
+                collectionCap.check(): "NFT storage does not exist on the account"
+            }          
 
             // Get the auction item resources
             let itemRef = &self.openEditionsItems[id] as &OpenEditionItem

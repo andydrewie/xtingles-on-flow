@@ -17,19 +17,8 @@ transaction(
         let openEditionOwner = getAccount(openEditionAddress)     
           
         // get the references to the buyer's Vault and NFT Collection receiver        
-        var collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
-
-        // if collection is not created yet we make it.
-        if !collectionCap.check() {
-            // store an empty NFT Collection in account storage
-            acct.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
-
-            // publish a capability to the Collection in storage
-            acct.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
-        }
-
         self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
-        
+      
         self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionPublic}>(/public/openEditionCollection)
             .borrow()
             ?? panic("Could not borrow nft sale reference")
@@ -42,7 +31,7 @@ transaction(
         let amount = self.openEditionCollectionRef.getPrice(id)!
         
          // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: amount)
+        self.temporaryVault <- vaultRef.withdraw(amount: amount)        
 
     }
 

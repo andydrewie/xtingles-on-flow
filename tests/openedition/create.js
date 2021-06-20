@@ -79,11 +79,11 @@ export const testSuiteCreateOpenEdition = () => describe("Create open edition", 
         );
 
         tickTransaction = fs.readFileSync(
-        path.join(
-            __dirname,
-            `../../transactions/emulator/Tick.cdc`
-        ),
-        "utf8"
+            path.join(
+                __dirname,
+                `../../transactions/emulator/Tick.cdc`
+            ),
+            "utf8"
         );  
     });
 
@@ -140,27 +140,27 @@ export const testSuiteCreateOpenEdition = () => describe("Create open edition", 
 
         // Mint FUSD for Vault and sent to the second account
         await sendTransaction({
-        code: mintFUSDTransaction,
-        args: [
-            ["500.00", t.UFix64], [second, t.Address]
-        ],
-        signers: [admin],
+            code: mintFUSDTransaction,
+            args: [
+                ["500.00", t.UFix64], [second, t.Address]
+            ],
+            signers: [admin],
         });
 
         // Setup FUSD Vault for the third account
         await sendTransaction({
-        code: setupFUSDTransaction,
-        args: [],
-        signers: [third],
+            code: setupFUSDTransaction,
+            args: [],
+            signers: [third],
         });
 
         // Mint FUSD for Vault and sent to the third account
         await sendTransaction({
-        code: mintFUSDTransaction,
-        args: [
-            ["500.00", t.UFix64], [third, t.Address]
-        ],
-        signers: [admin],
+            code: mintFUSDTransaction,
+            args: [
+                ["500.00", t.UFix64], [third, t.Address]
+            ],
+            signers: [admin],
         });
 
         done();

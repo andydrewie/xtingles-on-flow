@@ -4,7 +4,7 @@ import * as t from "@onflow/types";
 
 import { sendTransaction, mintFlow, getAccountAddress, init, emulator, deployContractByName, executeScript } from "flow-js-testing";
 
-export const testSuiteCancelOpenEdition = () => describe("Cancel open edition", () => {
+export const testSuiteCommissionPaymentsOpenEdition = () => describe("Commission payments open edition", () => {
     let createOpenEditionTransaction,
         checkAuctionStatusScript,
         createdAuction,
@@ -14,29 +14,18 @@ export const testSuiteCancelOpenEdition = () => describe("Cancel open edition", 
         setupFUSDTransaction,
         tickTransaction,
         mintFUSDTransaction,
-        cancelTransaction,
-        settleTransaction,
-        openEditionStatusScript,
         createOpenEditionWithFakePlatformVault,
         createOpenEditionWithoutCommissionInfo,
         cancelAuctionTransaction,
         placeBidWithoutNFTStorageTransaction,
         bidWithFakeReturnVaultCapTransaction,
-        bidWithVaultAndCollectionStorageDifferentOwner;
+        bidWithVaultAndCollectionStorageDifferentOwner,
+        purchaseTransaction,
+        createOpenEditionResourceTransaction,
+        purchaseOpenEditionWithoutNFTCollectionCapability,
+        cancelTransaction,
+        unlinkFUSDVault;
     
-    const commission = `{
-        Address(0xf8d6e0586b0a20c7) : Edition.CommissionStructure(
-            firstSalePercent: 1.00,
-            secondSalePercent: 2.00,
-            description: "xxx"
-        ),
-        Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
-            firstSalePercent: 99.00,
-            secondSalePercent: 7.00,
-            description: "xxx"
-        )
-    }`;
-
     beforeAll(async () => {
         jest.setTimeout(60000);
         init(path.resolve(__dirname, "../"));
@@ -49,21 +38,29 @@ export const testSuiteCancelOpenEdition = () => describe("Cancel open edition", 
             "utf8"
         );   
 
-        cancelTransaction = fs.readFileSync(
+        purchaseTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/openedition/CancelOpenEdition.cdc`
+                `../../transactions/emulator/openedition/PurchaseOpenEdition.cdc`
             ),
             "utf8"
-        );  
-        
-        settleTransaction = fs.readFileSync(
+        );   
+
+        createOpenEditionResourceTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/openedition/SettleOpenEdition.cdc`
+                `../../transactions/emulator/openedition/CreateOpenEditionResource.cdc`
             ),
             "utf8"
-        );  
+        ); 
+
+        purchaseOpenEditionWithoutNFTCollectionCapability = fs.readFileSync(
+            path.join(
+                __dirname,
+                `../../transactions/emulator/openedition/PurchaseOpenEditionWithoutNFTCollectionCapability.cdc`
+            ),
+            "utf8"
+        ); 
 
         setupFUSDTransaction = fs.readFileSync(
             path.join(
@@ -87,15 +84,23 @@ export const testSuiteCancelOpenEdition = () => describe("Cancel open edition", 
                 `../../transactions/emulator/Tick.cdc`
             ),
             "utf8"
-        );  
-
-        openEditionStatusScript = fs.readFileSync(
+        ); 
+                
+        cancelTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../scripts/emulator/openedition/OpenEditionStatus.cdc`
+                `../../transactions/emulator/openedition/CancelOpenEdition.cdc`
             ),
             "utf8"
-        );
+        ); 
+
+        unlinkFUSDVault = fs.readFileSync(
+            path.join(
+                __dirname,
+                `../../transactions/emulator/UnlinkFUSDVault.cdc`
+            ),
+            "utf8"
+        ); 
     });
 
     beforeEach(async (done) => {
@@ -125,6 +130,13 @@ export const testSuiteCancelOpenEdition = () => describe("Cancel open edition", 
         await deployContractByName({ to: admin, name: "FUSD" });
         await deployContractByName({ to: admin, name: "Collectible", addressMap });
         await deployContractByName({ to: admin, name: "OpenEdition", addressMap });
+
+        // Setup open edition resource
+        await sendTransaction({
+            code: createOpenEditionResourceTransaction,
+            args: [],
+            signers: [admin],
+        });
 
         // Setup FUSD Vault
         await sendTransaction({
@@ -183,29 +195,16 @@ export const testSuiteCancelOpenEdition = () => describe("Cancel open edition", 
         done();
     });
 
-    test("throw error, when open edition does not exist", async () => { 
+    test("commission payments check events during failed pay commission", async () => { 
         let error;
         try {
-            const admin = await getAccountAddress("admin");
-                      
-            const result  = await sendTransaction({
-                code: cancelTransaction,
-                args: [[1, t.UInt64]], 
-                signers: [admin],
-            }); 
-
-            expect(result).toEqual('')
-        } catch(e) {
-            error = e;
-        } 
-        expect(error).toMatch(/Open Edition does not exist/);  
-    });
-
-    test("cancel OpenEdition throws error, because open edition has been cancelled earlier", async () => { 
-        let error;
-        try {
-            const admin = await getAccountAddress("admin");
+            const admin = await getAccountAddress("admin");    
+            const second = await getAccountAddress("second");    
+            const third = await getAccountAddress("third");    
+            
             const price = 10;
+            const authorPercent = 1;
+            const platformPercent = 99;
 
             const openEditionParameters = [
                 // Link to IPFS
@@ -224,62 +223,21 @@ export const testSuiteCancelOpenEdition = () => describe("Cancel open edition", 
                 ["1000.00", t.UFix64],
                 // Platftom address
                 [admin, t.Address]
-            ];            
+            ];     
             
-            // Create Open edition
-            await sendTransaction({
-                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
-                signers: [admin],
-            }); 
-
-            // Cancel Open Edition
-            await sendTransaction({
-                code: cancelTransaction,
-                args: [[1, t.UInt64]], 
-                signers: [admin],
-            }); 
-
-            // Cancel Open Edition the second time
-            const result = await sendTransaction({
-                code: cancelTransaction,
-                args: [[1, t.UInt64]], 
-                signers: [admin],
-            }); 
-
-            expect(result).toEqual('')         
-        } catch(e) {
-            error = e;
-        } 
-        expect(error).toMatch(/Open edition has been cancelled earlier/);  
-    });
-
-    test("cancel OpenEdition throws error, because open edition has been settled", async () => { 
-        let error;
-        try {
-            const admin = await getAccountAddress("admin");
-            const price = 10;
-
-            const openEditionParameters = [
-                // Link to IPFS
-                ["https://www.ya.ru", t.String],
-                // Name
-                ["Great NFT!", t.String],
-                // Author
-                ["Brad Pitt", t.String],
-                // Description
-                ["Awesome", t.String],
-                // Initial price
-                [price.toFixed(2), t.UFix64],
-                // Start time
-                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
-                // Initial auction length  
-                ["1.00", t.UFix64],
-                // Platftom address
-                [admin, t.Address]
-            ];            
+            const commission = `{
+                Address(${third}) : Edition.CommissionStructure(
+                    firstSalePercent: ${authorPercent.toFixed(2)},
+                    secondSalePercent: 2.00,
+                    description: "xxx"
+                ),
+                Address(${admin}) : Edition.CommissionStructure(
+                    firstSalePercent: ${platformPercent.toFixed(2)},
+                    secondSalePercent: 7.00,
+                    description: "xxx"
+                )
+            }`;
             
-            // Create Open edition
             await sendTransaction({
                 code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
                 args: openEditionParameters, 
@@ -295,32 +253,61 @@ export const testSuiteCancelOpenEdition = () => describe("Cancel open edition", 
                 signers: [admin],
             }); 
 
-            // Settle Open Edition
+            // Unlink third account FUSD vault to check failed payment events
             await sendTransaction({
-                code: settleTransaction,
-                args: [[1, t.UInt64]], 
-                signers: [admin],
+                code: unlinkFUSDVault,
+                args: [], 
+                signers: [third],
+            }); 
+            
+            const result  = await sendTransaction({
+                code: purchaseTransaction,
+                args: [
+                    // Platftom address
+                    [admin, t.Address],
+                    // Open edtion id
+                    [1, t.UInt64]
+                ], 
+                signers: [second],
             }); 
 
-            // Cancel Open Edition
-            const result = await sendTransaction({
-                code: cancelTransaction,
-                args: [[1, t.UInt64]], 
-                signers: [admin],
-            }); 
+            const { events } = result;
 
-            expect(result).toEqual('')         
+            const earnedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.OpenEdition.Earned`);     
+
+            const failEarnedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.OpenEdition.FailEarned`);    
+
+            const tokensDepositedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.FUSD.TokensDeposited`);     
+            
+            // Earned events. All tokens are sent to platform vault
+            expect(earnedEvents.length).toEqual(1);
+            expect(earnedEvents[0].data.owner).toEqual(admin);
+         
+            // Failt earned events
+            expect(failEarnedEvents[0].data.owner).toEqual(third);       
+            
+            // Token deposited events. All tokens are sent to platform vault
+            expect(tokensDepositedEvents.length).toEqual(1);
+            expect(tokensDepositedEvents[0].data.to).toEqual(admin);
+            expect(parseFloat(tokensDepositedEvents[0].data.amount, 10)).toEqual(price);
+          
         } catch(e) {
             error = e;
         } 
-        expect(error).toMatch(/The open edition has already settled/);  
-    });
 
-    test("successfull case of cancel open edition", async () => { 
+        expect(error).toEqual(undefined);  
+    });    
+
+    test("commission payments check events during succesfull case", async () => { 
         let error;
         try {
-            const admin = await getAccountAddress("admin");
+            const admin = await getAccountAddress("admin");    
+            const second = await getAccountAddress("second");    
+            const third = await getAccountAddress("third");    
+            
             const price = 10;
+            const authorPercent = 1;
+            const platformPercent = 99;
 
             const openEditionParameters = [
                 // Link to IPFS
@@ -339,47 +326,72 @@ export const testSuiteCancelOpenEdition = () => describe("Cancel open edition", 
                 ["1000.00", t.UFix64],
                 // Platftom address
                 [admin, t.Address]
-            ];            
+            ];     
             
-            // Create Open edition
+            const commission = `{
+                Address(${third}) : Edition.CommissionStructure(
+                    firstSalePercent: ${authorPercent.toFixed(2)},
+                    secondSalePercent: 2.00,
+                    description: "xxx"
+                ),
+                Address(${admin}) : Edition.CommissionStructure(
+                    firstSalePercent: ${platformPercent.toFixed(2)},
+                    secondSalePercent: 7.00,
+                    description: "xxx"
+                )
+            }`;
+            
             await sendTransaction({
                 code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
                 args: openEditionParameters, 
                 signers: [admin],
             }); 
 
-            const statusBefore = await executeScript({
-                code: openEditionStatusScript,
-                args: [
-                  [admin, t.Address],     
-                  [1, t.UInt64]  
-                ]
-            });
+            await new Promise((r) => setTimeout(r, 3000));
 
-            // Cancel Open Edition
-            const result  = await sendTransaction({
-                code: cancelTransaction,
-                args: [[1, t.UInt64]], 
+            // The transaction to change add block with the last timestamp
+            await sendTransaction({
+                code: tickTransaction,
+                args: [], 
                 signers: [admin],
+            }); 
+            
+            const result  = await sendTransaction({
+                code: purchaseTransaction,
+                args: [
+                    // Platftom address
+                    [admin, t.Address],
+                    // Open edtion id
+                    [1, t.UInt64]
+                ], 
+                signers: [second],
             }); 
 
             const { events } = result;
 
-            const statusAfter = await executeScript({
-                code: openEditionStatusScript,
-                args: [
-                  [admin, t.Address],     
-                  [1, t.UInt64]  
-                ]
-            });
+            const earnedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.OpenEdition.Earned`);     
+
+            const failEarnedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.OpenEdition.FailEarned`);  
+
+            const tokensDepositedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.FUSD.TokensDeposited`);     
             
-            expect(events[0].type).toEqual(`A.${admin.substr(2)}.Edition.ChangeMaxEdition`);
-            expect(events[1].type).toEqual(`A.${admin.substr(2)}.OpenEdition.Canceled`);
-            expect(statusBefore.cancelled).toBe(false);
-            expect(statusAfter.cancelled).toBe(true);
+            // Earned events
+            expect(earnedEvents[0].data.owner).toEqual(third);
+            expect(earnedEvents[1].data.owner).toEqual(admin);  
+
+            // Fail earned events
+            expect(failEarnedEvents.length).toEqual(0);
+            
+            // Token deposited events
+            expect(tokensDepositedEvents[0].data.to).toEqual(third);
+            expect(parseFloat(tokensDepositedEvents[0].data.amount, 10)).toEqual(price * authorPercent * 0.01);
+            expect(tokensDepositedEvents[1].data.to).toEqual(admin);   
+            expect(parseFloat(tokensDepositedEvents[1].data.amount, 10)).toEqual(price * platformPercent * 0.01);
+
         } catch(e) {
             error = e;
         } 
+
         expect(error).toEqual(undefined);  
-    });
+    });    
 });
