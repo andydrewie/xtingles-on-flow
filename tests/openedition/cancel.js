@@ -5,37 +5,14 @@ import * as t from "@onflow/types";
 import { sendTransaction, mintFlow, getAccountAddress, init, emulator, deployContractByName, executeScript } from "flow-js-testing";
 
 export const testSuiteCancelOpenEdition = () => describe("Cancel open edition", () => {
-    let createOpenEditionTransaction,
-        checkAuctionStatusScript,
-        createdAuction,
-        placeBidTransaction,
-        createdAuctionWithNFT,
-        createAuctionTransactionWithNFT,
+    let createOpenEditionTransaction,      
         setupFUSDTransaction,
         tickTransaction,
         mintFUSDTransaction,
         cancelTransaction,
         settleTransaction,
-        openEditionStatusScript,
-        createOpenEditionWithFakePlatformVault,
-        createOpenEditionWithoutCommissionInfo,
-        cancelAuctionTransaction,
-        placeBidWithoutNFTStorageTransaction,
-        bidWithFakeReturnVaultCapTransaction,
-        bidWithVaultAndCollectionStorageDifferentOwner;
-    
-    const commission = `{
-        Address(0xf8d6e0586b0a20c7) : Edition.CommissionStructure(
-            firstSalePercent: 1.00,
-            secondSalePercent: 2.00,
-            description: "xxx"
-        ),
-        Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
-            firstSalePercent: 99.00,
-            secondSalePercent: 7.00,
-            description: "xxx"
-        )
-    }`;
+        openEditionStatusScript, 
+        commission;
 
     beforeAll(async () => {
         jest.setTimeout(60000);
@@ -108,6 +85,19 @@ export const testSuiteCancelOpenEdition = () => describe("Cancel open edition", 
         const admin = await getAccountAddress("admin");
         const second = await getAccountAddress("second");
         const third = await getAccountAddress("third");
+
+        commission = `{
+            Address(${second}) : Edition.CommissionStructure(
+                firstSalePercent: 1.00,
+                secondSalePercent: 5.00,
+                description: "xxx"
+            ),
+            Address(${third}) : Edition.CommissionStructure(
+                firstSalePercent: 99.00,
+                secondSalePercent: 6.00,
+                description: "xxx"
+            )          
+        }`;
 
         await mintFlow(admin, "10.0");
         await mintFlow(second, "10.0");

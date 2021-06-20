@@ -11,7 +11,7 @@ export const testSuiteCreateEdition = () => describe("Create edition", () => {
         mintFUSDTransaction;     
 
     beforeAll(async () => {
-        jest.setTimeout(60000);
+        jest.setTimeout(90000);
         init(path.resolve(__dirname, "../"));
 
         createEditionTransaction = fs.readFileSync(
@@ -120,6 +120,7 @@ export const testSuiteCreateEdition = () => describe("Create edition", () => {
 	});
 
     test("createEdition throws error, when firstRoyalty does not equal 100%", async () => { 
+        let error; 
         try {
             const admin = await getAccountAddress("admin");
             const second = await getAccountAddress("second");
@@ -138,18 +139,22 @@ export const testSuiteCreateEdition = () => describe("Create edition", () => {
                 )
             }`;
 
-            await sendTransaction({
+            const result = await sendTransaction({
                 code: createEditionTransaction.replace('RoyaltyVariable', commission),
                 args: [[1, t.UInt64]], 
                 signers: [admin],
             });  
 
+            expect(result).toEqual('');
+
         } catch (e) {
-            expect(e).toMatch(/The first summary sale percent should be 100 %/);
-        }    
+           error = e;
+        } 
+        expect(error).toMatch(/The first summary sale percent should be 100 %/);   
     }); 
 
     test("createEdition throws error, when secondRoyalty more 100% during creation", async () => { 
+        let error; 
         try {
             const admin = await getAccountAddress("admin");
             const second = await getAccountAddress("second");
@@ -168,18 +173,22 @@ export const testSuiteCreateEdition = () => describe("Create edition", () => {
                 )          
             }`;
 
-            await sendTransaction({
+            const result = await sendTransaction({
                 code: createEditionTransaction.replace('RoyaltyVariable', commission),
                 args: [[1, t.UInt64]], 
                 signers: [admin],
             });  
 
+            expect(result).toEqual('');
+
         } catch (e) {
-            expect(e).toMatch(/The second summary sale percent should be less than 100 %/);
+            error = e;
         }    
+           expect(error).toMatch(/The second summary sale percent should be less than 100 %/);
     }); 
 
     test("createEdition throws error, when account does not have fusd vault link capability", async () => { 
+        let error;
         try {
             const admin = await getAccountAddress("admin");
             const second = await getAccountAddress("second");
@@ -204,12 +213,15 @@ export const testSuiteCreateEdition = () => describe("Create edition", () => {
                 signers: [admin],
             });  
 
+            expect(result).toEqual('');
+
         } catch (e) {
-            expect(e).toMatch(/Account 0x2695ea898b04f0c0 does not provide fusd vault capability/);
+            error = e;
         }    
+            expect(error).toMatch(/Account 0x2695ea898b04f0c0 does not provide fusd vault capability/);
     }); 
 
-    test("successfull edition creation", async () => { 
+    test("check events createEdition successfull case", async () => { 
         let error;
         try {
             const admin = await getAccountAddress("admin");

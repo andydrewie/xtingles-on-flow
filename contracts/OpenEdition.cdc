@@ -152,7 +152,7 @@ pub contract OpenEdition {
             let editionRef = OpenEdition.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow()! 
         
             // Commission informaton for all copies of on item
-            let editionStatus = editionRef.getEdition(self.editionNumber)
+            let editionStatus = editionRef.getEdition(self.editionNumber)!
 
             // Vault for platform account
             let platformVault = self.platformVaultCap.borrow()!

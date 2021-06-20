@@ -5,7 +5,7 @@ import {
    testSuitePayCommission, testSuiteAuctionStatus,
 } from './auction';
 import { testSuiteCollectible } from "./collectible"
-import { testSuiteCreateEdition } from "./edition"
+import { testSuiteCreateEdition, testSuiteChangeCommission, testSuiteChangeMaxEdition, testSuiteGetEdition } from "./edition"
 import {
    testSuiteMarketPlacePuchase,
    testSuiteMarketPlaceCommon
@@ -23,7 +23,10 @@ import {
 
 describe('sequentially run tests', () => {
    // testSuiteCollectible();
-   testSuiteCreateEdition()
+   testSuiteCreateEdition();
+   testSuiteChangeCommission();
+   testSuiteChangeMaxEdition();
+   testSuiteGetEdition();
    // testSuiteCreateAuction();
    /*testSuiteAddNFT();
    testSuiteBidAuction();
@@ -35,11 +38,11 @@ describe('sequentially run tests', () => {
    testSuiteAuctionStatus();
    testSuiteMarketPlacePuchase();*/
   // testSuiteMarketPlaceCommon();
-  /* testSuiteCreateOpenEdition();
+   testSuiteCreateOpenEdition();
    testSuiteOpenEditionStatus();
    testSuiteCancelOpenEdition(); 
    testSuitePurchaseOpenEdition();
    testSuiteCommissionPaymentsOpenEdition();
    testSuiteSettleOpenEdition();
-   testSuiteOpenEditionPrice();*/
+   testSuiteOpenEditionPrice();
 })

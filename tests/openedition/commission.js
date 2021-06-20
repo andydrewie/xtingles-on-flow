@@ -5,25 +5,13 @@ import * as t from "@onflow/types";
 import { sendTransaction, mintFlow, getAccountAddress, init, emulator, deployContractByName, executeScript } from "flow-js-testing";
 
 export const testSuiteCommissionPaymentsOpenEdition = () => describe("Commission payments open edition", () => {
-    let createOpenEditionTransaction,
-        checkAuctionStatusScript,
-        createdAuction,
-        placeBidTransaction,
-        createdAuctionWithNFT,
-        createAuctionTransactionWithNFT,
+    let createOpenEditionTransaction,     
         setupFUSDTransaction,
         tickTransaction,
-        mintFUSDTransaction,
-        createOpenEditionWithFakePlatformVault,
-        createOpenEditionWithoutCommissionInfo,
-        cancelAuctionTransaction,
-        placeBidWithoutNFTStorageTransaction,
-        bidWithFakeReturnVaultCapTransaction,
-        bidWithVaultAndCollectionStorageDifferentOwner,
+        mintFUSDTransaction,      
         purchaseTransaction,
         createOpenEditionResourceTransaction,
         purchaseOpenEditionWithoutNFTCollectionCapability,
-        cancelTransaction,
         unlinkFUSDVault;
     
     beforeAll(async () => {
@@ -86,14 +74,6 @@ export const testSuiteCommissionPaymentsOpenEdition = () => describe("Commission
             "utf8"
         ); 
                 
-        cancelTransaction = fs.readFileSync(
-            path.join(
-                __dirname,
-                `../../transactions/emulator/openedition/CancelOpenEdition.cdc`
-            ),
-            "utf8"
-        ); 
-
         unlinkFUSDVault = fs.readFileSync(
             path.join(
                 __dirname,
