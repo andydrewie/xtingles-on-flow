@@ -80,13 +80,13 @@ pub contract Edition {
             emit ChangeCommision(editionId: self.editionId, royalty: royalty)
         }
 
-        // Change count of copies. This is used for Open Edition, because the eventual amount of copies are unknown        
+        // Change count of copies. This is used for Open Edition, because the eventual amount of copies are known only after finish of sale       
         pub fun changeMaxEdition (      
            maxEdition: UInt64     
         ) {
             pre {
-               // You can change this number only once after Open Edition would be completed
-               self.maxEdition < UInt64(1) : "You could not change max edition" 
+               // Possible change this number only once after Open Edition would be completed
+               self.maxEdition < UInt64(1) : "Forbid change max edition" 
             }
 
             self.maxEdition = maxEdition      
@@ -100,7 +100,7 @@ pub contract Edition {
     }    
 
     // EditionPublic is a resource interface that restricts users to
-    // retreiving the edition information
+    // retreiving the edition's information
     pub resource interface EditionPublic {
         pub fun getEdition(_ id: UInt64): EditionStatus
     }
