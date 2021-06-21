@@ -25,12 +25,12 @@ import {
 } from "./openedition";
 
 describe('sequentially run tests', () => {
-  /* testSuiteCollectible();
+   testSuiteCollectible();
    testSuiteCreateEdition();
    testSuiteChangeCommission();
    testSuiteChangeMaxEdition();
-   testSuiteGetEdition();*/
-  /* testSuiteCreateAuction();
+   testSuiteGetEdition();
+   testSuiteCreateAuction();
    testSuiteAddNFT();
    testSuiteBidAuction();
    testSuiteSendBidTokens();
@@ -39,16 +39,16 @@ describe('sequentially run tests', () => {
    testSuitSettleAuction(); 
    testSuitePayCommission();
    testSuiteAuctionStatus();
-   testSuiteSendNFT(); */
+   testSuiteSendNFT();
  //  testSuiteMarketPlacePuchase();
    //testSuiteMarketPlaceCommon();
    testSuiteChangePrice();
    testSuiteMarketPlaceWithdraw();
- /*  testSuiteCreateOpenEdition();
+   testSuiteCreateOpenEdition();
    testSuiteOpenEditionStatus();
    testSuiteCancelOpenEdition(); 
    testSuitePurchaseOpenEdition();
    testSuiteCommissionPaymentsOpenEdition();
    testSuiteSettleOpenEdition();
-   testSuiteOpenEditionPrice(); */
+   testSuiteOpenEditionPrice();
 })
