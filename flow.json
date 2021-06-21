@@ -73,14 +73,32 @@
 		"testnet-third-account": {
 			"address": "96c8ac9a55867f24",
 			"keys": "3b0248d3bf3b06b339bdd3d534d3ea8429c3deb3e9a8044856d8a6d9f07c5e21"
+		},
+		"testnet-xtingles-1": {
+			"address": "0xfc747df8f5e61fcb",
+			"keys": "1c0495acc9ceff7911026381031ea0d6a5b480dac6ca9f1d5085af00d1cd0544"
+		},
+		"testnet-xtingles-2": {
+			"address": "0xefb501878aa34730",
+			"keys": "3bd892709af008989f566be977450eaa1ac8744abdeb49db9dc5d573eba131ba"
+		},
+		"testnet-xtingles-3": {
+			"address": "0x0bd2b85a9b5947ef",
+			"keys": "35bad13e56157c9bf9c08969904dbe6375efd55a074fbda428a6911b7e9c0e5a"
+		},
+		"testnet-xtingles-4": {
+			"address": "0xf9e164b413a74d51",
+			"keys": "d82893303008a69c448ec948ca169ba4106339370ff5228aa1a25f661b369e4c"
 		}
 	},
 	"deployments": {
 		"testnet": {
-			"testnet-account": [	
+			"testnet-xtingles-1": [	
 				"Collectible",		
 				"Auction",
-				"Edition"					
+				"Edition",
+				"OpenEdition",
+				"MarketPlace"									
 			]
 		},
 		"emulator": {

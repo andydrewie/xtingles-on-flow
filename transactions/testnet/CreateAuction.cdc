@@ -1,6 +1,6 @@
 import FungibleToken from 0x9a0766d93b6608b7
 import NonFungibleToken from 0x631e88ae7f1d7c20
-import Auction, Collectible, Edition from 0x2695ea898b04f0c0
+import Auction, Collectible, Edition from 0xfc747df8f5e61fcb
 
 transaction(      
         minimumBidIncrement: UFix64, 
@@ -36,7 +36,6 @@ transaction(
 
         self.auctionCollectionRef = acct.borrow<&Auction.AuctionCollection>(from: /storage/auctionCollection)
             ?? panic("could not borrow minter reference")    
-
      
         let platform = getAccount(platformAddress)
 
@@ -84,12 +83,12 @@ transaction(
 
         let editionId = self.editionCollectionRef.createEdition(
             royalty: {
-                Address(0xf8d6e0586b0a20c7) : Edition.CommissionStructure(
+                Address(0xf9e164b413a74d51) : Edition.CommissionStructure(
                     firstSalePercent: 80.00,
                     secondSalePercent: 2.00,
                     description: "Author"
                 ),
-                Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
+                Address(0xefb501878aa34730) : Edition.CommissionStructure(
                     firstSalePercent: 20.00,
                     secondSalePercent: 7.00,
                     description: "Third party"

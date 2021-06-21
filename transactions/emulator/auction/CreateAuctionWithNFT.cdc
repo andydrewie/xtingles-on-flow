@@ -36,7 +36,6 @@ transaction(
 
         self.auctionCollectionRef = acct.borrow<&Auction.AuctionCollection>(from: /storage/auctionCollection)
             ?? panic("could not borrow minter reference")    
-
      
         let platform = getAccount(platformAddress)
 

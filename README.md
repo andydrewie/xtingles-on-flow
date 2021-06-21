@@ -1,5 +1,6 @@
 A. emulator example
 
+
 1. install flow cli https://docs.onflow.org/flow-cli/install
 2. launch flow emulator in the separate console in the root of this project (flow emulator start)
 3. launch script: bash ./setup.sh (create 3 accounts and setup FUSD tokens)
@@ -30,14 +31,15 @@ A. emulator example
 10. check NFTs on account: flow scripts execute ./scripts/emulator/CheckCollectible.cdc --arg Address:"0xf8d6e0586b0a20c7"
 
 
+
 B. testnet example
-three accounts: testnet-account, testnet-second-account, testnet-third-account
+There are three accounts: testnet-xtingles-1, testnet-xtingles-2, testnet-xtingles-3
 
 1. testnet create Auction: 
-  flow transactions send --code ./transactions/emulator/CreateAuctionWithNFT.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "3623248636.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"}]' --signer emulator-account 
+  flow transactions send --code ./transactions/testnet/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "3623248636.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=testnet
 
 2. see auction status: 
-  flow scripts execute ./scripts/emulator/CheckAuctionStatus.cdc --arg Address:"0xf8d6e0586b0a20c7" --arg UInt64:1 --network=testnet
+  flow scripts execute ./scripts/testnet/CheckAuctionStatus.cdc --arg Address:"0xfc747df8f5e61fcb" --arg UInt64:1 --network=testnet
 
 3. flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"},
     {"type": "UInt64","value": "2"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-second-account --network=testnet

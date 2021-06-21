@@ -1,14 +1,14 @@
-import FungibleToken from 0xee82856bf20e2aa6
-import FUSD from 0xf8d6e0586b0a20c7
+// Testnet
+import FungibleToken from 0x9a0766d93b6608b7
+import FUSD from 0xe223d8a629e49c68
 
 transaction {
+
   prepare(signer: AuthAccount) {
 
-    let existingVault = signer.borrow<&FUSD.Vault>(from: /storage/fusdVault)
-
-    // If the account is already set up that's not a problem, but we don't want to replace it
-    if (existingVault != nil) {
-        return
+    // It's OK if the account already has a Vault, but we don't want to replace it
+    if(signer.borrow<&FUSD.Vault>(from: /storage/fusdVault) != nil) {
+      return
     }
     
     // Create a new FUSD Vault and put it in storage
