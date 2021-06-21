@@ -79,10 +79,6 @@ pub contract MarketPlace {
             return <-token
         }
 
-        priv fun payCommision() {
-            
-        }
-
         // listForSale lists an NFT for sale in this collection
         pub fun listForSale(token: @Collectible.NFT, price: UFix64) {
             let id = token.id
@@ -102,7 +98,8 @@ pub contract MarketPlace {
         // changePrice changes the price of a token that is currently for sale
         pub fun changePrice(tokenID: UInt64, newPrice: UFix64) {
             pre {
-                self.prices[tokenID] != nil : "NFT does not exist on sale"        
+                self.prices[tokenID] != nil : "NFT does not exist on sale"  
+                newPrice > 0.00 : "Price should be more than 0"      
             }
 
             self.prices[tokenID] = newPrice
@@ -166,7 +163,7 @@ pub contract MarketPlace {
             let royaltyRef = MarketPlace.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow() 
                 ?? panic("Could not borrow Edition reference")     
 
-            let royaltyStatus = royaltyRef.getEdition(editionNumber)
+            let royaltyStatus = royaltyRef.getEdition(editionNumber)!
     
             for key in royaltyStatus.royalty.keys {
                 let commission = price * royaltyStatus.royalty[key]!.secondSalePercent * 0.01

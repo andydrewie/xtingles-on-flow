@@ -343,27 +343,6 @@ export const testSuiteMarketPlaceCommon = () => describe("MarketPlace Common", (
     expect(error).toEqual(undefined);
   });
 
-  test("throw error for changePrice, when change price to non-existent sale", async () => {
-    let error;
-    try {
-      const second = await getAccountAddress("second");
-
-      const result = await sendTransaction({
-        code: changePriceTransaction,
-        args: [
-          [1, t.UInt64],
-          ["999.00", t.UFix64]
-        ],
-        signers: [second],
-      });
-
-      expect(result).toEqual('');
-    } catch (e) {
-      error = e;
-    }
-    expect(error).toMatch(/NFT does not exist on sale/);
-  });  
-
   test("return nil for idPrice, when get price of non-existent sale", async () => {
     let error;
     try {
@@ -428,7 +407,7 @@ export const testSuiteMarketPlaceCommon = () => describe("MarketPlace Common", (
     expect(error).toEqual(undefined);
   }); 
 
-  /*test("return nil, when get edition number of non-existent NFT by function getEditionNumber", async () => {
+  test("return nil, when get edition number of non-existent NFT by function getEditionNumber", async () => {
     let error;
     try {
       const second = await getAccountAddress("second");
@@ -447,7 +426,7 @@ export const testSuiteMarketPlaceCommon = () => describe("MarketPlace Common", (
       error = e;
     }
     expect(error).toEqual(undefined);
-  }); */
+  }); 
 
   test("sent NFT to Sale by listForSale", async () => {
     let error;
@@ -514,168 +493,5 @@ export const testSuiteMarketPlaceCommon = () => describe("MarketPlace Common", (
       error = e;
     }
     expect(error).toEqual(undefined);
-  }); 
-
-  test("check changePrice events", async () => {
-    let error;
-    try {
-      const admin = await getAccountAddress("admin");
-      const second = await getAccountAddress("second");
-      const NFTId = 1;
-      const initialSalePrice = 10;
-      const newSalePrice = 15;
-
-      await sendTransaction({
-        code: saleNFTTransaction,
-        args: [
-          [NFTId, t.UInt64],
-          [initialSalePrice.toFixed(2), t.UFix64]
-        ],
-        signers: [second],
-      });
-
-       //Get sale price 
-      const initialPrice = await executeScript({
-        code: getPriceScript,
-        args: [
-          [second, t.Address],
-          [NFTId, t.UInt64]
-        ]
-      });
-     
-      const result = await sendTransaction({
-        code: changePriceTransaction,
-        args: [
-          [1, t.UInt64],
-          [newSalePrice.toFixed(2), t.UFix64]
-        ],
-        signers: [second],
-      });
-
-      const { events } = result;
-
-      //Get sale price 
-      const newPrice = await executeScript({
-        code: getPriceScript,
-        args: [
-          [second, t.Address],
-          [NFTId, t.UInt64]
-        ]
-      });
-
-      expect(parseFloat(initialPrice, 10)).toEqual(initialSalePrice);
-      expect(parseFloat(newPrice, 10)).toEqual(newSalePrice);
-
-      expect(events[0].type).toEqual(`A.${admin.substr(2)}.MarketPlace.PriceChanged`);
-      expect(events[0].data.owner).toEqual(second);
-      expect(parseFloat(events[0].data.newPrice, 10)).toEqual(newSalePrice);
-
-
-    } catch (e) {
-      console.log(e);
-      error = e;
-    }
-
-    expect(error).toEqual(undefined);
-  });  
-
-  test("throw error during withdraw, when NFT misses", async () => {
-    let error;
-    try {
-      const second = await getAccountAddress("second");
-      const NFTId = 1;
-      
-      const result = await sendTransaction({
-        code: cancelSaleTransaction,
-        args: [
-          [NFTId, t.UInt64],     
-        ],
-        signers: [second],
-      })
-
-      expect(result).toEqual('')     
-
-    } catch (e) {  
-      error = e;
-    }
-    expect(error).toMatch(/missing NFT/);
-  });  
-
-  test("check events withdraw function", async () => {
-    let error;
-    try {
-      const admin = await getAccountAddress("admin");
-      const second = await getAccountAddress("second");
-      const NFTId = 1;
-      const initialSalePrice = 10;
-
-      await sendTransaction({
-        code: saleNFTTransaction,
-        args: [
-          [NFTId, t.UInt64],
-          [initialSalePrice.toFixed(2), t.UFix64]
-        ],
-        signers: [second],
-      });
-
-      //All NFTs on sale
-      const saleNFTBefore = await executeScript({
-        code: getIDsScript,
-        args: [
-          [second, t.Address],
-        ]
-      });
-
-      // All NFT in storage
-      const accountNFTBefore = await executeScript({
-        code: getNFTIdsScript,
-        args: [
-          [second, t.Address]
-        ]
-      });
-      
-      // Cancel sale
-      const result = await sendTransaction({
-        code: cancelSaleTransaction,
-        args: [
-          [NFTId, t.UInt64],     
-        ],
-        signers: [second],
-      })
-
-      // All NFT on sale
-      const saleNFTAfter = await executeScript({
-        code: getIDsScript,
-        args: [
-          [second, t.Address],
-        ]
-      });
-
-      // All NFT in storage
-      const accountNFTAfter = await executeScript({
-        code: getNFTIdsScript,
-        args: [
-          [second, t.Address]
-        ]
-      });
-
-      const { events } =  result;
-
-      expect(saleNFTBefore).toContain(NFTId);
-      expect(accountNFTBefore).not.toContain(NFTId);
-
-      expect(saleNFTAfter).not.toContain(NFTId);
-      expect(accountNFTAfter).toContain(NFTId);
-
-      // Events
-      expect(events[0].type).toEqual(`A.${admin.substr(2)}.MarketPlace.SaleWithdrawn`);
-      expect(events[0].data.owner).toEqual(second);
-
-    } catch (e) {  
-      error = e;
-    }
-
-    expect(error).toEqual(undefined);
-  });  
-
+  });   
 });

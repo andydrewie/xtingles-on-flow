@@ -9,7 +9,9 @@ import { testSuiteCollectible } from "./collectible"
 import { testSuiteCreateEdition, testSuiteChangeCommission, testSuiteChangeMaxEdition, testSuiteGetEdition } from "./edition"
 import {
    testSuiteMarketPlacePuchase,
-   testSuiteMarketPlaceCommon
+   testSuiteMarketPlaceCommon,
+   testSuiteChangePrice,
+   testSuiteMarketPlaceWithdraw
 } from "./marketPlace";
 
 import {
@@ -28,7 +30,7 @@ describe('sequentially run tests', () => {
    testSuiteChangeCommission();
    testSuiteChangeMaxEdition();
    testSuiteGetEdition();*/
-   testSuiteCreateAuction();
+  /* testSuiteCreateAuction();
    testSuiteAddNFT();
    testSuiteBidAuction();
    testSuiteSendBidTokens();
@@ -37,9 +39,11 @@ describe('sequentially run tests', () => {
    testSuitSettleAuction(); 
    testSuitePayCommission();
    testSuiteAuctionStatus();
-   testSuiteSendNFT();
-  // testSuiteMarketPlacePuchase();
-  // testSuiteMarketPlaceCommon();
+   testSuiteSendNFT(); */
+ //  testSuiteMarketPlacePuchase();
+   //testSuiteMarketPlaceCommon();
+   testSuiteChangePrice();
+   testSuiteMarketPlaceWithdraw();
  /*  testSuiteCreateOpenEdition();
    testSuiteOpenEditionStatus();
    testSuiteCancelOpenEdition(); 
