@@ -14,11 +14,10 @@ import {
 describe('sequentially run tests', () => {
    testSuiteMarketPlace();
 
-   //testSuiteCollectible();
+   testSuiteCollectible();
 
-   //testSuiteEdition();
-  // testSuiteAuction();
+   testSuiteEdition();
+   testSuiteAuction();
 
-
-   //testSuiteOpenEdition();
+   testSuiteOpenEdition();
 })

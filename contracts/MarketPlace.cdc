@@ -138,36 +138,20 @@ pub contract MarketPlace {
             }
         }   
 
-        // purchase lets a user send tokens to purchase an NFT that is for sale
-        pub fun purchase(
+        priv fun handlePayments(
             tokenID: UInt64,
-            recipientCap: Capability<&{Collectible.CollectionPublic}>,
-            buyTokens: @FungibleToken.Vault
+            buyTokens: @FungibleToken.Vault,
+            price: UFix64 
         ) {
-            pre {
-                self.forSale[tokenID] != nil && self.prices[tokenID] != nil: "No token matching this ID for sale!"
-                buyTokens.balance == (self.prices[tokenID] ?? 0.0): "Not exact amount tokens to buy the NFT!"
-            }
-
             let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
 
-            let recipient = recipientCap.borrow() ?? panic("Could not borrow reference to recipient NFT storage")
-
-            // get the value out of the optional
-            let price = self.prices[tokenID]!
-            
-            self.prices[tokenID] = nil
-
-            let editionNumber = self.getEditionNumber(id: tokenID) ?? panic("Could not find edition number")     
-            
-            let token <- self.withdraw(tokenID: tokenID)
-
-            let tokenId = token.id
+            // this is validated during process of the cration NFT
+            let editionNumber = self.getEditionNumber(id: tokenID)!  
                       
             let royaltyRef = MarketPlace.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow()!             
 
-            let royaltyStatus = royaltyRef.getEdition(editionNumber)!
-    
+            let royaltyStatus = royaltyRef.getEdition(editionNumber)!           
+
             for key in royaltyStatus.royalty.keys {
                 let commission = price * royaltyStatus.royalty[key]!.secondSalePercent * 0.01
 
@@ -180,14 +164,40 @@ pub contract MarketPlace {
 
                     vaultCommissionRecepientRef.deposit(from: <- buyTokens.withdraw(amount: commission))
 
-                    emit Earned(nftID: tokenId, amount: commission, owner: key, type: "secondary")                   
+                    emit Earned(nftID: tokenID, amount: commission, owner: key, type: "secondary")                   
                 } else {
-                   emit FailEarned(nftID: tokenId, amount: commission, owner: key, type: "secondary")
+                   emit FailEarned(nftID: tokenID, amount: commission, owner: key, type: "secondary")
                 }             
             }
 
             // deposit the purchasing tokens into the owners vault
             vaultRef.deposit(from: <- buyTokens)
+        }
+
+        // purchase lets a user send tokens to purchase an NFT that is for sale
+        pub fun purchase(
+            tokenID: UInt64,
+            recipientCap: Capability<&{Collectible.CollectionPublic}>,
+            buyTokens: @FungibleToken.Vault
+        ) {
+            pre {
+                self.forSale[tokenID] != nil && self.prices[tokenID] != nil: "No token matching this ID for sale!"
+                buyTokens.balance == (self.prices[tokenID] ?? 0.0): "Not exact amount tokens to buy the NFT!"
+            }         
+
+            let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
+
+            // get the value out of the optional
+            let price = self.prices[tokenID]!
+            
+            self.prices[tokenID] = nil       
+
+            let recipient = recipientCap.borrow() ?? panic("Could not borrow reference to buyer NFT storage")   
+
+            // Send money to seller and share the secondary commission
+            self.handlePayments(tokenID: tokenID, buyTokens: <- buyTokens, price: price)  
+            
+            let token <- self.withdraw(tokenID: tokenID)   
 
             // deposit the NFT into the buyers collection
             recipient.deposit(token: <- token)

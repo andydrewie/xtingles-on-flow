@@ -8,14 +8,14 @@ import { testSuiteBorrowCollectible } from "./borrowCollectible";
 import { testSuiteCollectibles } from "./getCollectible";
 
 export const testSuiteMarketPlace = () => describe("Market Place", () => {
-    testSuiteSale();
-    testSuitePrice();
-    testSuiteIDs();
-    testSuiteBorrowCollectible();
-    testSuiteCollectibles();
-    testSuiteChangePrice();
-    testSuiteMarketPlaceWithdraw();
-    testSuitePurchase();
+   testSuiteSale();
+   testSuitePrice();
+   testSuiteIDs();
+   testSuiteBorrowCollectible();
+   testSuiteCollectibles();
+   testSuiteChangePrice();
+   testSuiteMarketPlaceWithdraw(); 
+   testSuitePurchase();
  });
 
 

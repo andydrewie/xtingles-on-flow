@@ -31,7 +31,11 @@ export const testSuitePurchase = () => describe("MarketPlace Purchase", () => {
     saleNFTTransaction,
     cancelSaleTransaction,
     buyNFTNoOnMarketPlaceTransaction,
-    buyNFTWithWrongPriceTransaction;
+    buyNFTWithWrongPriceTransaction,
+    buyNFTTransaction,
+    unlinkFUSDVault,
+    unlinkCollectible,
+    buyNFTWithWrongRecepientCap;
 
     beforeAll(async () => {
       jest.setTimeout(30000);
@@ -214,6 +218,14 @@ export const testSuitePurchase = () => describe("MarketPlace Purchase", () => {
           "utf8"
         );
 
+        buyNFTTransaction = fs.readFileSync(
+          path.join(
+          __dirname,
+          `../../transactions/emulator/marketplace/BuyNFT.cdc`
+          ),
+          "utf8"
+        );
+
         createEditionTransaction = fs.readFileSync(
           path.join(
               __dirname,
@@ -221,6 +233,30 @@ export const testSuitePurchase = () => describe("MarketPlace Purchase", () => {
           ),
           "utf8"    
         );  
+
+        unlinkFUSDVault = fs.readFileSync(
+          path.join(
+              __dirname,
+              `../../transactions/emulator/UnlinkFUSDVault.cdc`
+          ),
+          "utf8"
+        ); 
+
+        unlinkCollectible = fs.readFileSync(
+          path.join(
+              __dirname,
+              `../../transactions/emulator/UnlinkCollectible.cdc`
+          ),
+          "utf8"
+        ); 
+
+        buyNFTWithWrongRecepientCap = fs.readFileSync(
+          path.join(
+              __dirname,
+              `../../transactions/emulator/marketplace/BuyNFTWithWrongRecepientCap.cdc`
+          ),
+          "utf8"
+        ); 
   });
  
   beforeEach(async (done) => {
@@ -230,10 +266,10 @@ export const testSuitePurchase = () => describe("MarketPlace Purchase", () => {
 
     await emulator.start(port, false);
    
-
     const admin = await getAccountAddress("admin");
     const second = await getAccountAddress("second");
     const third = await getAccountAddress("third");
+    const fourth = await getAccountAddress("fourth");
 
     await mintFlow(admin, "10.0");
 
@@ -294,6 +330,22 @@ export const testSuitePurchase = () => describe("MarketPlace Purchase", () => {
         code: mintFUSDTransaction,
         args: [
             ["500.00", t.UFix64], [third, t.Address]
+        ],
+        signers: [admin],
+    });
+
+    // Setup FUSD Vault for the fourth account
+    await sendTransaction({
+        code: setupFUSDTransaction,
+        args: [],
+        signers: [fourth],
+    });
+
+    // Mint FUSD for Vault and sent to the fourth account
+    await sendTransaction({
+        code: mintFUSDTransaction,
+        args: [
+            ["500.00", t.UFix64], [fourth, t.Address]
         ],
         signers: [admin],
     });
@@ -437,4 +489,141 @@ export const testSuitePurchase = () => describe("MarketPlace Purchase", () => {
     expect(error).toMatch(/Not exact amount tokens to buy the NFT!/);
   });  
 
+  test("purchase throws error, when buyer vault is unreachable", async () => {
+    let error;
+    try {
+        const admin = await getAccountAddress("admin");
+        const second = await getAccountAddress("second");
+        const third = await getAccountAddress("third");
+
+        const NFTId = 1;
+        const initialSalePrice = 15;
+
+        // Sell NFT
+        await sendTransaction({
+          code: saleNFTTransaction,
+          args: [
+            [NFTId, t.UInt64],
+            [initialSalePrice.toFixed(2), t.UFix64]
+          ],
+          signers: [second],
+        });
+
+        // Unlink the second account FUSD vault to check fail to buy the item
+        await sendTransaction({
+          code: unlinkFUSDVault,
+          args: [], 
+          signers: [second],
+        }); 
+   
+        // Buy NFT
+        const result = await sendTransaction({
+            code: buyNFTTransaction,
+            args: [
+                [second, t.Address],  
+                [NFTId, t.UInt64],     
+            ],
+            signers: [third],
+        })     
+
+        expect(result).toEqual('');
+    } catch (e) {  
+      error = e;
+    }
+
+    expect(error).toMatch(/Could not borrow reference to owner token vault/);
+  });  
+
+  test("purchase throws error, when buyer NFT storage is unreachable", async () => {
+    let error;
+    try {
+        const admin = await getAccountAddress("admin");
+        const second = await getAccountAddress("second");
+        const third = await getAccountAddress("third");
+
+        const NFTId = 1;
+        const initialSalePrice = 15;
+
+        // Sell NFT
+        await sendTransaction({
+          code: saleNFTTransaction,
+          args: [
+            [NFTId, t.UInt64],
+            [initialSalePrice.toFixed(2), t.UFix64]
+          ],
+          signers: [second],
+        });
+  
+        // Buy NFT
+        const result = await sendTransaction({
+            code: buyNFTWithWrongRecepientCap,
+            args: [
+                // owner NFT
+                [second, t.Address],  
+                // NFT id
+                [NFTId, t.UInt64],     
+            ],
+            signers: [third],
+        })     
+
+        expect(result).toEqual('');
+    } catch (e) {  
+      error = e;
+    }
+
+    expect(error).toMatch(/Could not borrow reference to buyer NFT storage/);
+  }); 
+
+  test("purchase check events", async () => {
+    let error;
+    try {
+        const admin = await getAccountAddress("admin");
+        const second = await getAccountAddress("second");
+        const third = await getAccountAddress("third");
+        const fourth = await getAccountAddress("fourth");
+
+        const NFTId = 1;
+        const initialSalePrice = 15;
+
+        // Sell NFT
+        await sendTransaction({
+          code: saleNFTTransaction,
+          args: [
+            [NFTId, t.UInt64],
+            [initialSalePrice.toFixed(2), t.UFix64]
+          ],
+          signers: [second],
+        });
+
+        // Buy NFT
+        const result = await sendTransaction({
+            code: buyNFTTransaction,
+            args: [
+                // owner NFT
+                [second, t.Address],  
+                // NFT id
+                [NFTId, t.UInt64],     
+            ],
+            signers: [fourth],
+        })     
+
+        const { events } = result;
+
+        const collectibleDepositedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.Collectible.Deposit`);
+        const tokenPurchasedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.MarketPlace.TokenPurchased`);
+       
+        // The fourth account receives NFT
+        expect(collectibleDepositedEvents[0].data.to).toEqual(fourth);
+
+        // The fourth account receives NFT from the second for the sale price
+        expect(tokenPurchasedEvents[0].data.from).toEqual(second);
+        expect(tokenPurchasedEvents[0].data.to).toEqual(fourth);
+        expect(parseFloat(tokenPurchasedEvents[0].data.price, 10)).toEqual(initialSalePrice);
+    } catch (e) {  
+      error = e;
+    }
+
+    expect(error).toEqual(undefined);
+  });  
+  
 });
