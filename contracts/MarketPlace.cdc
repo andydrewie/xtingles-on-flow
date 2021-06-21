@@ -65,6 +65,12 @@ pub contract MarketPlace {
             self.prices = {}
         }
 
+        priv fun getEditionNumber(id: UInt64): UInt64? {
+            let ref = self.borrowCollectible(id: id) 
+            if ref == nil { return nil }
+            return ref!.getEditionNumber()
+        }
+
         // withdraw gives the owner the opportunity to remove a sale from the collection
         pub fun withdraw(tokenID: UInt64): @Collectible.NFT {
             // remove the price
@@ -81,6 +87,10 @@ pub contract MarketPlace {
 
         // listForSale lists an NFT for sale in this collection
         pub fun listForSale(token: @Collectible.NFT, price: UFix64) {
+            pre {              
+                price > 0.00 : "Price should be more than 0"      
+            }
+
             let id = token.id
 
             // store the price in the price array
@@ -126,13 +136,7 @@ pub contract MarketPlace {
             } else {
                 return nil
             }
-        }
-
-        pub fun getEditionNumber(id: UInt64): UInt64? {
-            let ref = self.borrowCollectible(id: id) 
-            if ref == nil { return nil }
-            return ref!.getEditionNumber()
-        }
+        }   
 
         // purchase lets a user send tokens to purchase an NFT that is for sale
         pub fun purchase(
@@ -147,7 +151,7 @@ pub contract MarketPlace {
 
             let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
 
-            let recipient = recipientCap.borrow() ?? panic("Could not borrow reference to recipient NFT stoarge")
+            let recipient = recipientCap.borrow() ?? panic("Could not borrow reference to recipient NFT storage")
 
             // get the value out of the optional
             let price = self.prices[tokenID]!
@@ -160,8 +164,7 @@ pub contract MarketPlace {
 
             let tokenId = token.id
                       
-            let royaltyRef = MarketPlace.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow() 
-                ?? panic("Could not borrow Edition reference")     
+            let royaltyRef = MarketPlace.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow()!             
 
             let royaltyStatus = royaltyRef.getEdition(editionNumber)!
     

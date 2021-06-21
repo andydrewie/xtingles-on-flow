@@ -5,7 +5,7 @@ import * as t from "@onflow/types";
 import { sendTransaction, executeScript, mintFlow, getAccountAddress, init, emulator, deployContractByName  } from "flow-js-testing";
 import { ZERO_UFIX64, defaultAuctionParameters } from "./constants";
 
-export const testSuiteCreateAuction = () => describe("Create auction", () => {
+export const testSuiteCreateAuction = () => describe("Auction create", () => {
   let createAuctionTransaction, checkAuctionStatusScript, setupFUSDTransaction; 
 
   beforeAll(() => {

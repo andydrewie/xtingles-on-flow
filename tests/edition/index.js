@@ -3,9 +3,9 @@ import { testSuiteGetEdition } from "./get";
 import { testSuiteChangeCommission } from "./changeCommission";
 import { testSuiteChangeMaxEdition } from "./changeMaxEdition";
 
-export {
-    testSuiteCreateEdition, 
-    testSuiteChangeCommission,
-    testSuiteChangeMaxEdition,
-    testSuiteGetEdition
-}
+export const testSuiteEdition = () => describe("Edition", () => {
+   testSuiteCreateEdition();
+   testSuiteChangeCommission();
+   testSuiteChangeMaxEdition();
+   testSuiteGetEdition();
+ });

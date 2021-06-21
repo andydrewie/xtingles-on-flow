@@ -6,12 +6,12 @@ import { testSuiteCommissionPaymentsOpenEdition } from "./commission";
 import { testSuiteSettleOpenEdition } from "./settle";
 import { testSuiteOpenEditionPrice } from "./price";
 
-export {
-    testSuiteCreateOpenEdition,
-    testSuiteOpenEditionStatus,
-    testSuiteCancelOpenEdition,
-    testSuitePurchaseOpenEdition,
-    testSuiteCommissionPaymentsOpenEdition,
-    testSuiteSettleOpenEdition,
-    testSuiteOpenEditionPrice
-}
+export const testSuiteOpenEdition = () => describe("Open Edition", () => {
+   testSuiteCreateOpenEdition();
+   testSuiteOpenEditionStatus();
+   testSuiteCancelOpenEdition(); 
+   testSuitePurchaseOpenEdition();
+   testSuiteCommissionPaymentsOpenEdition();
+   testSuiteSettleOpenEdition();
+   testSuiteOpenEditionPrice();
+});

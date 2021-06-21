@@ -4,7 +4,7 @@ import * as t from "@onflow/types";
 
 import { sendTransaction, executeScript, mintFlow, getAccountAddress, init, emulator, deployContractByName  } from "flow-js-testing";
 
-export const testSuiteChangeMaxEdition = () => describe("Change max edition", () => {
+export const testSuiteChangeMaxEdition = () => describe("Edition change max", () => {
     let createEditionTransaction, 
         getEditionScript,
         changeMaxEditionTransaction,

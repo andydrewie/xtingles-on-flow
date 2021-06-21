@@ -7,7 +7,7 @@ import {
   init, emulator, deployContractByName, executeScript
 } from "flow-js-testing";
 
-export const testSuiteSendNFT = () => describe("Send NFT", () => {
+export const testSuiteSendNFT = () => describe("Auction send NFT", () => {
   let placeBidTransaction,
     createAuctionTransactionWithNFT,
     setupFUSDTransaction,

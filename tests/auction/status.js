@@ -7,7 +7,7 @@ import {
   init, emulator, deployContractByName, executeScript
 } from "flow-js-testing";
 
-export const testSuiteAuctionStatus = () => describe("Auction", () => {
+export const testSuiteAuctionStatus = () => describe("Auction status", () => {
   let placeBidTransaction,
     createAuctionTransactionWithNFT,
     setupFUSDTransaction,

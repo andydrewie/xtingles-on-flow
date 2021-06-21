@@ -4,7 +4,7 @@ import * as t from "@onflow/types";
 
 import { sendTransaction, mintFlow, getAccountAddress, init, emulator, deployContractByName  } from "flow-js-testing";
 
-export const testSuiteSendBidTokens = () => describe("Send bid tokens auction (return bid)", () => {
+export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (return bid)", () => {
   let placeBidTransaction,
       createAuctionTransactionWithNFT,
       setupFUSDTransaction,

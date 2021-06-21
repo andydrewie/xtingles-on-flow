@@ -5,7 +5,7 @@ import * as t from "@onflow/types";
 import { sendTransaction, mintFlow, getAccountAddress, init, emulator, deployContractByName  } from "flow-js-testing";
 import { defaultAuctionParameters } from "./constants";
 
-export const testSuiteAddNFT = () => describe("Add NFT", () => {
+export const testSuiteAddNFT = () => describe("Auction add NFT", () => {
   let createAuctionTransaction,
       addNFTInAuctionTransaction,
       createAuctionTransactionWithNFT,

@@ -4,7 +4,7 @@ import * as t from "@onflow/types";
 
 import { sendTransaction, mintFlow, getAccountAddress, init, emulator, deployContractByName, executeScript } from "flow-js-testing";
 
-export const testSuiteSettleOpenEdition = () => describe("Settle open edition", () => {
+export const testSuiteSettleOpenEdition = () => describe("Open Edition settle", () => {
     let createOpenEditionTransaction,     
         setupFUSDTransaction,
         tickTransaction,

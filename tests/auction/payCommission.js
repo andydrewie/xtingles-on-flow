@@ -7,7 +7,7 @@ import {
     init, emulator, deployContractByName, executeScript
 } from "flow-js-testing";
 
-export const testSuitePayCommission = () => describe("Pay commissions", () => {
+export const testSuitePayCommission = () => describe("Auction pay commissions", () => {
     let placeBidTransaction,
         createAuctionTransactionWithNFT,
         setupFUSDTransaction,

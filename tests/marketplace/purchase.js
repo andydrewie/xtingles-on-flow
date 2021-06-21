@@ -6,7 +6,7 @@ import { sendTransaction, executeScript, mintFlow, getAccountAddress, init, emul
 
 const editionNumber = 1;
 
-export const testSuiteMarketPlacePuchase = () => describe("MarketPlace Pruchase", () => {
+export const testSuitePurchase = () => describe("MarketPlace Purchase", () => {
   let createEditionTransaction, 
     getEditionScript,
     changeCommissionTransaction,
@@ -129,7 +129,7 @@ export const testSuiteMarketPlacePuchase = () => describe("MarketPlace Pruchase"
       changePriceTransaction = fs.readFileSync(
         path.join(
           __dirname,
-          `../../transactions/emulator/ChangePriceMarketPlace.cdc`
+          `../../transactions/emulator/marketplace/ChangePriceMarketPlace.cdc`
         ),
         "utf8"
       );
@@ -185,7 +185,7 @@ export const testSuiteMarketPlacePuchase = () => describe("MarketPlace Pruchase"
         saleNFTTransaction = fs.readFileSync(
             path.join(
             __dirname,
-            `../../transactions/emulator/SaleNFT.cdc`
+            `../../transactions/emulator/marketplace/SaleNFT.cdc`
             ),
             "utf8"
         );
@@ -193,7 +193,7 @@ export const testSuiteMarketPlacePuchase = () => describe("MarketPlace Pruchase"
         cancelSaleTransaction = fs.readFileSync(
             path.join(
             __dirname,
-            `../../transactions/emulator/CancelSale.cdc`
+            `../../transactions/emulator/marketplace/CancelSale.cdc`
             ),
             "utf8"
         );
@@ -213,8 +213,15 @@ export const testSuiteMarketPlacePuchase = () => describe("MarketPlace Pruchase"
           ),
           "utf8"
         );
-  });
 
+        createEditionTransaction = fs.readFileSync(
+          path.join(
+              __dirname,
+              `../../transactions/emulator/CreateEdition.cdc`
+          ),
+          "utf8"    
+        );  
+  });
  
   beforeEach(async (done) => {
     const basePath = path.resolve(__dirname, "../../");
@@ -291,6 +298,26 @@ export const testSuiteMarketPlacePuchase = () => describe("MarketPlace Pruchase"
         signers: [admin],
     });
 
+    const commission = `{
+      Address(${second}) : Edition.CommissionStructure(
+          firstSalePercent: 1.00,
+          secondSalePercent: 5.00,
+          description: "xxx"
+      ),
+      Address(${third}) : Edition.CommissionStructure(
+          firstSalePercent: 99.00,
+          secondSalePercent: 6.00,
+          description: "xxx"
+      )          
+    }`;
+
+    // Create the common edition infromation for all copies of the item
+    await sendTransaction({
+        code: createEditionTransaction.replace('RoyaltyVariable', commission),
+        args: [[1, t.UInt64]], 
+        signers: [admin],
+    });  
+
     // Mint NFT
     await sendTransaction({
       code: mintCollectibleTransaction,
@@ -344,7 +371,7 @@ export const testSuiteMarketPlacePuchase = () => describe("MarketPlace Pruchase"
     done();
   });
 
-  test("throw error, then NFT doesn not exist in sale", async () => {
+  test("purchase throws error, then NFT doesn not exist in sale", async () => {
     let error;
     try {
         const admin = await getAccountAddress("admin");
@@ -372,7 +399,7 @@ export const testSuiteMarketPlacePuchase = () => describe("MarketPlace Pruchase"
     expect(error).toMatch(/No token matching this ID for sale!/);
   });  
 
-  test("throw error, when not exact amount tokens to buy the NFT!", async () => {
+  test("purchase throws error, when not exact amount tokens to buy the NFT!", async () => {
     let error;
     try {
         const admin = await getAccountAddress("admin");

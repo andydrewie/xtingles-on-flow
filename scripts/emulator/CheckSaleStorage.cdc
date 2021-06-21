@@ -6,5 +6,5 @@ pub fun main(address:Address) : Bool {
     let acct = getAccount(address)
     let marketplaceCap = acct.getCapability<&{MarketPlace.SalePublic}>(/public/CollectibleSale)
     
-    return marketplaceCap .check()
+    return marketplaceCap.check()
 }
