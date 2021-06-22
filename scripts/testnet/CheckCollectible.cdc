@@ -1,5 +1,4 @@
-import NonFungibleToken from 0x631e88ae7f1d7c20
-import Collectible from 0x2695ea898b04f0c0
+import Collectible from 0xfc747df8f5e61fcb
 
 /*
   This script will check an address and print out its Collectible resources

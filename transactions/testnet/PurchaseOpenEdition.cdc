@@ -1,24 +1,22 @@
-import Auction, Collectible from 0xfc747df8f5e61fcb
 import FungibleToken from 0x9a0766d93b6608b7
 import NonFungibleToken from 0x631e88ae7f1d7c20
+import Collectible, OpenEdition from 0xfc747df8f5e61fcb
 
 transaction(
-        // auction owner address
-        address: Address,
-        // auction id
-        id: UInt64,    
-        // bid amount
-        amount: UFix64
+        openEditionAddress: Address,
+        id: UInt64 
     ) {
 
-    let auctionCollectionRef: &AnyResource{Auction.AuctionPublic}
+    let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionPublic}
     let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     let vaultCap: Capability<&{FungibleToken.Receiver}>
     let temporaryVault: @FungibleToken.Vault
 
     prepare(acct: AuthAccount) {
-        let auctionOwner = getAccount(address)       
-        // get the references to the buyer's Vault and NFT Collection receiver
+       
+        let openEditionOwner = getAccount(openEditionAddress)     
+          
+        // get the references to the buyer's Vault and NFT Collection receiver        
         var collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
         // if collection is not created yet we make it.
@@ -32,23 +30,28 @@ transaction(
 
         self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
         
-        self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionPublic}>(/public/auctionCollection)
+        self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionPublic}>(/public/openEditionCollection)
             .borrow()
             ?? panic("Could not borrow nft sale reference")
 
-        // capability to vault of bidder
         self.vaultCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
    
         let vaultRef = acct.borrow<&FungibleToken.Vault>(from: /storage/fusdVault)
             ?? panic("Could not borrow owner's Vault reference")
+
+        let amount = self.openEditionCollectionRef.getPrice(id)!
         
-        // withdraw tokens from the buyer's Vault
+         // withdraw tokens from the buyer's Vault
         self.temporaryVault <- vaultRef.withdraw(amount: amount)
 
     }
 
-    execute {    
-        self.auctionCollectionRef.placeBid(id: id, bidTokens:  <- self.temporaryVault, vaultCap: self.vaultCap, collectionCap: self.collectionCap)       
-      
+    execute {
+       
+        self.openEditionCollectionRef.purchase(
+            id: id, 
+            buyerTokens: <- self.temporaryVault,
+            collectionCap: self.collectionCap
+        )       
     }
 }

@@ -1,83 +1,108 @@
-A. emulator example
+testnet example
 
+There are four accounts with FUSD: testnet-xtingles-1, testnet-xtingles-2, testnet-xtingles-3, testnet-xtingles-4
 
-1. install flow cli https://docs.onflow.org/flow-cli/install
-2. launch flow emulator in the separate console in the root of this project (flow emulator start)
-3. launch script: bash ./setup.sh (create 3 accounts and setup FUSD tokens)
-4. check FUSD balance on 3 accounts:
-  flow scripts execute ./scripts/emulator/FUSDBalance.cdc --arg Address:"0xf8d6e0586b0a20c7"
-  flow scripts execute ./scripts/emulator/FUSDBalance.cdc --arg Address:"0x01cf0e2f2f715450"
-  flow scripts execute ./scripts/emulator/FUSDBalance.cdc --arg Address:"0x179b6b1cb6755e31"
-5. create auction transaction:
-  flow transactions send --code ./transactions/emulator/CreateAuctionWithNFT.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1623440139.00"},{"type": "UFix64","value": "1000.0"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer emulator-account
+Collectible.
 
-  Need to replace time to actual (something similar). easy to use fro this purpose https://www.unixtimestamp.com/.
+1. Check NFT on the account: 
+    
+    --arg Address:"0xfc747df8f5e61fcb" - (account's address, where auction collection is stored)
 
-6. check auction status (1st parameter - address where deployed auction contract. 2st - auctionId):
-   flow scripts execute ./scripts/emulator/CheckAuctionStatus.cdc --arg Address:"0xf8d6e0586b0a20c7" --arg UInt64:1
+    flow scripts execute ./scripts/testnet/CheckCollectible.cdc --arg Address:"0xefb501878aa34730" --network=testnet
 
-7. bid:
-  flow transactions send --code ./transactions/emulator/Bid.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"},
-  {"type": "UInt64","value": "1"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-second-account
-   
+Auction.
 
-8. transaction to crate new blocks: 
-   flow transactions send --code ./transactions/emulator/Tick.cdc --signer emulator-account
+1. create: 
 
+  minimumBidIncrement: UFix64 - (min precent different between two bids in a row) 
+  auctionLength: UFix64 - (initial auction length in sec)
+  extendedLength: UFix64 - (length in sec to extend auction in case of bid and time until finish less than remain LengthToExtend)
+  remainLengthToExtend: UFix64 - (time until finish, when auction is extended in case of bid)
+  auctionStartTime: UFix64 - (start auction time at unix timestamp sec)
+  startPrice: UFix64 - (iniial price) 
+  platformAddress: Address - (platform vault address to handle share commission fails)
+  link: String  - (metadata NFT: link to file)         
+  name: String - (metadata NFT: name)   
+  author: String - (metadata NFT: author)   
+  description: String - (metadata NFT: description)   
 
-9. settle:
-  flow transactions send --code ./transactions/emulator/Settle.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer emulator-account
+  flow transactions send --code ./transactions/testnet/CreateAuction.cdc --args-json '[ {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1624314807.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=testnet
 
-10. check NFTs on account: flow scripts execute ./scripts/emulator/CheckCollectible.cdc --arg Address:"0xf8d6e0586b0a20c7"
+2. check auction status: 
+  --arg Address:"0xfc747df8f5e61fcb" - (account's address, where auction collection is stored)
+  --arg UInt64:1 - (auction id)
 
-
-
-B. testnet example
-There are three accounts: testnet-xtingles-1, testnet-xtingles-2, testnet-xtingles-3
-
-1. testnet create Auction: 
-  flow transactions send --code ./transactions/testnet/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "3623248636.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=testnet
-
-2. see auction status: 
   flow scripts execute ./scripts/testnet/CheckAuctionStatus.cdc --arg Address:"0xfc747df8f5e61fcb" --arg UInt64:1 --network=testnet
 
-3. flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"},
-    {"type": "UInt64","value": "2"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-second-account --network=testnet
+3. bid:
+    // auction owner address
+    address: Address,
+    // auction id
+    id: UInt64,    
+    // bid amount
+    amount: UFix64
 
-4. flow transactions send --code ./transactions/testnet/Settle.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-account --network=testnet
-
-5. check NFTs on account: flow scripts execute ./scripts/testnet/CheckCollectible.cdc --arg Address:"0x2695ea898b04f0c0" --network=testnet
-
-6. flow scripts execute ./scripts/testnet/FUSDBalance.cdc --arg Address:"0x616e69383b392700" --network=testnet
-
-flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x616e69383b392700"}, {"type": "UInt64","value": "6"}, {"type": "UFix64","value": "2.00"}]' --signer testnet-second-account --network=testnet
-
-flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "UInt64","value": "1"}, {"type": "UFix64","value": "2.00"}]' --signer testnet-second-account --network=testnet
-
-flow transactions send --code ./transactions/emulator/MintCollectible.cdc --args-json '[{"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "2"}]' --signer emulator-account
-
-flow transactions send --code ./transactions/emulator/SaleNFT.cdc --args-json '[{"type": "UInt64","value": "1"}, {"type": "UFix64","value": "33.0"}]' --signer emulator-account
-
-flow transactions send --code ./transactions/emulator/CreateEdition.cdc --args-json '[{"type": "UFix64","value": "10.00"}, {"type": "UFix64","value": "20.00"},  {"type": "UFix64","value": "10.00"},  {"type": "UFix64","value": "15.00"}, {"type": "Address","value": "0x179b6b1cb6755e31"}, {"type": "Address","value": "0xf8d6e0586b0a20c7"}]' --signer emulator-account
-
- flow transactions send --code ./transactions/emulator/CreateEdition.cdc --signer emulator-account
-
-  flow transactions send --code ./transactions/trancations/BuyNFTFromSale.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UInt64","value": "1"}]' --signer second-account
-
-  flow transactions send --code ./transactions/emulator/BuyNFTFromSale.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UInt64","value": "1"}]' --signer third-account
+   flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0xfc747df8f5e61fcb"},
+       {"type": "UInt64","value": "4"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-xtingles-4 --network=testnet
 
 
-  flow transactions send --code ./transactions/emulator/CancelAuction.cdc --args-json '[{"type": "Address","value": "0xf8d6e0586b0a20c7"}, {"type": "UInt64","value": "1"}]' --signer emulator-account
+4. settle: 
+  after auction time is expired, auction should be settled. settle is to pay commision and send NFT to winner.
+  only owner of the auction can settle
+
+  id: UInt64 - auction id
+
+  flow transactions send --code ./transactions/testnet/Settle.cdc --args-json '[{"type": "UInt64","value": "3"}]' --signer testnet-xtingles-1 --network=testnet
+
+5. cancel: 
+ auction can be cancelled. in this case NFT wil be burt and the last bid will be returned. only owner of the auction can cancel
+
+ id: UInt64 - auction id
+
+flow transactions send --code ./transactions/testnet/CancelAuction.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-xtingles-1 --network=testnet
 
 
-  flow transactions send --code ./transactions/emulator/ChangeCommission.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer emulator-account
+OpenEdition.
 
+1. create:
 
+    link: String  - (metadata NFT: link to file)         
+    name: String - (metadata NFT: name)   
+    author: String - (metadata NFT: author)   
+    description: String - (metadata NFT: description)   
+    price: UFix64,       - (price)
+    startTime: UFix64,  - (start sale time at unix timestamp sec)
+    saleLength: UFix64, - (length sale in sec)
+    platformAddress: Address - (platform vault address to handle share commission fails)
 
-  //
+   flow transactions send --code ./transactions/testnet/CreateOpenEdition.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UFix64","value": "12.00"}, {"type": "UFix64","value": "1624319705.00"}, {"type": "UFix64","value": "300.00"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}]' --signer testnet-xtingles-1 --network=testnet
 
-  flow transactions send --code ./transactions/testnet/CreateAuction.cdc --args-json '[{"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "120.00"}, {"type": "UFix64","value": "1623915827.00"},{"type": "UFix64","value": "10.0"}, {"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-account --network=testnet
+2. status: 
+  --arg Address:"0xfc747df8f5e61fcb" - (account's address, where auction collection is stored)
+  --arg UInt64:1 - (auction id)
 
-  flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "UInt64","value": "2"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-account --network=testnet
+  flow scripts execute ./scripts/testnet/OpenEditionStatus.cdc --arg Address:"0xfc747df8f5e61fcb" --arg UInt64:1 --network=testnet
 
-    flow scripts execute ./scripts/testnet/CheckAuctionStatus.cdc --arg Address:"0x2695ea898b04f0c0" --arg UInt64:2 --network=testnet
+3. purchase: 
+
+    // auction owner address   
+    openEditionAddress: Address,
+    // open edition id
+    id: UInt64,    
+ 
+   flow transactions send --code ./transactions/testnet/PurchaseOpenEdition.cdc --args-json '[{"type": "Address","value": "0xfc747df8f5e61fcb"}, {"type": "UInt64","value": "1"}]' --signer testnet-xtingles-4 --network=testnet
+
+4. settle: 
+  after open edition time is expired, open edition should be settled. settle is set final amount of the all sold copies.
+  only owner of the auction can settle
+
+  id: UInt64 - auction id
+
+  flow transactions send --code ./transactions/testnet/SettleOpenEdition.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-xtingles-1 --network=testnet
+
+5. cancel: 
+ open edition can be cancelled.  cancel is set final amount of the all sold copies and sale will be over until finish time. only owner of the auction can cancel
+
+ id: UInt64 - open edition id
+
+flow transactions send --code ./transactions/testnet/CancelOpenEdition.cdc --args-json '[{"type": "UInt64","value": "2"}]' --signer testnet-xtingles-1 --network=testnet

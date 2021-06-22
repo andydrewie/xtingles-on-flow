@@ -10,6 +10,8 @@ transaction(
         auctionStartTime: UFix64,
         startPrice: UFix64, 
         platformAddress: Address,
+
+        // Metadata for NFT
         link: String,          
         name: String, 
         author: String,      
@@ -25,8 +27,10 @@ transaction(
   
     prepare(acct: AuthAccount) {
 
+        // Capability to auctions resource
         let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(/public/auctionCollection)
 
+        // Create auction resource on the account 
         if !auctionCap.check() {          
             let sale <- Auction.createAuctionCollection()
             acct.save(<-sale, to: /storage/auctionCollection)         
@@ -34,27 +38,36 @@ transaction(
             log("Auction Collection Created for account")
         }  
 
+        // Auction refrerence
         self.auctionCollectionRef = acct.borrow<&Auction.AuctionCollection>(from: /storage/auctionCollection)
             ?? panic("could not borrow minter reference")    
      
+        // Platform account to handle fail commission payments
         let platform = getAccount(platformAddress)
 
+        // Capability to FUSD vault
         self.platformCap = platform.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
 
+        // Reference to resource mint NFT on the account
         self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: /storage/CollectibleMinter)
             ?? panic("could not borrow minter reference")
 
+        // Create metadata for NFT
         self.metadata = Collectible.Metadata(
             link: link,          
             name: name, 
             author: author,      
-            description: description,        
+            description: description,    
+            // Number of copy. In case auction it is always 1    
             edition: 1,
+            // Reserve for the future metadata
             properties: {}   
         ) 
 
+        // Capability to handle the common information for the all copies of one item
         let editionCap = acct.getCapability<&{Edition.EditionPublic}>(/public/editionCollection)
 
+        // Create Edition resource on the account 
         if !editionCap.check() {        
             let edition <- Edition.createEditionCollection()
             acct.save( <- edition, to: /storage/editionCollection)         
@@ -70,6 +83,7 @@ transaction(
 
     execute {    
      
+        // Create acution without NFT
         let auctionId = self.auctionCollectionRef.createAuction(          
             minimumBidIncrement: minimumBidIncrement,
             auctionLength: auctionLength,       
@@ -78,10 +92,14 @@ transaction(
             auctionStartTime: auctionStartTime,
             startPrice: startPrice,
             platformVaultCap: self.platformCap,
+            // Capability to get the common information for the all copies of the one item (in our case commission and amount of copies)
             editionCap: self.editionCap   
         )
 
+        // Create item in collection Edition to store common infromation for the all copies of the one item 
         let editionId = self.editionCollectionRef.createEdition(
+            // Commission charges in the case of the first (auction) and the secondary (marketplace) sale
+            // In our sdk we'd prefer to replace this info as template in Javascript than pass as paramters in transaction
             royalty: {
                 Address(0xf9e164b413a74d51) : Edition.CommissionStructure(
                     firstSalePercent: 80.00,
@@ -94,11 +112,14 @@ transaction(
                     description: "Third party"
                 )
             },
+            // Amount copies of the item. This is 1 in case of auction
             maxEdition: 1
         )       
 
+        // Mint NFT
         let newNFT <- self.minterRef.mintNFT(metadata: self.metadata, editionNumber: editionId)
      
+        // Add NFT in auction
         self.auctionCollectionRef.addNFT(id: auctionId, NFT:<- newNFT)
     }
 }
