@@ -5,8 +5,7 @@
   "main": "index.js",
   "directories": {
     "test": "tests"
-  },
-  "scripts": {
+  },  "scripts": {
     "test": "jest"
   },
   "repository": {
