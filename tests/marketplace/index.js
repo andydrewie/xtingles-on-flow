@@ -15,7 +15,7 @@ export const testSuiteMarketPlace = () => describe("Market Place", () => {
    testSuiteBorrowCollectible();
    testSuiteCollectibles();
    testSuiteChangePrice();
-   testSuiteMarketPlaceWithdraw(); 
+   testSuiteMarketPlaceWithdraw();
    testSuitePurchase(); 
    testSuitePayments();
  });

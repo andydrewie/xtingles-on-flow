@@ -93,7 +93,7 @@
 	},
 	"deployments": {
 		"testnet": {
-			"testnet-xtingles-1": [	
+			"testnet-account": [	
 				"Collectible",		
 				"Auction",
 				"Edition",

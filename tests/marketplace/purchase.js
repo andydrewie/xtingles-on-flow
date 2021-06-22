@@ -35,7 +35,8 @@ export const testSuitePurchase = () => describe("MarketPlace Purchase", () => {
     buyNFTTransaction,
     unlinkFUSDVault,
     unlinkCollectible,
-    buyNFTWithWrongRecepientCap;
+    buyNFTWithWrongRecepientCap,
+    buyNFTFlowTokensTransaction;
 
     beforeAll(async () => {
       jest.setTimeout(30000);
@@ -226,6 +227,14 @@ export const testSuitePurchase = () => describe("MarketPlace Purchase", () => {
           "utf8"
         );
 
+        buyNFTFlowTokensTransaction = fs.readFileSync(
+          path.join(
+          __dirname,
+          `../../transactions/emulator/marketplace/BuyNFTFlowTokens.cdc`
+          ),
+          "utf8"
+        );
+
         createEditionTransaction = fs.readFileSync(
           path.join(
               __dirname,
@@ -271,7 +280,10 @@ export const testSuitePurchase = () => describe("MarketPlace Purchase", () => {
     const third = await getAccountAddress("third");
     const fourth = await getAccountAddress("fourth");
 
-    await mintFlow(admin, "10.0");
+    await mintFlow(admin, "1000.0");
+    await mintFlow(second, "1000.0");
+    await mintFlow(third, "1000.0");
+    await mintFlow(fourth, "1000.0");
 
     const addressMap = {
         NonFungibleToken: admin,
@@ -573,6 +585,48 @@ export const testSuitePurchase = () => describe("MarketPlace Purchase", () => {
 
     expect(error).toMatch(/Could not borrow reference to buyer NFT storage/);
   }); 
+
+  test("purchase throws error, when try to buy for Flow Tokens instead of FUSD", async () => {
+    let error;
+    try {
+        const admin = await getAccountAddress("admin");
+        const second = await getAccountAddress("second");
+        const third = await getAccountAddress("third");
+        const fourth = await getAccountAddress("fourth");
+
+        const NFTId = 1;
+        const initialSalePrice = 15;
+
+        // Sell NFT
+        await sendTransaction({
+          code: saleNFTTransaction,
+          args: [
+            [NFTId, t.UInt64],
+            [initialSalePrice.toFixed(2), t.UFix64]
+          ],
+          signers: [second],
+        });
+
+        // Buy NFT
+        const result = await sendTransaction({
+            code: buyNFTFlowTokensTransaction,
+            args: [
+                // owner NFT
+                [second, t.Address],  
+                // NFT id
+                [NFTId, t.UInt64],     
+            ],
+            signers: [fourth],
+        })     
+
+    
+        expect(result).toEqual('');
+    } catch (e) {  
+      error = e;
+    }
+
+    expect(error).toMatch(/Cannot deposit an incompatible token type/);
+  });  
 
   test("purchase check events", async () => {
     let error;

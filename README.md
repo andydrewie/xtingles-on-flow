@@ -1,3 +1,14 @@
+emulator example
+run test: yarn test
+This is about 120 automated tests, which is combined with unit tests.
+Tests time takes about 20-25 minutes, because every test is separate and hava thsese stages:
+ 1. lauch emulator
+ 2. create accounts
+ 3. deploy contracts
+ 4. setup FUSD resource
+ 5. mint and transfer FUSD on the account
+ 6. other preparation, which is specific for the test
+
 testnet example
 
 There are four accounts with FUSD: testnet-xtingles-1, testnet-xtingles-2, testnet-xtingles-3, testnet-xtingles-4
