@@ -17,9 +17,9 @@ Collectible.
 
 1. Check NFT on the account: 
     
-    --arg Address:"0xfc747df8f5e61fcb" - (account's address, where auction collection is stored)
+    --arg Address:"0xf9e164b413a74d51" - (account's address)
 
-    flow scripts execute ./scripts/testnet/CheckCollectible.cdc --arg Address:"0xefb501878aa34730" --network=testnet
+    flow scripts execute ./scripts/testnet/CheckCollectible.cdc --arg Address:"0xf9e164b413a74d51" --network=testnet
 
 Auction.
 
@@ -117,3 +117,30 @@ OpenEdition.
  id: UInt64 - open edition id
 
 flow transactions send --code ./transactions/testnet/CancelOpenEdition.cdc --args-json '[{"type": "UInt64","value": "2"}]' --signer testnet-xtingles-1 --network=testnet
+
+MarketPlace.
+
+1. Send NFT to Sale (transfer from /storage/CollectibleCollection to /storage/CollectibleSale):
+   tokenId: UInt64, - (NFT id)
+   price: UFix64 - (price) 
+
+   flow transactions send ./transactions/testnet/SaleNFT.cdc --args-json '[{"type": "UInt64","value": "3"}, {"type": "UFix64","value": "40.0"}]' --signer testnet-xtingles-4 --network=testnet
+
+2. check sale (/storage/CollectibleSale): 
+   
+  --arg Address:"0xf9e164b413a74d51" - (account's address)
+
+  flow scripts execute ./scripts/testnet/CheckSale.cdc --arg Address:"0xf9e164b413a74d51" --network=testnet
+
+3. buy:
+
+  marketplace: Address, - (seller address)
+  tokenId: UInt64, - (NFT id, which to buy)
+
+ flow transactions send ./transactions/testnet/BuyNFTMarketPlace.cdc --args-json '[{"type": "Address","value": "0xf9e164b413a74d51"}, {"type": "UInt64","value": "3"}]' --signer testnet-xtingles-4 --network=testnet
+
+4. cancel ((transfer from /storage/CollectibleSale to /storage/CollectibleCollection):
+
+ tokenId: UInt64, - (NFT id)
+
+ flow transactions send ./transactions/testnet/CancelSaleMarketPlace.cdc --args-json '[{"type": "UInt64","value": "3"}]' --signer testnet-xtingles-4 --network=testnet

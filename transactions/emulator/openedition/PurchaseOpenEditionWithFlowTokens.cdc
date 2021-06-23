@@ -32,12 +32,15 @@ transaction(
         self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionPublic}>(/public/openEditionCollection)
             .borrow()
             ?? panic("Could not borrow nft sale reference")
-   
-        let vaultRef = acct.borrow<&FungibleToken.Vault>(from: /storage/fusdVault)
+       
+        let vaultRef = acct.borrow<&FungibleToken.Vault>(from: /storage/flowTokenVault)
             ?? panic("Could not borrow owner's Vault reference")
+
+        let amount = self.openEditionCollectionRef.getPrice(id)!
         
          // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: 10.00) 
+        self.temporaryVault <- vaultRef.withdraw(amount: amount)
+
     }
 
     execute {
