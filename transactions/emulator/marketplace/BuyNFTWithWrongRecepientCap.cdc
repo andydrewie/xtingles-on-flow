@@ -9,7 +9,6 @@ transaction(
     // reference to the buyer's NFT collection where they
     // will store the bought NFT
 
-    let vaultCap: Capability<&{FungibleToken.Receiver}>
     let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     // Vault that will hold the tokens that will be used
     // to buy the NFT
@@ -17,10 +16,8 @@ transaction(
 
     prepare(account: AuthAccount) {     
   
-        self.collectionCap = account.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
-        
-        self.vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
-                   
+        self.collectionCap = account.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)        
+                    
         let vaultRef = account.borrow<&FungibleToken.Vault>(from: /storage/fusdVault)
             ?? panic("Could not borrow owner's Vault reference")
         

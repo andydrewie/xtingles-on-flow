@@ -9,7 +9,6 @@ transaction(
 
     let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionPublic}
     let collectionCap: Capability<&{Collectible.CollectionPublic}> 
-    let vaultCap: Capability<&{FungibleToken.Receiver}>
     let temporaryVault: @FungibleToken.Vault
 
     prepare(acct: AuthAccount) {
@@ -33,8 +32,6 @@ transaction(
         self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionPublic}>(/public/openEditionCollection)
             .borrow()
             ?? panic("Could not borrow nft sale reference")
-
-        self.vaultCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
    
         let vaultRef = acct.borrow<&FungibleToken.Vault>(from: /storage/fusdVault)
             ?? panic("Could not borrow owner's Vault reference")
