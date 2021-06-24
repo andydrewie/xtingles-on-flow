@@ -6,6 +6,9 @@ import Edition from "./Edition.cdc"
 
 pub contract OpenEdition {
 
+    pub let CollectionStoragePath: StoragePath
+    pub let CollectionPublicPath: PublicPath
+
     pub struct OpenEditionStatus{
         pub let id: UInt64
         pub let price : UFix64
@@ -149,7 +152,7 @@ pub contract OpenEdition {
 
         priv fun sendCommissionPayments(buyerTokens: @FungibleToken.Vault, tokenID: UInt64) {
             // Capability to resource with commission information
-            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow()! 
+            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath).borrow()! 
         
             // Commission informaton for all copies of on item
             let editionStatus = editionRef.getEdition(self.editionNumber)!
@@ -322,7 +325,7 @@ pub contract OpenEdition {
                 platformVaultCap.check() : "Platform vault should be reachable"
             }     
 
-            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow()! 
+            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath).borrow()! 
 
             // Check edition info in contract Edition in order to manage commission and all amount of copies of the same item
             // This error throws inside Edition contract. But I put this check for redundant
@@ -438,5 +441,7 @@ pub contract OpenEdition {
 
     init() {
         self.totalOpenEditions = (0 as UInt64)
+        self.CollectionPublicPath = /public/xtinglesOpenEdition
+        self.CollectionStoragePath = /storage/xtinglesOpenEdition
     }   
 }

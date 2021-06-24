@@ -52,7 +52,7 @@ transaction(
         // get the read-only account storage of the seller
         let seller = getAccount(marketplace)
 
-        let marketplace= seller.getCapability(/public/CollectibleSale).borrow<&{MarketPlace.SalePublic}>()
+        let marketplace= seller.getCapability(MarketPlace.CollectionPublicPath).borrow<&{MarketPlace.SalePublic}>()
             ?? panic("Could not borrow seller's sale reference")
 
         marketplace.purchase(

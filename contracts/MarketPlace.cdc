@@ -7,8 +7,8 @@ import NonFungibleToken from "./NonFungibleToken.cdc"
 pub contract MarketPlace {
 
     pub init() {
-        self.CollectionPublicPath = /public/CollectibleSale
-        self.CollectionStoragePath = /storage/CollectibleSale
+        self.CollectionPublicPath = /public/xtinglesCollectibleSale
+        self.CollectionStoragePath = /storage/xtinglesCollectibleSale
     }
 
     pub let CollectionStoragePath: StoragePath
@@ -148,7 +148,7 @@ pub contract MarketPlace {
             // this is validated during process of the cration NFT
             let editionNumber = self.getEditionNumber(id: tokenID)!  
                       
-            let royaltyRef = MarketPlace.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow()!             
+            let royaltyRef = MarketPlace.account.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath).borrow()!             
 
             let royaltyStatus = royaltyRef.getEdition(editionNumber)!           
 
@@ -230,7 +230,7 @@ pub contract MarketPlace {
         var saleData: [SaleData] = []
         let account = getAccount(address)
 
-        let CollectibleCollection = account.getCapability<&AnyResource{MarketPlace.SalePublic}>(/public/CollectibleSale)
+        let CollectibleCollection = account.getCapability<&AnyResource{MarketPlace.SalePublic}>(MarketPlace.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow sale reference")
      

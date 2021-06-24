@@ -20,29 +20,29 @@ transaction(
  
     prepare(acct: AuthAccount) {
 
-        let  editionCap = acct.getCapability<&{Edition.EditionPublic}>(/public/editionCollection)
+        let  editionCap = acct.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath)
 
         if !editionCap.check() {        
             let edition <- Edition.createEditionCollection()
-            acct.save(<- edition, to: /storage/editionCollection)         
-            acct.link<&{Edition.EditionPublic}>(/public/editionCollection, target: /storage/editionCollection)
+            acct.save(<- edition, to: Edition.CollectionStoragePath)         
+            acct.link<&{Edition.EditionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
             log("Edition Collection Created for account")
         }  
 
-        self.royaltyCollectionRef = acct.borrow<&Edition.EditionCollection>(from: /storage/editionCollection)
+        self.royaltyCollectionRef = acct.borrow<&Edition.EditionCollection>(from: Edition.CollectionStoragePath)
             ?? panic("could not borrow minter reference")            
 
-        let openEditionCap = acct.getCapability<&{OpenEdition.OpenEditionPublic}>(/public/openEditionCollection)
+        let openEditionCap = acct.getCapability<&{OpenEdition.OpenEditionPublic}>(OpenEdition.CollectionPublicPath)
 
         if !openEditionCap.check() {
-            let minterCap = acct.getCapability<&Collectible.NFTMinter>(/private/CollectibleMinter)!    
+            let minterCap = acct.getCapability<&Collectible.NFTMinter>(Collectible.MinterPrivatePath)!    
             let openEdition <- OpenEdition.createOpenEditionCollection(minterCap: minterCap)        
-            acct.save( <-openEdition, to: /storage/openEditionCollection)         
-            acct.link<&{OpenEdition.OpenEditionPublic}>(/public/openEditionCollection, target: /storage/openEditionCollection)
+            acct.save( <-openEdition, to: OpenEdition.CollectionStoragePath)         
+            acct.link<&{OpenEdition.OpenEditionPublic}>(OpenEdition.CollectionPublicPath, target: OpenEdition.CollectionStoragePath)
             log("Open Edition Collection created for account")
         } 
 
-        self.openEditionCollectionRef = acct.borrow<&OpenEdition.OpenEditionCollection>(from: /storage/openEditionCollection)
+        self.openEditionCollectionRef = acct.borrow<&OpenEdition.OpenEditionCollection>(from: OpenEdition.CollectionStoragePath)
             ?? panic("could not borrow open edition collection reference")  
 
         let platform = getAccount(platformAddress)

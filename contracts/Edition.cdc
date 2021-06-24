@@ -3,6 +3,9 @@ import FungibleToken from "./FungibleToken.cdc"
 // Common information for all copies of the same item
 pub contract Edition {
 
+    pub let CollectionStoragePath: StoragePath
+    pub let CollectionPublicPath: PublicPath
+
     // The total amount of editions that have been created
     pub var totalEditions: UInt64
 
@@ -226,5 +229,7 @@ pub contract Edition {
 
     init() {
         self.totalEditions = (0 as UInt64)
+        self.CollectionPublicPath = /public/xtinglesEdition
+        self.CollectionStoragePath = /storage/xtinglesEdition
     }   
 }

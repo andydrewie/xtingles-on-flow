@@ -8,21 +8,21 @@ transaction(tokenId: UInt64, price: UFix64) {
 
     prepare(acct: AuthAccount) {
 
-        let marketplaceCap = acct.getCapability<&{MarketPlace.SalePublic}>(/public/CollectibleSale)
+        let marketplaceCap = acct.getCapability<&{MarketPlace.SalePublic}>(MarketPlace.CollectionPublicPath)
 
         if !marketplaceCap.check() {
             let receiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
             let sale <- MarketPlace.createSaleCollection(ownerVault: receiver)
-            acct.save(<-sale, to: /storage/CollectibleSale)
-            acct.link<&MarketPlace.SaleCollection{MarketPlace.SalePublic}>(/public/CollectibleSale, target: /storage/CollectibleSale)
+            acct.save(<-sale, to: MarketPlace.CollectionStoragePath)
+            acct.link<&MarketPlace.SaleCollection{MarketPlace.SalePublic}>(MarketPlace.CollectionPublicPath, target: MarketPlace.CollectionStoragePath)
             log("Sale Created for account")
         }  
 
-        self.collectionRef = acct.getCapability<&{Collectible.CollectionPublic}>(/public/CollectibleCollection)
+        self.collectionRef = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow receiver reference")  
 
-        self.saleRef = acct.borrow<&MarketPlace.SaleCollection>(from: /storage/CollectibleSale)
+        self.saleRef = acct.borrow<&MarketPlace.SaleCollection>(from: MarketPlace.CollectionStoragePath)
             ?? panic("could not borrow minter reference")     
     }
 

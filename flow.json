@@ -89,11 +89,15 @@
 		"testnet-xtingles-4": {
 			"address": "0xf9e164b413a74d51",
 			"keys": "d82893303008a69c448ec948ca169ba4106339370ff5228aa1a25f661b369e4c"
+		},
+		"staging-account": {
+			"address": "0x85080f371da20cc1",
+			"keys": "939fa191fa6759871c548ac81f64b2f7ded3a4c27643531899cdf4e10b110785"
 		}
 	},
 	"deployments": {
 		"testnet": {
-			"testnet-account": [	
+			"testnet-xtingles-1": [	
 				"Collectible",		
 				"Auction",
 				"Edition",

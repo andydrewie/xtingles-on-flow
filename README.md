@@ -37,7 +37,7 @@ Auction.
   author: String - (metadata NFT: author)   
   description: String - (metadata NFT: description)   
 
-  flow transactions send --code ./transactions/testnet/CreateAuction.cdc --args-json '[ {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1624314807.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=testnet
+  flow transactions send ./transactions/testnet/CreateAuction.cdc --args-json '[ {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1624529487.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=testnet
 
 2. check auction status: 
   --arg Address:"0xfc747df8f5e61fcb" - (account's address, where auction collection is stored)
@@ -53,8 +53,8 @@ Auction.
     // bid amount
     amount: UFix64
 
-   flow transactions send --code ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0xfc747df8f5e61fcb"},
-       {"type": "UInt64","value": "4"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-xtingles-4 --network=testnet
+   flow transactions send ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0xfc747df8f5e61fcb"},
+       {"type": "UInt64","value": "1"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-xtingles-4 --network=testnet
 
 
 4. settle: 
@@ -63,7 +63,7 @@ Auction.
 
   id: UInt64 - auction id
 
-  flow transactions send --code ./transactions/testnet/Settle.cdc --args-json '[{"type": "UInt64","value": "3"}]' --signer testnet-xtingles-1 --network=testnet
+  flow transactions send ./transactions/testnet/Settle.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-xtingles-1 --network=testnet
 
 5. cancel: 
  auction can be cancelled. in this case NFT wil be burt and the last bid will be returned. only owner of the auction can cancel
@@ -86,7 +86,7 @@ OpenEdition.
     saleLength: UFix64, - (length sale in sec)
     platformAddress: Address - (platform vault address to handle share commission fails)
 
-   flow transactions send --code ./transactions/testnet/CreateOpenEdition.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UFix64","value": "12.00"}, {"type": "UFix64","value": "1624319705.00"}, {"type": "UFix64","value": "300.00"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}]' --signer testnet-xtingles-1 --network=testnet
+   flow transactions send ./transactions/testnet/CreateOpenEdition.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UFix64","value": "12.00"}, {"type": "UFix64","value": "1624530447.00"}, {"type": "UFix64","value": "300.00"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}]' --signer testnet-xtingles-1 --network=testnet
 
 2. status: 
   --arg Address:"0xfc747df8f5e61fcb" - (account's address, where auction collection is stored)
@@ -101,7 +101,7 @@ OpenEdition.
     // open edition id
     id: UInt64,    
  
-   flow transactions send --code ./transactions/testnet/PurchaseOpenEdition.cdc --args-json '[{"type": "Address","value": "0xfc747df8f5e61fcb"}, {"type": "UInt64","value": "1"}]' --signer testnet-xtingles-4 --network=testnet
+   flow transactions send ./transactions/testnet/PurchaseOpenEdition.cdc --args-json '[{"type": "Address","value": "0xfc747df8f5e61fcb"}, {"type": "UInt64","value": "1"}]' --signer testnet-xtingles-4 --network=testnet
 
 4. settle: 
   after open edition time is expired, open edition should be settled. settle is set final amount of the all sold copies.
@@ -109,7 +109,7 @@ OpenEdition.
 
   id: UInt64 - auction id
 
-  flow transactions send --code ./transactions/testnet/SettleOpenEdition.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-xtingles-1 --network=testnet
+  flow transactions send ./transactions/testnet/SettleOpenEdition.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-xtingles-1 --network=testnet
 
 5. cancel: 
  open edition can be cancelled.  cancel is set final amount of the all sold copies and sale will be over until finish time. only owner of the auction can cancel

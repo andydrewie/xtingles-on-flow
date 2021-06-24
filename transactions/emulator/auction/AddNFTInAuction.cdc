@@ -16,20 +16,20 @@ transaction(
   
     prepare(acct: AuthAccount) {
 
-        let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(/public/auctionCollection)
+        let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath)
 
         if !auctionCap.check() {          
             let sale <- Auction.createAuctionCollection()
-            acct.save(<-sale, to: /storage/auctionCollection)         
-            acct.link<&{Auction.AuctionPublic}>(/public/auctionCollection, target: /storage/auctionCollection)
+            acct.save(<-sale, to:Auction.CollectionStoragePath)         
+            acct.link<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
             log("Auction Collection Created for account")
         }  
 
-        self.auctionCollectionRef = acct.borrow<&Auction.AuctionCollection>(from: /storage/auctionCollection)
+        self.auctionCollectionRef = acct.borrow<&Auction.AuctionCollection>(from:Auction.CollectionStoragePath)
             ?? panic("could not borrow minter reference")    
 
  
-        self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: /storage/CollectibleMinter)
+        self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: Collectible.MinterStoragePath)
             ?? panic("could not borrow minter reference")
 
         self.metadata = Collectible.Metadata(

@@ -8,17 +8,17 @@ transaction(id: UInt64) {
     let clientEdition: &Edition.EditionCollection
     
     prepare(acct: AuthAccount) {
-        let editionCap = acct.getCapability<&{Edition.EditionPublic}>(/public/editionCollection)
+        let editionCap = acct.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath)
 
         if !editionCap.check() {        
             let edition <- Edition.createEditionCollection()
-            acct.save(<- edition, to: /storage/editionCollection)         
-            acct.link<&{Edition.EditionPublic}>(/public/editionCollection, target: /storage/editionCollection)
+            acct.save(<- edition, to: Edition.CollectionStoragePath)         
+            acct.link<&{Edition.EditionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
             log("Edition Collection Created for account")
         }  
 
-        self.clientOpenEdition = acct.borrow<&OpenEdition.OpenEditionCollection>(from: /storage/openEditionCollection) ?? panic("could not borrow open edition reference")
-        self.clientEdition = acct.borrow<&Edition.EditionCollection>(from: /storage/editionCollection) ?? panic("could not borrow edition reference")
+        self.clientOpenEdition = acct.borrow<&OpenEdition.OpenEditionCollection>(from: OpenEdition.CollectionStoragePath) ?? panic("could not borrow open edition reference")
+        self.clientEdition = acct.borrow<&Edition.EditionCollection>(from: Edition.CollectionStoragePath) ?? panic("could not borrow edition reference")
     }
 
     execute {
