@@ -18,16 +18,16 @@ transaction(
 
         self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
-        let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(/public/auctionCollection)
+        let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath)
 
         if !auctionCap.check() {          
             let sale <- Auction.createAuctionCollection()
-            acct.save(<-sale, to: /storage/auctionCollection)         
-            acct.link<&{Auction.AuctionPublic}>(/public/auctionCollection, target: /storage/auctionCollection)
+            acct.save(<-sale, to:Auction.CollectionStoragePath)         
+            acct.link<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
             log("Auction Collection Created for account")
         }  
         
-        self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionPublic}>(/public/auctionCollection)
+        self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionPublic}>(Auction.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow auction reference")        
 

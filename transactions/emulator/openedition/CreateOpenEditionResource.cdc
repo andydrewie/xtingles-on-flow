@@ -6,13 +6,13 @@ transaction() {
 
     prepare(acct: AuthAccount) {
 
-        let openEditionCap = acct.getCapability<&{OpenEdition.OpenEditionPublic}>(/public/openEditionCollection)
+        let openEditionCap = acct.getCapability<&{OpenEdition.OpenEditionPublic}>(OpenEdition.CollectionPublicPath)
 
         if !openEditionCap.check() {
-            let minterCap = acct.getCapability<&Collectible.NFTMinter>(/private/CollectibleMinter)!    
+            let minterCap = acct.getCapability<&Collectible.NFTMinter>(Collectible.MinterPrivatePath)!    
             let openEdition <- OpenEdition.createOpenEditionCollection(minterCap: minterCap)        
-            acct.save( <-openEdition, to: /storage/openEditionCollection)         
-            acct.link<&{OpenEdition.OpenEditionPublic}>(/public/openEditionCollection, target: /storage/openEditionCollection)
+            acct.save( <-openEdition, to: OpenEdition.CollectionStoragePath)         
+            acct.link<&{OpenEdition.OpenEditionPublic}>(OpenEdition.CollectionPublicPath, target: OpenEdition.CollectionStoragePath)
             log("Open Edition Collection created for account")
         } 
     }

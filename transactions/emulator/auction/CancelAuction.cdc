@@ -10,16 +10,16 @@ transaction(
 
     prepare(acct: AuthAccount) {
 
-        let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(/public/auctionCollection)
+        let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath)
 
         if !auctionCap.check() {          
             let sale <- Auction.createAuctionCollection()
-            acct.save(<-sale, to: /storage/auctionCollection)         
-            acct.link<&{Auction.AuctionPublic}>(/public/auctionCollection, target: /storage/auctionCollection)
+            acct.save(<-sale, to:Auction.CollectionStoragePath)         
+            acct.link<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
             log("Auction Collection Created for account")
         }  
 
-        self.client = acct.borrow<&Auction.AuctionCollection>(from: /storage/auctionCollection) ?? panic("could not load admin storage for auction")
+        self.client = acct.borrow<&Auction.AuctionCollection>(from:Auction.CollectionStoragePath) ?? panic("could not load admin storage for auction")
     }
 
     execute {    

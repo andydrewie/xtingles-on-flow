@@ -7,7 +7,7 @@ transaction(id: UInt64) {
     let client: &Auction.AuctionCollection
     
     prepare(account: AuthAccount) {
-        self.client = account.borrow<&Auction.AuctionCollection>(from: /storage/auctionCollection) ?? panic("could not load admin auction reference")
+        self.client = account.borrow<&Auction.AuctionCollection>(from:Auction.CollectionStoragePath) ?? panic("could not load admin auction reference")
     }
 
     execute {

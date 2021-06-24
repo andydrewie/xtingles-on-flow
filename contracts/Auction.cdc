@@ -6,6 +6,9 @@ import Edition from "./Edition.cdc"
 
 pub contract Auction {
 
+    pub let CollectionStoragePath: StoragePath
+    pub let CollectionPublicPath: PublicPath
+
     pub struct AuctionStatus{
         pub let id: UInt64
         pub let price : UFix64
@@ -646,5 +649,7 @@ pub contract Auction {
 
     init() {
         self.totalAuctions = (0 as UInt64)
+        self.CollectionPublicPath = /public/xtinglesAuction
+        self.CollectionStoragePath = /storage/xtinglesAuction
     }   
 }

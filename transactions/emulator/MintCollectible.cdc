@@ -16,11 +16,11 @@ transaction(
     prepare(
         acct: AuthAccount     
     ) {
-        self.receiverRef = acct.getCapability<&{Collectible.CollectionPublic}>(/public/CollectibleCollection)
+        self.receiverRef = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow receiver reference")        
         
-        self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: /storage/CollectibleMinter)
+        self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: Collectible.MinterStoragePath)
             ?? panic("could not borrow minter reference")
 
         self.metadata = Collectible.Metadata(

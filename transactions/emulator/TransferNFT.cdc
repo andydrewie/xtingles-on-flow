@@ -14,7 +14,7 @@ transaction(
   
         let acctReceiver = getAccount(to)
        
-        self.receiverRef = acctReceiver.getCapability<&{Collectible.CollectionPublic}>(/public/CollectibleCollection)
+        self.receiverRef = acctReceiver.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow receiver reference")        
 

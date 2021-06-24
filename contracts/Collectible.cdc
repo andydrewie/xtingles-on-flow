@@ -6,6 +6,7 @@ pub contract Collectible: NonFungibleToken {
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath     
     pub let MinterStoragePath: StoragePath
+    pub let MinterPrivatePath: PrivatePath
 
     // Events
     pub event ContractInitialized()
@@ -39,7 +40,7 @@ pub contract Collectible: NonFungibleToken {
         // Number of copy
         pub (set) var edition: UInt64  
         // Additional properties to use in future
-        pub let properties: { String: AnyStruct }    
+        pub let properties: AnyStruct    
 
         init(
             link:String,          
@@ -47,7 +48,7 @@ pub contract Collectible: NonFungibleToken {
             author: String,      
             description: String,        
             edition: UInt64, 
-            properties: { String: AnyStruct }
+            properties: AnyStruct
     )  {
             self.link = link             
             self.name = name
@@ -198,7 +199,7 @@ pub contract Collectible: NonFungibleToken {
     pub resource NFTMinter {
   
         pub fun mintNFT(metadata: Metadata, editionNumber: UInt64): @NFT {
-            let editionRef = Collectible.account.getCapability<&{Edition.EditionPublic}>(/public/editionCollection).borrow()! 
+            let editionRef = Collectible.account.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath).borrow()! 
 
             // Check edition info in contract Edition in order to manage commission and all amount of copies of the same item
             if editionRef.getEdition(editionNumber) == nil { panic("Edition does not exist") }
@@ -274,16 +275,17 @@ pub contract Collectible: NonFungibleToken {
     init() {
         // Initialize the total supply
         self.totalSupply = 1
-        self.CollectionPublicPath = /public/CollectibleCollection
-        self.CollectionStoragePath = /storage/CollectibleCollection
-        self.MinterStoragePath = /storage/CollectibleMinter
+        self.CollectionPublicPath = /public/xtinglesCollectibleCollection
+        self.CollectionStoragePath = /storage/xtinglesCollectibleCollection
+        self.MinterStoragePath = /storage/xtinglesCollectibleMinter
+        self.MinterPrivatePath = /private/xtinglesCollectibleMinter
 
         self.account.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
         self.account.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         
         let minter <- create NFTMinter()         
         self.account.save(<-minter, to: self.MinterStoragePath)
-        self.account.link<&Collectible.NFTMinter>(/private/CollectibleMinter, target: self.MinterStoragePath)
+        self.account.link<&Collectible.NFTMinter>(self.MinterPrivatePath, target: self.MinterStoragePath)
 
         emit ContractInitialized()
 	}

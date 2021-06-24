@@ -29,7 +29,7 @@ transaction(
 
         self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
         
-        self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionPublic}>(/public/openEditionCollection)
+        self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionPublic}>(OpenEdition.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow nft sale reference")
    

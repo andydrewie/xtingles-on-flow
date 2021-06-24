@@ -7,11 +7,11 @@ transaction(tokenId: UInt64) {
     let saleRef: &MarketPlace.SaleCollection
 
     prepare(acct: AuthAccount) {
-        self.receiverRef = acct.getCapability<&{Collectible.CollectionPublic}>(/public/CollectibleCollection)
+        self.receiverRef = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
             .borrow()
             ?? panic("could not borrow receiver reference")     
             
-        self.saleRef = acct.borrow<&MarketPlace.SaleCollection>(from: /storage/CollectibleSale)
+        self.saleRef = acct.borrow<&MarketPlace.SaleCollection>(from: MarketPlace.CollectionStoragePath)
             ?? panic("could not borrow marketplace reference")     
     }
 
