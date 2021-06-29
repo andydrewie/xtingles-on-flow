@@ -23,7 +23,7 @@ transaction(tokenId: UInt64, price: UFix64) {
             ?? panic("Could not borrow receiver reference")  
 
         self.saleRef = acct.borrow<&MarketPlace.SaleCollection>(from: MarketPlace.CollectionStoragePath)
-            ?? panic("could not borrow minter reference")     
+            ?? panic("could not borrow sale reference")     
     }
 
     execute {    

@@ -1,17 +1,30 @@
 emulator example
 run test: yarn test
 This is about 120 automated tests, which is combined with unit tests.
-Tests time takes about 20-25 minutes, because every test is separate and hava thsese stages:
+Tests time takes about 20-25 minutes, because every test is separate and hava these stages:
  1. lauch emulator
  2. create accounts
  3. deploy contracts
  4. setup FUSD resource
  5. mint and transfer FUSD on the account
- 6. other preparation, which is specific for the test
+ 6. other preparation, which are specific for the test
 
 testnet example
 
-There are four accounts with FUSD: testnet-xtingles-1, testnet-xtingles-2, testnet-xtingles-3, testnet-xtingles-4
+There are four accounts with setup FUSD resource and fungible token on the balance: testnet-xtingles-1, testnet-xtingles-2, testnet-xtingles-3, testnet-xtingles-4.
+
+  "testnet-xtingles-1": {
+    "address": "0xfc747df8f5e61fcb",
+  },
+  "testnet-xtingles-2": {
+    "address": "0xefb501878aa34730",	
+  },
+  "testnet-xtingles-3": {
+    "address": "0x0bd2b85a9b5947ef",
+  },
+  "testnet-xtingles-4": {
+    "address": "0xf9e164b413a74d51",
+  },
 
 Collectible.
 
@@ -21,7 +34,7 @@ Collectible.
 
     flow scripts execute ./scripts/testnet/CheckCollectible.cdc --arg Address:"0xf9e164b413a74d51" --network=testnet
 
-Auction.
+Auction (english type of auction with extended lenght).
 
 1. create: 
 
@@ -56,7 +69,6 @@ Auction.
    flow transactions send ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0xfc747df8f5e61fcb"},
        {"type": "UInt64","value": "1"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-xtingles-4 --network=testnet
 
-
 4. settle: 
   after auction time is expired, auction should be settled. settle is to pay commision and send NFT to winner.
   only owner of the auction can settle
@@ -73,7 +85,7 @@ Auction.
 flow transactions send --code ./transactions/testnet/CancelAuction.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-xtingles-1 --network=testnet
 
 
-OpenEdition.
+Open Edition (purchase with fixed time lengh to sell one item with sold number of copies).
 
 1. create:
 
@@ -118,7 +130,7 @@ OpenEdition.
 
 flow transactions send --code ./transactions/testnet/CancelOpenEdition.cdc --args-json '[{"type": "UInt64","value": "2"}]' --signer testnet-xtingles-1 --network=testnet
 
-MarketPlace.
+Marketplace.
 
 1. Send NFT to Sale (transfer from /storage/CollectibleCollection to /storage/CollectibleSale):
    tokenId: UInt64, - (NFT id)
@@ -144,3 +156,30 @@ MarketPlace.
  tokenId: UInt64, - (NFT id)
 
  flow transactions send ./transactions/testnet/CancelSaleMarketPlace.cdc --args-json '[{"type": "UInt64","value": "3"}]' --signer testnet-xtingles-4 --network=testnet
+
+
+Edition.
+ (We use this contract to manage commission and store item's amount of copies. In case of open edition, the final amount of copies will be known only after finish of purchase).
+
+ 1. Change commission:
+    id: UInt64 - (unique number for issue all copies of item. this number is dictionary key to store commission information on the Edition resource)
+
+    flow transactions send ./transactions/testnet/ChangeCommission.cdc --args-json '[{"type": "UInt64","value": "2"}]' --signer testnet-xtingles-1 --network=testnet
+
+2.  check commission information by edition number: 
+    --arg Address:"0xfc747df8f5e61fcb" - adress, where stores common information for issue of all copies
+    --arg UInt64:2 - unique number for all copies
+
+    flow scripts execute ./scripts/testnet/GetEdition.cdc --arg Address:"0xfc747df8f5e61fcb" --arg UInt64:2 --network=testnet
+
+    royalty - commission
+    maxEditon - amount of copies
+    editionId -  unique editionNumber
+
+3. check editionNumber (unique for all copies of the item) for NFT:
+    --arg Address:"0x0bd2b85a9b5947ef" - (NFT owner's address)
+    --arg UInt64:1 - (NFT id)
+    
+   flow scripts execute ./scripts/testnet/CheckEditionNumberNFT.cdc --arg Address:"0x0bd2b85a9b5947ef" --arg UInt64:1 --network=testnet
+
+   You can commission info and amount of copies by script from point 2.
