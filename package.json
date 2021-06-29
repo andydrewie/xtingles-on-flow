@@ -1,0 +1,33 @@
+{
+  "name": "smartcontracts",
+  "version": "1.0.0",
+  "description": "tests for cadence smartcontracts",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.pixelplex.by:743-xtingles/smartcontracts.git"
+  },
+  "keywords": [
+    "smart",
+    "contracts",
+    "flow",
+    "js"
+  ],
+  "author": "PixelPlex",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.14.0",
+    "@babel/preset-env": "^7.14.1",
+    "@onflow/types": "0.0.4",
+    "babel-jest": "^26.6.3",
+    "jest": "^26.6.3"
+  },
+  "dependencies": {
+    "flow-js-testing": "^0.1.10"
+  }
+}

@@ -6,28 +6,114 @@
 		}
 	},
 	"contracts": {
-        "ASMR": "./contracts/ASMR.cdc", 
-		"NonFungibleToken": "./contracts/NonFungibleToken.cdc"  
-    },
+		"NonFungibleToken": {
+			"source": "./contracts/NonFungibleToken.cdc",
+			"aliases": {
+				"testnet": "0x631e88ae7f1d7c20"		
+			}
+		},
+		"FungibleToken": {
+			"source": "./contracts/FungibleToken.cdc",
+			"aliases": {
+				"testnet": "0x9a0766d93b6608b7",
+				"emulator": "0xee82856bf20e2aa6"
+			}
+		},
+		"FlowToken": {
+			"source": "./contracts/FlowToken.cdc",
+			"aliases": {
+				"testnet": "0x7e60df042a9c0868",
+				"emulator": "0x0ae53cb6e3f42a79"
+			}
+		},
+		"FUSD": {
+			"source": "./contracts/FUSD.cdc",
+			"aliases": {
+				"testnet": "0xe223d8a629e49c68"
+			}
+		},
+		"Collectible": "./contracts/Collectible.cdc",
+		"MarketPlace": "./contracts/MarketPlace.cdc",
+		"Auction": "./contracts/Auction.cdc",
+		"Edition": "./contracts/Edition.cdc",
+		"OpenEdition": "./contracts/OpenEdition.cdc",
+		"Drawing": "./contracts/Drawing.cdc",
+		"Pack": "./contracts/Pack.cdc",
+		"PackSale": "./contracts/PackSale.cdc"				
+	},
 	"networks": {
-		"emulator": {
-			"host": "127.0.0.1:3569",
-			"chain": "flow-emulator"
+		"emulator": "127.0.0.1:3569",
+		"mainnet": "access.mainnet.nodes.onflow.org:9000",
+		"testnet": {
+			"host": "access.testnet.nodes.onflow.org:9000",
+			"chain": "flow-testnet"
 		}
 	},
 	"accounts": {
 		"emulator-account": {
-			"address": "f8d6e0586b0a20c7",
-			"keys": "fba7b4a0fae33c4c27e46a00b50107a05a72abc3220e203e65d1d26db2758c6f"
-		}, 
+			"address": "0xf8d6e0586b0a20c7",
+			"keys": "f8e188e8af0b8b414be59c4a1a15cc666c898fb34d94156e9b51e18bfde754a5"
+		},
 		"second-account": {
-			"address": "01cf0e2f2f715450", 
-			"keys": "6441442458044928e0b5d14c8297fbe041b6334bc3b4abdab05cfe512026d96e"
+			"address": "0x01cf0e2f2f715450",
+			"keys": "521cac87a4705c06ef3d2481ccd7b9615b35c1135eec259158061f7641f9f068"				
+		},
+		"third-account": {
+			"address": "0x179b6b1cb6755e31",			
+			"keys": "1394d1a74c0be41868a92155e43d7d70e52e592609cb28696fa408c7b06a5338"	
+		},
+		"testnet-account": {
+			"address": "2695ea898b04f0c0",
+			"keys": "515affb23ac04fb9a149af15ed3b1cad47ab4c7f41db99c3044ff16effab29b3"
+		},
+		"testnet-second-account": {
+			"address": "616e69383b392700",
+			"keys": "3dee6904f1bdd6e7159029f224e249e2d555efa3ce1c6a272acab20d31c3faff"
+		},
+		"testnet-third-account": {
+			"address": "96c8ac9a55867f24",
+			"keys": "3b0248d3bf3b06b339bdd3d534d3ea8429c3deb3e9a8044856d8a6d9f07c5e21"
+		},
+		"testnet-xtingles-1": {
+			"address": "0xfc747df8f5e61fcb",
+			"keys": "1c0495acc9ceff7911026381031ea0d6a5b480dac6ca9f1d5085af00d1cd0544"
+		},
+		"testnet-xtingles-2": {
+			"address": "0xefb501878aa34730",
+			"keys": "3bd892709af008989f566be977450eaa1ac8744abdeb49db9dc5d573eba131ba"
+		},
+		"testnet-xtingles-3": {
+			"address": "0x0bd2b85a9b5947ef",
+			"keys": "35bad13e56157c9bf9c08969904dbe6375efd55a074fbda428a6911b7e9c0e5a"
+		},
+		"testnet-xtingles-4": {
+			"address": "0xf9e164b413a74d51",
+			"keys": "d82893303008a69c448ec948ca169ba4106339370ff5228aa1a25f661b369e4c"
+		},
+		"staging-account": {
+			"address": "0x85080f371da20cc1",
+			"keys": "939fa191fa6759871c548ac81f64b2f7ded3a4c27643531899cdf4e10b110785"
 		}
 	},
 	"deployments": {
+		"testnet": {
+			"testnet-xtingles-1": [	
+				"Collectible",		
+				"Auction",
+				"Edition",
+				"OpenEdition",
+				"MarketPlace"									
+			]
+		},
 		"emulator": {
-		"emulator-account": ["NonFungibleToken", "ASMR"]
+			"emulator-account": [				
+				"NonFungibleToken",			
+				"Collectible",		
+				"Auction",
+				"Edition",
+				"FUSD",
+				"MarketPlace"				
+			]
 		}
 	}
 }
