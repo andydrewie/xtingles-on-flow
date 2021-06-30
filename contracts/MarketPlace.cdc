@@ -18,7 +18,7 @@ pub contract MarketPlace {
     pub event ForSale(id: UInt64, owner: Address, price: UFix64)
 
     // Event that is emitted when the price of an NFT changes
-    pub event PriceChanged(id: UInt64, owner: Address, newPrice: UFix64)    
+    pub event PriceChanged(id: UInt64, owner: Address, newPrice: UFix64, oldPrice: UFix64)    
 
     // Event that is emitted when a token is purchased
     pub event TokenPurchased(id: UInt64, price: UFix64, from:Address, to:Address)
@@ -112,11 +112,13 @@ pub contract MarketPlace {
                 newPrice > 0.00 : "Price should be more than 0"      
             }
 
+            let oldPrice = self.prices[tokenID]!
+
             self.prices[tokenID] = newPrice
 
             let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
 
-            emit PriceChanged(id: tokenID, owner: vaultRef.owner!.address, newPrice: newPrice)
+            emit PriceChanged(id: tokenID, owner: vaultRef.owner!.address, newPrice: newPrice, oldPrice: oldPrice)
         }
 
         // idPrice returns the price of a specific token in the sale
