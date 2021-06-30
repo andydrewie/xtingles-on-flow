@@ -379,6 +379,7 @@ export const testSuiteChangePrice = () => describe("MarketPlace change price", (
             expect(events[0].type).toEqual(`A.${admin.substr(2)}.MarketPlace.PriceChanged`);
             expect(events[0].data.owner).toEqual(second);
             expect(parseFloat(events[0].data.newPrice, 10)).toEqual(newSalePrice);
+            expect(parseFloat(events[0].data.oldPrice, 10)).toEqual(initialSalePrice);
         } catch (e) {     
            error = e;
         }
