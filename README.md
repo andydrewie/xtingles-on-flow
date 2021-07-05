@@ -1,5 +1,5 @@
 emulator example
-run test: yarn test
+run test: npm run test
 This is about 120 automated tests, which is combined with unit tests.
 Tests time takes about 20-25 minutes, because every test is separate and hava these stages:
  1. lauch emulator
@@ -156,6 +156,13 @@ Marketplace.
  tokenId: UInt64, - (NFT id)
 
  flow transactions send ./transactions/testnet/CancelSaleMarketPlace.cdc --args-json '[{"type": "UInt64","value": "3"}]' --signer testnet-xtingles-4 --network=testnet
+
+5. change price: 
+  tokenId: UInt64 - (NFT id)
+  price: UFix64 - (price) 
+
+  flow transactions send ./transactions/testnet/ChangePriceMarketPlace.cdc --args-json '[{"type": "UInt64","value": "1"},  {"type": "UFix64","value": "45.0"}]' --signer testnet-xtingles-3 --network=testnet
+   
 
 
 Edition.
