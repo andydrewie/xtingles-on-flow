@@ -243,9 +243,9 @@ pub contract Auction {
                     if (vaultCap.check()) {
                         let vault = vaultCap.borrow()!
                         vault.deposit(from: <- self.bidVault.withdraw(amount: commission))
-                        emit Earned(nftID: self.NFT?.id!, amount: commission, owner: key, type: "primary")
+                        emit Earned(nftID: self.NFT?.id!, amount: commission, owner: key, type: editionStatus.royalty[key]!.description)
                     } else {
-                        emit FailEarned(nftID: self.NFT?.id!, amount: commission, owner: key, type: "primary")
+                        emit FailEarned(nftID: self.NFT?.id!, amount: commission, owner: key, type: editionStatus.royalty[key]!.description)
                     }            
                 }                
             }
@@ -260,7 +260,7 @@ pub contract Auction {
 
                 platformVault.deposit(from: <- self.bidVault.withdraw(amount: amount))
 
-                emit Earned(nftID: self.NFT?.id!, amount: amount, owner: platformVault.owner!.address, type: "primary")
+                emit Earned(nftID: self.NFT?.id!, amount: amount, owner: platformVault.owner!.address, type: "PLATFORM")
             }
         }
 
