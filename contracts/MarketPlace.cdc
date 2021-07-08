@@ -166,9 +166,9 @@ pub contract MarketPlace {
 
                     vaultCommissionRecepientRef.deposit(from: <- buyTokens.withdraw(amount: commission))
 
-                    emit Earned(nftID: tokenID, amount: commission, owner: key, type: "secondary")                   
+                    emit Earned(nftID: tokenID, amount: commission, owner: key, type: royaltyStatus.royalty[key]!.description)                   
                 } else {
-                   emit FailEarned(nftID: tokenID, amount: commission, owner: key, type: "secondary")
+                   emit FailEarned(nftID: tokenID, amount: commission, owner: key, type: royaltyStatus.royalty[key]!.description)
                 }             
             }
 
