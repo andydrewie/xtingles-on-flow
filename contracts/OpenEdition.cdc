@@ -88,7 +88,7 @@ pub contract OpenEdition {
         // Metadata for minted NFT
         priv let metadata: Collectible.Metadata
 
-        // The capability to pay commission to the platform when the purchase is done. 
+        //The vault receive FUSD in case of the recipient of commissiona is unreachable 
         priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>   
 
         init(

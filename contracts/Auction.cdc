@@ -125,7 +125,7 @@ pub contract Auction {
         //the capablity to send the escrow bidVault to if you are outbid
         priv var recipientVaultCap: Capability<&{FungibleToken.Receiver}>?
 
-        //the capability to pay the platform when the auction is done
+        //the vault receive FUSD in case of the recipient of commissiona or the previous bidder are unreachable
         priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>
 
         //This action was cancelled
@@ -525,6 +525,7 @@ pub contract Auction {
                 minimumBidIncrement > 0.00 : "Minimum bid increment should be more than 0.00"
                 extendedLength > 0.00 : "Extended length should be more than 0.00"
                 remainLengthToExtend > 0.0 : "Remain length to extend should be more than 0.00"
+                platformVaultCap.check() : "Platform vault should be reachable"
             }
             
             // create a new auction items resource container
