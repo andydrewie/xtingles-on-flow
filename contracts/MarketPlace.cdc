@@ -80,8 +80,7 @@ pub contract MarketPlace {
             let token <- self.forSale.remove(key: tokenID) ?? panic("missing NFT")
 
             let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
-
-            emit SaleWithdrawn(id: tokenID, owner: vaultRef.owner!.address)
+          
             return <-token
         }
 
@@ -119,6 +118,19 @@ pub contract MarketPlace {
             let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
 
             emit PriceChanged(id: tokenID, owner: vaultRef.owner!.address, newPrice: newPrice, oldPrice: oldPrice)
+        }
+
+        // remove nft from sale. this uses is to differ between cancel sale and buy NFT
+        pub fun withdrawFromSale(tokenID: UInt64): @Collectible.NFT {
+            pre {
+                self.prices[tokenID] != nil : "NFT does not exist on sale"          
+            }
+
+            let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
+
+            emit SaleWithdrawn(id: tokenID, owner: vaultRef.owner!.address)
+
+            return <-self.withdraw(tokenID: tokenID)  
         }
 
         // idPrice returns the price of a specific token in the sale
