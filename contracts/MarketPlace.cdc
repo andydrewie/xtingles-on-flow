@@ -172,8 +172,12 @@ pub contract MarketPlace {
                 }             
             }
 
+            let amount = buyTokens.balance
+
             // deposit the purchasing tokens into the owners vault
             vaultRef.deposit(from: <- buyTokens)
+
+            emit Earned(nftID: tokenID, amount: amount, owner: vaultRef.owner!.address, type: "SELLER") 
         }
 
         // purchase lets a user send tokens to purchase an NFT that is for sale
