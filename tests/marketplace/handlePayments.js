@@ -362,12 +362,12 @@ export const testSuitePayments = () => describe("MarketPlace Payments", () => {
       Address(${second}) : Edition.CommissionStructure(
           firstSalePercent: 1.00,
           secondSalePercent: 5.00,
-          description: "xxx"
+          description: "AUTHOR"
       ),
       Address(${third}) : Edition.CommissionStructure(
           firstSalePercent: 99.00,
           secondSalePercent: 6.00,
-          description: "xxx"
+          description: "PLATFORM"
       )          
     }`;
 
@@ -438,7 +438,8 @@ export const testSuitePayments = () => describe("MarketPlace Payments", () => {
         const second = await getAccountAddress("second");
         const third = await getAccountAddress("third");
         const fourth = await getAccountAddress("fourth");
-        const typePayment = "secondary";
+        const typePayment1 = "AUTHOR";
+        const typePayment2 = "PLATFORM";
 
         const NFTId = 1;
         const initialSalePrice = 15;
@@ -481,6 +482,8 @@ export const testSuitePayments = () => describe("MarketPlace Payments", () => {
 
         const { events } = result;
 
+        console.log(events);
+
         const FUSDDepositedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.FUSD.TokensDeposited`);
         const marketPlaceEarnedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.MarketPlace.Earned`);
        
@@ -488,11 +491,11 @@ export const testSuitePayments = () => describe("MarketPlace Payments", () => {
         // the first commission recepient
         expect(parseFloat(marketPlaceEarnedEvents[0].data.amount, 10)).toEqual(initialSalePrice * secondAccountPercent / 100);
         expect(marketPlaceEarnedEvents[0].data.owner).toEqual(second);
-        expect(marketPlaceEarnedEvents[0].data.type).toEqual(typePayment);
+        expect(marketPlaceEarnedEvents[0].data.type).toEqual(typePayment1);
         // the second commission recepient
         expect(parseFloat(marketPlaceEarnedEvents[1].data.amount, 10)).toEqual(initialSalePrice * thirdAccountPercent / 100);
         expect(marketPlaceEarnedEvents[1].data.owner).toEqual(third);
-        expect(marketPlaceEarnedEvents[1].data.type).toEqual(typePayment);
+        expect(marketPlaceEarnedEvents[1].data.type).toEqual(typePayment2);
 
         // FUSD deposit events
         // the first commission recepient
