@@ -6,7 +6,7 @@ import { sendTransaction, executeScript, mintFlow, getAccountAddress, init, emul
 
 const editionNumber = 1;
 
-export const testSuiteMarketPlaceWithdraw = () => describe("MarketPlace withdrawFromSale", () => {
+export const testSuiteMarketPlaceWithdrawFromSale = () => describe("MarketPlace withdrawFromSale", () => {
     let mintCollectibleTransaction,
         checkCollectibleScript,
         checkCollectibleStorageScript,
