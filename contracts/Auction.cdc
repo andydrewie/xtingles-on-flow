@@ -356,6 +356,7 @@ pub contract Auction {
                 self.NFT != nil: "NFT in auction does not exist"
                 self.auctionStartTime < getCurrentBlock().timestamp : "The auction has not started yet"             
                 !self.isAuctionExpired() : "Time expired"
+                bidTokens.balance < 999999.99 : "Bid should be less than 999 999.99"  
             }
 
             let bidderAddress = vaultCap.borrow()!.owner!.address
@@ -522,6 +523,7 @@ pub contract Auction {
                 auctionLength > 0.00 : "Auction lenght should be more than 0.00"
                 auctionStartTime > getCurrentBlock().timestamp : "Auction start time can't be in the past"
                 startPrice > 0.00 : "Start price should be more than 0.00"
+                startPrice < 999999.99 : "Start bid should be less than 999 999.99"
                 minimumBidIncrement > 0.00 : "Minimum bid increment should be more than 0.00"
                 extendedLength > 0.00 : "Extended length should be more than 0.00"
                 remainLengthToExtend > 0.0 : "Remain length to extend should be more than 0.00"

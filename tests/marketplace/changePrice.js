@@ -315,6 +315,45 @@ export const testSuiteChangePrice = () => describe("MarketPlace change price", (
         expect(error).toMatch(/Price should be more than 0/);
     });  
 
+    test("changePrice throws error, when new price is more than 999 999.99", async () => {
+        let error;
+        try {
+            const admin = await getAccountAddress("admin");
+            const second = await getAccountAddress("second");
+            const NFTId = 1;
+            const initialSalePrice = 10;
+            const newSalePrice = 1000000;
+
+            await sendTransaction({
+                code: saleNFTTransaction,
+                args: [
+                    // NFT id
+                    [NFTId, t.UInt64],
+                    // Price
+                    [initialSalePrice.toFixed(2), t.UFix64]
+                ],
+                signers: [second],
+            });
+            
+            const result = await sendTransaction({
+                code: changePriceTransaction,
+                args: [
+                    // NFT Id
+                    [NFTId, t.UInt64],
+                    // New price
+                    [newSalePrice.toFixed(2), t.UFix64]
+                ],
+                signers: [second],
+            });
+
+            expect(result).toEqual('');
+        } catch (e) {     
+           error = e;
+        }
+
+        expect(error).toMatch(/Price should be less than 999 999.99/);
+    });  
+
     test("changePrice check events", async () => {
         let error;
         try {

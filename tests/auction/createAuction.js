@@ -178,6 +178,24 @@ export const testSuiteCreateAuction = () => describe("Auction create", () => {
     expect(error).toMatch(/Start price should be more than 0.00/);  
   });
 
+  test("createAuction throws panic, when start price is more than 999999.99", async () => { 
+    let error;
+    try {
+      const admin = await getAccountAddress("admin");
+      const auctionParameters = [...defaultAuctionParameters];
+      const extraPrice = 1000000;
+      auctionParameters[5] = [extraPrice.toFixed(2), t.UFix64];
+      await sendTransaction({
+        code: createAuctionTransaction,
+        args: auctionParameters, 
+        signers: [admin],
+      }); 
+    } catch(e) {
+      error = e;
+    } 
+    expect(error).toMatch(/Start bid should be less than 999 999.99/);  
+  });
+
   test("createAuction check events", async () => { 
     let error;
     try {
