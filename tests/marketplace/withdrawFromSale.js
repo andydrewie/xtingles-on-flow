@@ -6,7 +6,7 @@ import { sendTransaction, executeScript, mintFlow, getAccountAddress, init, emul
 
 const editionNumber = 1;
 
-export const testSuiteMarketPlaceWithdraw = () => describe("MarketPlace withdraw", () => {
+export const testSuiteMarketPlaceWithdrawFromSale = () => describe("MarketPlace withdrawFromSale", () => {
     let mintCollectibleTransaction,
         checkCollectibleScript,
         checkCollectibleStorageScript,
@@ -323,7 +323,7 @@ export const testSuiteMarketPlaceWithdraw = () => describe("MarketPlace withdraw
         } catch (e) {  
            error = e;
         }
-           expect(error).toMatch(/missing NFT/);
+           expect(error).toMatch(/NFT does not exist on sale/);
     });  
 
     test("withdraw function check events", async () => {

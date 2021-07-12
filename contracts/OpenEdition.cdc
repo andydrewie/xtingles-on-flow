@@ -88,7 +88,7 @@ pub contract OpenEdition {
         // Metadata for minted NFT
         priv let metadata: Collectible.Metadata
 
-        // The capability to pay commission to the platform when the purchase is done. 
+        //The vault receive FUSD in case of the recipient of commissiona is unreachable 
         priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>   
 
         init(
@@ -174,9 +174,9 @@ pub contract OpenEdition {
                     if (vaultCap.check()) {
                         let vault = vaultCap.borrow()!
                         vault.deposit(from: <- buyerTokens.withdraw(amount: commission))
-                        emit Earned(nftID: tokenID, amount: commission, owner: key, type: "primary")
+                        emit Earned(nftID: tokenID, amount: commission, owner: key, type: editionStatus.royalty[key]!.description)
                     } else {
-                        emit FailEarned(nftID: tokenID, amount: commission, owner: key, type: "primary")
+                        emit FailEarned(nftID: tokenID, amount: commission, owner: key, type: editionStatus.royalty[key]!.description)
                     }            
                 }                
             }
@@ -186,8 +186,7 @@ pub contract OpenEdition {
 
             platformVault.deposit(from: <- buyerTokens)
 
-            emit Earned(nftID: tokenID, amount: amount, owner: platformVault.owner!.address, type: "primary")
-  
+            emit Earned(nftID: tokenID, amount: amount, owner: platformVault.owner!.address, type: "PLATFORM")  
         }
    
         pub fun purchase(

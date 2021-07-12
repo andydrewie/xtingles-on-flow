@@ -1,6 +1,6 @@
 import { testSuitePurchase } from "./purchase";
 import { testSuiteChangePrice } from "./changePrice";
-import { testSuiteMarketPlaceWithdraw } from "./withdraw";
+import { testSuiteMarketPlaceWithdrawFromSale } from "./withdrawFromSale";
 import { testSuiteSale } from "./sale";
 import { testSuitePrice } from "./price";
 import { testSuiteIDs } from "./getIDs";
@@ -15,7 +15,7 @@ export const testSuiteMarketPlace = () => describe("Market Place", () => {
    testSuiteBorrowCollectible();
    testSuiteCollectibles();
    testSuiteChangePrice();
-   testSuiteMarketPlaceWithdraw();
+   testSuiteMarketPlaceWithdrawFromSale();
    testSuitePurchase(); 
    testSuitePayments();
  });
