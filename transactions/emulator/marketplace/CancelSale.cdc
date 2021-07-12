@@ -17,7 +17,7 @@ transaction(tokenId: UInt64) {
 
     execute {    
 
-        let token <- self.saleRef.withdraw(tokenID: tokenId) as! @Collectible.NFT
+        let token <- self.saleRef.withdrawFromSale(tokenID: tokenId) as! @Collectible.NFT
 
         self.receiverRef.deposit(token: <- token)
 

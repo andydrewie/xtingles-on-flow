@@ -125,7 +125,7 @@ pub contract Auction {
         //the capablity to send the escrow bidVault to if you are outbid
         priv var recipientVaultCap: Capability<&{FungibleToken.Receiver}>?
 
-        //the capability to pay the platform when the auction is done
+        //the vault receive FUSD in case of the recipient of commissiona or the previous bidder are unreachable
         priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>
 
         //This action was cancelled
@@ -243,9 +243,9 @@ pub contract Auction {
                     if (vaultCap.check()) {
                         let vault = vaultCap.borrow()!
                         vault.deposit(from: <- self.bidVault.withdraw(amount: commission))
-                        emit Earned(nftID: self.NFT?.id!, amount: commission, owner: key, type: "primary")
+                        emit Earned(nftID: self.NFT?.id!, amount: commission, owner: key, type: editionStatus.royalty[key]!.description)
                     } else {
-                        emit FailEarned(nftID: self.NFT?.id!, amount: commission, owner: key, type: "primary")
+                        emit FailEarned(nftID: self.NFT?.id!, amount: commission, owner: key, type: editionStatus.royalty[key]!.description)
                     }            
                 }                
             }
@@ -260,7 +260,7 @@ pub contract Auction {
 
                 platformVault.deposit(from: <- self.bidVault.withdraw(amount: amount))
 
-                emit Earned(nftID: self.NFT?.id!, amount: amount, owner: platformVault.owner!.address, type: "primary")
+                emit Earned(nftID: self.NFT?.id!, amount: amount, owner: platformVault.owner!.address, type: "PLATFORM")
             }
         }
 
@@ -525,6 +525,7 @@ pub contract Auction {
                 minimumBidIncrement > 0.00 : "Minimum bid increment should be more than 0.00"
                 extendedLength > 0.00 : "Extended length should be more than 0.00"
                 remainLengthToExtend > 0.0 : "Remain length to extend should be more than 0.00"
+                platformVaultCap.check() : "Platform vault should be reachable"
             }
             
             // create a new auction items resource container
