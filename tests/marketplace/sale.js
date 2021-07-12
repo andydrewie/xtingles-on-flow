@@ -278,6 +278,33 @@ export const testSuiteSale = () => describe("MarketPlace list for sale", () => {
         expect(error).toMatch(/Price should be more than 0/);
     });  
 
+    test("list for sale throws error, when price is more than 999 999.99", async () => {
+        let error;
+        try {
+            const admin = await getAccountAddress("admin");
+            const second = await getAccountAddress("second");
+            const NFTId = 1;
+            const initialSalePrice = 1000000;
+       
+            const result = await sendTransaction({
+                code: saleNFTTransaction,
+                args: [
+                    // NFT id
+                    [NFTId, t.UInt64],
+                    // Price
+                    [initialSalePrice.toFixed(2), t.UFix64]
+                ],
+                signers: [second],
+            });                   
+
+            expect(result).toEqual('');
+        } catch (e) {     
+           error = e;
+        }
+
+        expect(error).toMatch(/Price should be less than 999 999.99/);
+    });  
+
     test("list for sale throws error, when seller's vault is unreachable", async () => {
         let error;
         try {

@@ -167,7 +167,7 @@ export const testSuiteBidAuction = () => describe("Auction bid", () => {
     await sendTransaction({
       code: mintFUSDTransaction,
       args: [
-        ["500.00", t.UFix64], [admin, t.Address]
+        ["10000000.00", t.UFix64], [admin, t.Address]
       ],
       signers: [admin],
     });
@@ -690,6 +690,68 @@ export const testSuiteBidAuction = () => describe("Auction bid", () => {
       error = e;
     }
     expect(error).toMatch(/Bid is less than min acceptable/);
+  });
+
+  test("throw error, when the bid is more than 999 999.99", async () => {
+    let error;
+    try {
+      const admin = await getAccountAddress("admin");    
+      
+      const extraBid = 1000000;
+
+      const auctionParameters = [
+        ["10.00", t.UFix64],
+
+        // Auction length  
+        ["1000.00", t.UFix64],
+
+        ["1300.00", t.UFix64],
+        ["1300.00", t.UFix64],
+
+        // Start time
+        [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+
+        ["50.00", t.UFix64],
+        ["0x01cf0e2f2f715450", t.Address]
+      ];
+
+      const createdAuctionWithNFT = await sendTransaction({
+        code: createAuctionTransactionWithNFT.replace('RoyaltyVariable', commission),
+        args: [
+          ...auctionParameters,
+          ["xxx", t.String],
+          ["xxx", t.String],
+          ["xxx", t.String],
+          ["xxx", t.String],
+          [1, t.UInt64],
+        ],
+        signers: [admin],
+      });
+
+      const { events } = createdAuctionWithNFT;
+
+      await new Promise((r) => setTimeout(r, 3000));
+
+      await sendTransaction({
+        code: tickTransaction,
+        args: [],
+        signers: [admin],
+      });
+
+      await sendTransaction({
+        code: placeBidTransaction,
+        args: [
+          [events[0].data.auctionID, t.UInt64],
+          [extraBid.toFixed(2), t.UFix64],
+          [admin, t.Address],
+        ],
+        signers: [admin],
+      });
+
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toMatch(/Bid should be less than 999 999.99/);
   });
 
   test("successfull bid case", async () => {

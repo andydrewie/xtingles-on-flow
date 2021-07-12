@@ -201,6 +201,45 @@ export const testSuiteCreateOpenEdition = () => describe("Open Edition create", 
         expect(error).toMatch(/Price should be more than 0.00/);  
     });
 
+    test("throw error, when open edition price is more than 999999.99", async () => { 
+        let error;
+        try {
+            const admin = await getAccountAddress("admin");
+
+            const extraPrice = 1000000;
+
+            const openEditionParameters = [
+                // Link to IPFS
+                ["https://www.ya.ru", t.String],
+                // Name
+                ["Great NFT!", t.String],
+                // Author
+                ["Brad Pitt", t.String],
+                // Description
+                ["Awesome", t.String],
+                // Price
+                ["1000000.00", t.UFix64],
+                // Start time
+                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+                // Initial auction length  
+                [extraPrice.toFixed(2), t.UFix64],
+                // Platftom address
+                [admin, t.Address]
+            ];            
+            
+            const result  = await sendTransaction({
+                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
+                args: openEditionParameters, 
+                signers: [admin],
+            }); 
+
+            expect(result).toEqual('')
+        } catch(e) {
+            error = e;
+        } 
+        expect(error).toMatch(/Price should be less than 999 999.99/);  
+    });
+
     test("throw error, when open edition length is 0.00", async () => { 
         let error;
         try {
