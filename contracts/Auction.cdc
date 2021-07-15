@@ -525,8 +525,6 @@ pub contract Auction {
                 startPrice > 0.00 : "Start price should be more than 0.00"
                 startPrice < 999999.99 : "Start bid should be less than 999 999.99"
                 minimumBidIncrement > 0.00 : "Minimum bid increment should be more than 0.00"
-                extendedLength > 0.00 : "Extended length should be more than 0.00"
-                remainLengthToExtend > 0.0 : "Remain length to extend should be more than 0.00"
                 platformVaultCap.check() : "Platform vault should be reachable"
             }
             
