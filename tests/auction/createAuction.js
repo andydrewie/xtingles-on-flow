@@ -110,40 +110,6 @@ export const testSuiteCreateAuction = () => describe("Auction create", () => {
     expect(error).toMatch(/Auction lenght should be more than 0.00/);  
   });
 
-  test("createAuction throws panic, when extended length is 0.00", async () => { 
-    let error;
-    try {
-      const admin = await getAccountAddress("admin");
-      const auctionParameters = [...defaultAuctionParameters];
-      auctionParameters[2] = ZERO_UFIX64;
-      await sendTransaction({
-        code: createAuctionTransaction,
-        args: auctionParameters, 
-        signers: [admin],
-      }); 
-    } catch(e) {
-      error = e;
-    } 
-    expect(error).toMatch(/Extended length should be more than 0.00/);  
-  });
-
-  test("createAuction throws panic, when remain length to extend is 0.00", async () => { 
-    let error;
-    try {
-      const admin = await getAccountAddress("admin");
-      const auctionParameters = [...defaultAuctionParameters];
-      auctionParameters[3] = ZERO_UFIX64;
-      await sendTransaction({
-        code: createAuctionTransaction,
-        args: auctionParameters, 
-        signers: [admin],
-      }); 
-    } catch(e) {
-      error = e;
-    } 
-    expect(error).toMatch(/Remain length to extend should be more than 0.00/);  
-  });
-
   test("createAuction throws panic, when start time in the past", async () => { 
     let error;
     try {
