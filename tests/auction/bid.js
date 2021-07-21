@@ -751,7 +751,7 @@ export const testSuiteBidAuction = () => describe("Auction bid", () => {
     } catch (e) {
       error = e;
     }
-    expect(error).toMatch(/Bid should be less than 999 999.99/);
+    expect(error).toMatch(/Bid should be less than 1 000 000.00/);
   });
 
   test("successfull bid case", async () => {

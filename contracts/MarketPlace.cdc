@@ -88,7 +88,7 @@ pub contract MarketPlace {
         pub fun listForSale(token: @Collectible.NFT, price: UFix64) {
             pre {              
                 price > 0.00 : "Price should be more than 0"  
-                price < 999999.99 : "Price should be less than 999 999.99"     
+                price <= 999999.99 : "Price should be less than 1 000 000.00"     
             }
 
             let id = token.id
@@ -110,7 +110,7 @@ pub contract MarketPlace {
             pre {
                 self.prices[tokenID] != nil : "NFT does not exist on sale"  
                 newPrice > 0.00 : "Price should be more than 0"  
-                newPrice < 999999.99 : "Price should be less than 999 999.99"        
+                newPrice <= 999999.99 : "Price should be less than 1 000 000.00"        
             }
 
             let oldPrice = self.prices[tokenID]!

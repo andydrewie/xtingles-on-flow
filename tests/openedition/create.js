@@ -237,7 +237,7 @@ export const testSuiteCreateOpenEdition = () => describe("Open Edition create", 
         } catch(e) {
             error = e;
         } 
-        expect(error).toMatch(/Price should be less than 999 999.99/);  
+        expect(error).toMatch(/Price should be less than 1 000 000.00/);  
     });
 
     test("throw error, when open edition length is 0.00", async () => { 

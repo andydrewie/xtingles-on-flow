@@ -320,7 +320,7 @@ pub contract OpenEdition {
                 saleLength > 0.00 : "Sale lenght should be more than 0.00"
                 startTime > getCurrentBlock().timestamp : "Start time can't be in the past"
                 price > 0.00 : "Price should be more than 0.00"
-                price < 999999.99 : "Price should be less than 999 999.99"
+                price <= 999999.99 : "Price should be less than 1 000 000.00"
                 metadata != nil : "NFT metadata should be provided"
                 platformVaultCap.check() : "Platform vault should be reachable"
             }     

@@ -302,7 +302,7 @@ export const testSuiteSale = () => describe("MarketPlace list for sale", () => {
            error = e;
         }
 
-        expect(error).toMatch(/Price should be less than 999 999.99/);
+        expect(error).toMatch(/Price should be less than 1 000 000.00/);
     });  
 
     test("list for sale throws error, when seller's vault is unreachable", async () => {
