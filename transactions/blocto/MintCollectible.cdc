@@ -1,4 +1,4 @@
-import Collectible, Edition from 0x01cf0e2f2f715450
+import Collectible, Edition from 0x1bc62b2c04dfd147
 
 transaction(
         link: String,          
@@ -29,14 +29,21 @@ transaction(
 
     execute {
 
-        var edition = 1;
+        var edition = 1 as UInt64;
+
+        let editionNumber = self.editionCollectionRef.createEdition(
+            royalty: {
+                Address(0xefb501878aa34730) : Edition.CommissionStructure(
+                    firstSalePercent: 100.00,
+                    secondSalePercent: 2.00,
+                    description: "PLATFORM"
+                )
+            },
+            maxEdition: maxEdition
+        )  
 
         while edition <= maxEdition {
-
-            let editionNumber = self.editionCollectionRef.createEdition(
-                royalty: RoyaltyVariable,
-                maxEdition: maxEdition
-            )       
+             
             let metadata = Collectible.Metadata(
                 link: link,
                 name: name,           
@@ -49,9 +56,9 @@ transaction(
             let newNFT <- self.minterRef.mintNFT(metadata: metadata, editionNumber: editionNumber)
         
             self.receiverRef.deposit(token: <-newNFT)
+            edition = edition + 1;
         }
-
        
-        log("NFT Minted and deposited to Account's Collection")
+        log("NFTs Minted and deposited to Account's Collection")
     }
 }

@@ -190,3 +190,28 @@ Edition.
    flow scripts execute ./scripts/testnet/CheckEditionNumberNFT.cdc --arg Address:"0x0bd2b85a9b5947ef" --arg UInt64:1 --network=testnet
 
    You can commission info and amount of copies by script from point 2.
+
+
+   Blocto.
+
+    flow transactions send ./transactions/blocto/MintCollectible.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"}]' --signer dev-account --network=testnet
+
+    // The firth 4 parameters are metadata.
+    // The fifth is amount of issued tokens.
+
+    flow transactions send ./transactions/blocto/SetupNFTStorage.cdc --signer dev-account --network=testnet
+
+    // Setup NFT storage
+
+    flow transactions send ./transactions/blocto/TransferNFT.cdc --args-json '[{"type": "Address","value": "0x96c8ac9a55867f24"}, {"type": "UInt64","value": "1"}]' --signer dev-account --network=testnet
+
+    // Recipient of NFT
+    // NFT id
+
+    flow scripts execute ./scripts/blocto/CheckCollectibles.cdc --arg Address:"0x1bc62b2c04dfd147" --arg Address:"0x1bc62b2c04dfd147" --network=testnet
+
+    // Script to display NFT info in storage
+    // The first argument is owner address
+    // The second is account, where was deployed Edition contract. Need to exract final amount of minted NFT
+
+
