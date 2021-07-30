@@ -194,6 +194,8 @@ Edition.
 
    Blocto.
 
+    Edition and Collectible Contracts  are deployed to dev-account (testnet).
+
     flow transactions send ./transactions/blocto/MintCollectible.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"}]' --signer dev-account --network=testnet
 
     // The firth 4 parameters are metadata.
