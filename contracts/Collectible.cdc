@@ -146,7 +146,9 @@ pub contract Collectible: NonFungibleToken {
   
         // Common number for all copies of the item
         pub fun getEditionNumber(id: UInt64): UInt64? {
-            if self.ownedNFTs[id] == nil { return nil }
+            if self.ownedNFTs[id] == nil { 
+                return nil
+            }
 
             let ref = self.getNFT(id: id)
 

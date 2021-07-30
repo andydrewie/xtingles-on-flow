@@ -142,9 +142,13 @@ pub contract Edition {
                 }
             }      
 
-            if firstSummaryPercent != 100.00 { panic("The first summary sale percent should be 100 %") }
+            if firstSummaryPercent != 100.00 { 
+                panic("The first summary sale percent should be 100 %")
+            }
 
-            if secondSummaryPercent >= 100.00 { panic("The second summary sale percent should be less than 100 %") }            
+            if secondSummaryPercent >= 100.00 { 
+                panic("The second summary sale percent should be less than 100 %")
+            }            
         }
 
         // Create edition (common information for all copies of the same item)
@@ -173,7 +177,9 @@ pub contract Edition {
         }
      
         pub fun getEdition(_ id: UInt64): EditionStatus? {
-            if self.editionItems[id] == nil { return nil }         
+            if self.editionItems[id] == nil { 
+                return nil
+            }         
 
             // Get the edition item resources
             let itemRef = &self.editionItems[id] as &EditionItem

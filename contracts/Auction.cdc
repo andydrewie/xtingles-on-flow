@@ -180,7 +180,9 @@ pub contract Auction {
 
         access(contract) fun burnNFT() {   
             
-            if(self.NFT == nil) { return }           
+            if(self.NFT == nil) { 
+                return
+            }           
 
             let nftId = self.NFT?.id!
 
@@ -332,7 +334,9 @@ pub contract Auction {
             if let vaultCap = self.recipientVaultCap {
                 // Check possible situation, where vault was unlinked after bid
                 // Test this case in automated test
-                if !vaultCap.check() { return nil }
+                if !vaultCap.check() {
+                    return nil
+                }
 
                 return vaultCap.borrow()!.owner!.address
             }
@@ -557,8 +561,9 @@ pub contract Auction {
         // getAuctionPrices returns a dictionary of available NFT IDs with their current price
         pub fun getAuctionStatuses(): {UInt64: AuctionStatus} {
            
-            if self.auctionItems.keys.length == 0 { return {} }
-           
+            if self.auctionItems.keys.length == 0 { 
+                return {} 
+            }           
 
             let priceList: {UInt64: AuctionStatus} = {}
 
@@ -572,7 +577,9 @@ pub contract Auction {
 
         pub fun getAuctionStatus(_ id:UInt64): AuctionStatus? {
     
-            if  self.auctionItems[id] == nil { return  nil }        
+            if  self.auctionItems[id] == nil {
+                return  nil
+            }        
 
             // Get the auction item resources
             let itemRef = &self.auctionItems[id] as &AuctionItem
@@ -580,7 +587,9 @@ pub contract Auction {
         }
 
         pub fun getTimeLeft(_ id: UInt64): Fix64? {
-            if(self.auctionItems[id] == nil) { return nil }
+            if(self.auctionItems[id] == nil) {
+                return nil
+            }
 
             // Get the auction item resources
             let itemRef = &self.auctionItems[id] as &AuctionItem
