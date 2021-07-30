@@ -103,10 +103,7 @@
 		"testnet": {
 			"dev-account": [	
 				"Collectible",		
-				"Auction",
-				"Edition",
-				"OpenEdition",
-				"MarketPlace"									
+				"Edition"							
 			]
 		},
 		"emulator": {

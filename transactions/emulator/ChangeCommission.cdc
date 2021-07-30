@@ -7,7 +7,7 @@ transaction(id: UInt64) {
     prepare(acct: AuthAccount) {
 
         self.editionCollectionRef = acct.borrow<&Edition.EditionCollection>(from: Edition.CollectionStoragePath)
-            ?? panic("could not edition reference")                     
+            ?? panic("could not edition reference")                    
    
     }
 
