@@ -93,11 +93,15 @@
 		"staging-account": {
 			"address": "0x85080f371da20cc1",
 			"keys": "939fa191fa6759871c548ac81f64b2f7ded3a4c27643531899cdf4e10b110785"
+		},
+		"dev-account": {
+			"address": "0x1bc62b2c04dfd147",
+			"keys": "4c639685e38cf14d4f131b54299f3d8b968d1e67f40f2c366d03ae1704a4540d"
 		}
 	},
 	"deployments": {
 		"testnet": {
-			"testnet-account": [	
+			"dev-account": [	
 				"Collectible",		
 				"Auction",
 				"Edition",

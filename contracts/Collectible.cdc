@@ -195,7 +195,7 @@ pub contract Collectible: NonFungibleToken {
             let editionRef = Collectible.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()! 
 
             // Check edition info in contract Edition in order to manage commission and all amount of copies of the same item
-            assert(editionRef.getEdition(editionNumber) == nil, message: "Edition does not exist")
+            assert(editionRef.getEdition(editionNumber) != nil, message: "Edition does not exist")
         
             var newNFT <- create NFT(
                 initID: Collectible.totalSupply,
@@ -230,7 +230,7 @@ pub contract Collectible: NonFungibleToken {
     }
 
     // get info for NFT including metadata
-    pub fun getCollectibleData(address:Address) : [CollectibleData] {
+    pub fun getCollectibleDatas(address:Address) : [CollectibleData] {
 
         var collectibleData: [CollectibleData] = []
         let account = getAccount(address)

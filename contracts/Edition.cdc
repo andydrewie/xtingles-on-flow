@@ -221,7 +221,7 @@ pub contract Edition {
     }   
 
     // createEditionCollection returns a new createEditionCollection resource to the caller
-    access(account) fun createEditionCollection(): @EditionCollection {
+    priv fun createEditionCollection(): @EditionCollection {
         let editionCollection <- create EditionCollection()
 
         return <- editionCollection
@@ -231,5 +231,9 @@ pub contract Edition {
         self.totalEditions = (0 as UInt64)
         self.CollectionPublicPath = /public/xtinglesEdition
         self.CollectionStoragePath = /storage/xtinglesEdition
+
+        let edition <- Edition.createEditionCollection()
+        self.account.save(<- edition, to: Edition.CollectionStoragePath)         
+        self.account.link<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
     }   
 }

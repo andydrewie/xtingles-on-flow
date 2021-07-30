@@ -6,15 +6,6 @@ transaction(id: UInt64, maxEdition: UInt64) {
    
     prepare(acct: AuthAccount) {
 
-         let editionCap = acct.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath)
-
-        if !editionCap.check() {        
-            let edition <- Edition.createEditionCollection()
-            acct.save(<- edition, to: Edition.CollectionStoragePath)         
-            acct.link<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
-            log("Edition Collection Created for account")
-        }  
-
         self.editionCollectionRef = acct.borrow<&Edition.EditionCollection>(from: Edition.CollectionStoragePath)
             ?? panic("could not edition reference")                     
    

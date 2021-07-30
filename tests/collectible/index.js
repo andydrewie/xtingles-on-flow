@@ -16,7 +16,6 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
     transferCollectibleTransaction,
     initializeNFTStorageTransaction,
     createEditionTransaction,
-    createEditionResourceTransaction,
     setupFUSDTransaction,
     mintFUSDTransaction;
 
@@ -88,14 +87,6 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
       "utf8"    
     );  
          
-    createEditionResourceTransaction = fs.readFileSync(
-      path.join(
-          __dirname,
-          `../../transactions/emulator/CreateEditionResource.cdc`
-      ),
-      "utf8"    
-    );   
-
     setupFUSDTransaction = fs.readFileSync(
       path.join(
           __dirname,
@@ -180,13 +171,6 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
         ],
         signers: [admin],
     });
-
-    // Create editon resource to store commission information
-    await sendTransaction({
-      code: createEditionResourceTransaction,
-      args: [], 
-      signers: [admin],
-    });  
 
     const commission = `{
       Address(${second}) : Edition.CommissionStructure(

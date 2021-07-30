@@ -6,7 +6,6 @@ import { sendTransaction, executeScript, mintFlow, getAccountAddress, init, emul
 
 export const testSuiteGetEdition = () => describe("Edition get", () => {
     let createEditionTransaction, 
-        createEditionResourceTransaction,
         getEditionScript,
         setupFUSDTransaction,
         mintFUSDTransaction,
@@ -24,14 +23,6 @@ export const testSuiteGetEdition = () => describe("Edition get", () => {
             "utf8"    
         );      
         
-        createEditionResourceTransaction = fs.readFileSync(
-            path.join(
-                __dirname,
-                `../../transactions/emulator/CreateEditionResource.cdc`
-            ),
-            "utf8"    
-        );      
-
         getEditionScript = fs.readFileSync(
             path.join(
                 __dirname,
@@ -146,12 +137,6 @@ export const testSuiteGetEdition = () => describe("Edition get", () => {
         let error;
         try {
             const admin = await getAccountAddress("admin");
-
-            await sendTransaction({
-                code: createEditionResourceTransaction,
-                args: [], 
-                signers: [admin],
-            });  
 
             const result = await executeScript({
                 code: getEditionScript,
