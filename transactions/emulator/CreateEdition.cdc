@@ -6,12 +6,12 @@ transaction(maxEdition: UInt64) {
    
     prepare(acct: AuthAccount) {
 
-        let editionCap = acct.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath)
+        let editionCap = acct.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath)
 
         if !editionCap.check() {        
             let edition <- Edition.createEditionCollection()
             acct.save(<- edition, to: Edition.CollectionStoragePath)         
-            acct.link<&{Edition.EditionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
+            acct.link<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
             log("Edition Collection Created for account")
         }  
 

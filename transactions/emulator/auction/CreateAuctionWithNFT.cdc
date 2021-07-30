@@ -20,7 +20,7 @@ transaction(
     let platformCap: Capability<&{FungibleToken.Receiver}>
     let minterRef: &Collectible.NFTMinter
     let editionCollectionRef: &Edition.EditionCollection
-    let editionCap: Capability<&{Edition.EditionPublic}>
+    let editionCap: Capability<&{Edition.EditionCollectionPublic}>
     let metadata: Collectible.Metadata
   
     prepare(acct: AuthAccount) {
@@ -53,16 +53,16 @@ transaction(
             properties: {}   
         ) 
 
-        let editionCap = acct.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath)
+        let editionCap = acct.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath)
 
         if !editionCap.check() {        
             let edition <- Edition.createEditionCollection()
             acct.save( <- edition, to: Edition.CollectionStoragePath)         
-            acct.link<&{Edition.EditionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
+            acct.link<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
             log("Edition Collection Created for account")
         }  
 
-        self.editionCap = acct.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath)
+        self.editionCap = acct.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath)
 
         self.editionCollectionRef = acct.borrow<&Edition.EditionCollection>(from: Edition.CollectionStoragePath)
             ?? panic("could not borrow edition reference reference")     

@@ -7,7 +7,7 @@ transaction(
         id: UInt64 
     ) {
 
-    let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionPublic}
+    let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionCollectionPublic}
     let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     let temporaryVault: @FungibleToken.Vault
 
@@ -18,7 +18,7 @@ transaction(
         // get the references to the buyer's Vault and NFT Collection receiver        
         self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
       
-        self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionPublic}>(OpenEdition.CollectionPublicPath)
+        self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionCollectionPublic}>(OpenEdition.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow nft sale reference")
    

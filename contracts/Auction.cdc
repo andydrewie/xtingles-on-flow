@@ -132,7 +132,7 @@ pub contract Auction {
         priv var auctionCancelled: Bool
 
         // Manage royalty for copies of the same items
-        priv let editionCap: Capability<&{Edition.EditionPublic}>
+        priv let editionCap: Capability<&{Edition.EditionCollectionPublic}>
 
         init(          
             minimumBidIncrement: UFix64,
@@ -142,7 +142,7 @@ pub contract Auction {
             extendedLength: UFix64, 
             remainLengthToExtend: UFix64, 
             platformVaultCap: Capability<&{FungibleToken.Receiver}>,         
-            editionCap: Capability<&{Edition.EditionPublic}>
+            editionCap: Capability<&{Edition.EditionCollectionPublic}>
         ) {
             Auction.totalAuctions = Auction.totalAuctions + (1 as UInt64)
             self.NFT <- nil
@@ -476,7 +476,7 @@ pub contract Auction {
             auctionStartTime: UFix64,
             startPrice: UFix64, 
             platformVaultCap: Capability<&{FungibleToken.Receiver}>,         
-            editionCap: Capability<&{Edition.EditionPublic}>
+            editionCap: Capability<&{Edition.EditionCollectionPublic}>
         ): UInt64
 
         pub fun getAuctionStatuses(): {UInt64: AuctionStatus}
@@ -516,7 +516,7 @@ pub contract Auction {
             auctionStartTime: UFix64,
             startPrice: UFix64,           
             platformVaultCap: Capability<&{FungibleToken.Receiver}>,         
-            editionCap: Capability<&{Edition.EditionPublic}>
+            editionCap: Capability<&{Edition.EditionCollectionPublic}>
         ): UInt64 {
 
             pre {              

@@ -152,7 +152,7 @@ pub contract OpenEdition {
 
         priv fun sendCommissionPayments(buyerTokens: @FungibleToken.Vault, tokenID: UInt64) {
             // Capability to resource with commission information
-            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath).borrow()! 
+            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()! 
         
             // Commission informaton for all copies of on item
             let editionStatus = editionRef.getEdition(self.editionNumber)!
@@ -267,7 +267,7 @@ pub contract OpenEdition {
 
     // AuctionPublic is a resource interface that restricts users to
     // retreiving the auction price list and placing bids
-    pub resource interface OpenEditionPublic {
+    pub resource interface OpenEditionCollectionPublic {
 
         pub fun createOpenEdition(
             price: UFix64,
@@ -291,7 +291,7 @@ pub contract OpenEdition {
 
     // AuctionCollection contains a dictionary of AuctionItems and provides
     // methods for manipulating the AuctionItems
-    pub resource OpenEditionCollection: OpenEditionPublic {
+    pub resource OpenEditionCollection: OpenEditionCollectionPublic {
         // Auction Items
         access(account) var openEditionsItems: @{UInt64: OpenEditionItem}     
 
@@ -325,7 +325,7 @@ pub contract OpenEdition {
                 platformVaultCap.check() : "Platform vault should be reachable"
             }     
 
-            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath).borrow()! 
+            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()! 
 
             // Check edition info in contract Edition in order to manage commission and all amount of copies of the same item
             // This error throws inside Edition contract. But I put this check for redundant

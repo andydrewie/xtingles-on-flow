@@ -164,7 +164,7 @@ pub contract MarketPlace {
             // this is validated during process of the cration NFT
             let editionNumber = self.getEditionNumber(id: tokenID)!  
                       
-            let royaltyRef = MarketPlace.account.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath).borrow()!             
+            let royaltyRef = MarketPlace.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()!             
 
             let royaltyStatus = royaltyRef.getEdition(editionNumber)!           
 
