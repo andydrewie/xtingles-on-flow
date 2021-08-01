@@ -1,5 +1,5 @@
 import FungibleToken from 0xee82856bf20e2aa6
-import Auction, Collectible, Edition, NonFungibleToken from 0x01cf0e2f2f715450
+import Auction, Collectible, Edition, NonFungibleToken, FUSD from 0x01cf0e2f2f715450
 
 transaction(      
         minimumBidIncrement: UFix64, 
@@ -12,7 +12,7 @@ transaction(
     ) {
 
     let auctionCollectionRef: &Auction.AuctionCollection
-    let platformCap: Capability<&{FungibleToken.Receiver}>
+    let platformCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let editionCollectionRef: &Edition.EditionCollection
     let editionCap: Capability<&{Edition.EditionCollectionPublic}>
 
@@ -23,7 +23,7 @@ transaction(
 
         let platform = getAccount(platformAddress)
 
-        self.platformCap = platform.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
+        self.platformCap = platform.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
 
         self.editionCap = acct.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath)
 

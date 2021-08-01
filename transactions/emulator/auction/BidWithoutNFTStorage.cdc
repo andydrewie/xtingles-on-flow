@@ -1,5 +1,5 @@
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken from 0x01cf0e2f2f715450
+import NonFungibleToken, FUSD from 0x01cf0e2f2f715450
 import Auction, Collectible from 0x01cf0e2f2f715450
 
 transaction(       
@@ -9,22 +9,22 @@ transaction(
     ) {
 
     let auctionCollectionRef: &AnyResource{Auction.AuctionCollectionPublic}
-    let collectionCap: Capability<&{Collectible.CollectionPublic}> 
+    let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
     let vaultCap: Capability<&{FungibleToken.Receiver}>
-    let temporaryVault: @FungibleToken.Vault
+    let temporaryVault: @FUSD.Vault
 
     prepare(acct: AuthAccount) {
         let auctionOwner = getAccount(auction) 
 
-        self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        self.collectionCap = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
         self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow auction reference")        
 
-        self.vaultCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
+        self.vaultCap = acct.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
    
-        let vaultRef = acct.borrow<&FungibleToken.Vault>(from: /storage/fusdVault)
+        let vaultRef = acct.borrow<&FUSD.Vault>(from: /storage/fusdVault)
             ?? panic("Could not borrow owner's Vault reference")
         
           // withdraw tokens from the buyer's Vault
