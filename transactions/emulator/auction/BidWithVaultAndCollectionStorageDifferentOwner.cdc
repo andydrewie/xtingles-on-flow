@@ -42,7 +42,7 @@ transaction(
             ?? panic("Could not borrow owner's Vault reference")
         
           // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: amount)
+        self.temporaryVault <- vaultRef.withdraw(amount: amount) as! @FUSD.Vault
 
     }
 

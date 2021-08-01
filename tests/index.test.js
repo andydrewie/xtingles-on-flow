@@ -12,12 +12,12 @@ import {
 } from "./openedition";
 
 describe('sequentially run tests', () => {
-   testSuiteMarketPlace();
+  /* testSuiteMarketPlace();
 
    testSuiteCollectible();
 
-   testSuiteEdition();
-   /* testSuiteAuction(); */
+   testSuiteEdition();*/
+   testSuiteAuction();
 
-   testSuiteOpenEdition();
+  // testSuiteOpenEdition();
 })
