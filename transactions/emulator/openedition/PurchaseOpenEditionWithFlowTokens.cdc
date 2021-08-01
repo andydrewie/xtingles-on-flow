@@ -1,5 +1,5 @@
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken from 0x01cf0e2f2f715450
+import NonFungibleToken, FUSD from 0x01cf0e2f2f715450
 import Collectible, OpenEdition from 0x01cf0e2f2f715450
 
 transaction(
@@ -9,7 +9,7 @@ transaction(
 
     let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionCollectionPublic}
     let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
-    let temporaryVault: @FungibleToken.Vault
+    let temporaryVault: @FUSD.Vault
 
     prepare(acct: AuthAccount) {
        

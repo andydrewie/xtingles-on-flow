@@ -151,7 +151,7 @@ pub contract OpenEdition {
             return timeRemaining < Fix64(0.0)
         }
 
-        priv fun sendCommissionPayments(buyerTokens: @FungibleToken.Vault, tokenID: UInt64) {
+        priv fun sendCommissionPayments(buyerTokens: @FUSD.Vault, tokenID: UInt64) {
             // Capability to resource with commission information
             let editionRef = OpenEdition.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()! 
         
@@ -185,13 +185,13 @@ pub contract OpenEdition {
             // Platform get the rest of Fungible tokens and tokens from failed transactions
             let amount = buyerTokens.balance        
 
-            platformVault.deposit(from: <- buyerTokens)
+            platformVault.deposit(from: <- (buyerTokens as! @FungibleToken.Vault))
 
             emit Earned(nftID: tokenID, amount: amount, owner: platformVault.owner!.address, type: "PLATFORM")  
         }
    
         pub fun purchase(
-            buyerTokens: @FungibleToken.Vault,
+            buyerTokens: @FUSD.Vault,
             buyerCollectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>,
             minterCap: Capability<&Collectible.NFTMinter>
         ) {
@@ -292,7 +292,7 @@ pub contract OpenEdition {
 
         pub fun purchase(
             id: UInt64, 
-            buyerTokens: @FungibleToken.Vault,      
+            buyerTokens: @FUSD.Vault,      
             collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>       
         )
     }
@@ -421,7 +421,7 @@ pub contract OpenEdition {
         // purchase sends the buyer's tokens to the buyer's tokens vault      
         pub fun purchase(
             id: UInt64, 
-            buyerTokens: @FungibleToken.Vault,      
+            buyerTokens: @FUSD.Vault,      
             collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>       
         ) {
             pre {

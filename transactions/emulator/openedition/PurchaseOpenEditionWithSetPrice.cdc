@@ -9,7 +9,7 @@ transaction(
 
     let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionCollectionPublic}
     let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
-    let temporaryVault: @FungibleToken.Vault
+    let temporaryVault: @FUSD.Vault
 
     prepare(acct: AuthAccount) {
        
@@ -37,7 +37,7 @@ transaction(
             ?? panic("Could not borrow owner's Vault reference")
         
          // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: 10.00) 
+        self.temporaryVault <- vaultRef.withdraw(amount: 10.00) as! @FUSD.Vault 
     }
 
     execute {

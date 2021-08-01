@@ -9,7 +9,7 @@ transaction(
 
     let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionCollectionPublic}
     let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
-    let temporaryVault: @FungibleToken.Vault
+    let temporaryVault: @FUSD.Vault
 
     prepare(acct: AuthAccount) {
        
@@ -39,7 +39,7 @@ transaction(
         let amount = self.openEditionCollectionRef.getPrice(id)!
         
          // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: amount)
+        self.temporaryVault <- vaultRef.withdraw(amount: amount) as! @FUSD.Vault
 
     }
 
