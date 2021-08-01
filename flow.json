@@ -105,9 +105,9 @@
 	},
 	"deployments": {
 		"testnet": {
-			"new-account": [	
-				"Collectible",		
+			"testnet-xtingles-1": [	
 				"Edition",
+				"Collectible",			
 				"MarketPlace",
 				"OpenEdition"							
 			]

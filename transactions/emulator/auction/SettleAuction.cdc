@@ -7,12 +7,12 @@ transaction(id: UInt64) {
     let client: &Auction.AuctionCollection
     
     prepare(acct: AuthAccount) {
-        let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath)
+        let auctionCap = acct.getCapability<&{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath)
 
         if !auctionCap.check() {          
             let sale <- Auction.createAuctionCollection()
             acct.save(<-sale, to:Auction.CollectionStoragePath)         
-            acct.link<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
+            acct.link<&{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
             log("Auction Collection Created for account")
         }  
 

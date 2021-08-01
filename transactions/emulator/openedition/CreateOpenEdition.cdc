@@ -21,7 +21,7 @@ transaction(
     prepare(acct: AuthAccount) {
 
         self.royaltyCollectionRef = acct.borrow<&Edition.EditionCollection>(from: Edition.CollectionStoragePath)
-            ?? panic("could not borrow minter reference")            
+            ?? panic("could not borrow edition reference")            
 
         self.openEditionCollectionRef = acct.borrow<&OpenEdition.OpenEditionCollection>(from: OpenEdition.CollectionStoragePath)
             ?? panic("could not borrow open edition collection reference")  

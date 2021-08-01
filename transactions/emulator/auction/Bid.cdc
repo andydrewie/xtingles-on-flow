@@ -8,7 +8,7 @@ transaction(
         auction: Address
     ) {
 
-    let auctionCollectionRef: &AnyResource{Auction.AuctionPublic}
+    let auctionCollectionRef: &AnyResource{Auction.AuctionCollectionPublic}
     let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     let vaultCap: Capability<&{FungibleToken.Receiver}>
     let temporaryVault: @FungibleToken.Vault
@@ -29,16 +29,16 @@ transaction(
 
         self.collectionCap = collectionCap 
 
-        let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath)
+        let auctionCap = acct.getCapability<&{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath)
 
         if !auctionCap.check() {          
             let sale <- Auction.createAuctionCollection()
             acct.save(<-sale, to:Auction.CollectionStoragePath)         
-            acct.link<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
+            acct.link<&{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
             log("Auction Collection Created for account")
         }  
         
-        self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionPublic}>(Auction.CollectionPublicPath)
+        self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow auction reference")
 

@@ -1,4 +1,4 @@
-import Collectible from 0x01547a7e742007d9
+import Collectible from 0xfc747df8f5e61fcb
 
 /*
   This script will check an address and print out its Collectible resources

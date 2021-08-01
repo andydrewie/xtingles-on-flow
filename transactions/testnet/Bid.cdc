@@ -11,7 +11,7 @@ transaction(
         amount: UFix64
     ) {
 
-    let auctionCollectionRef: &AnyResource{Auction.AuctionPublic}
+    let auctionCollectionRef: &AnyResource{Auction.AuctionCollectionPublic}
     let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     let vaultCap: Capability<&{FungibleToken.Receiver}>
     let temporaryVault: @FungibleToken.Vault
@@ -32,7 +32,7 @@ transaction(
 
         self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
         
-        self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionPublic}>(Auction.CollectionPublicPath)
+        self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow nft sale reference")
 

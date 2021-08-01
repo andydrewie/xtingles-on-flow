@@ -253,10 +253,10 @@ pub contract Collectible: NonFungibleToken {
     init() {
         // Initialize the total supply
         self.totalSupply = 1
-        self.CollectionPublicPath = /public/bloctoXtinglesCollectibleCollection
-        self.CollectionStoragePath = /storage/bloctoXtinglesCollectibleCollection
-        self.MinterStoragePath = /storage/bloctoXtinglesCollectibleMinter
-        self.MinterPrivatePath = /private/bloctoXtinglesCollectibleMinter
+        self.CollectionPublicPath = /public/xtinglesNFTCollectibleCollection
+        self.CollectionStoragePath = /storage/xtinglesNFTCollectibleCollection
+        self.MinterStoragePath = /storage/xtinglesNFTCollectibleMinter
+        self.MinterPrivatePath = /private/xtinglesNFTCollectibleMinter
 
         self.account.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
         self.account.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
