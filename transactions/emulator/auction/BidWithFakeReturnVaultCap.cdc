@@ -10,13 +10,13 @@ transaction(
 
     let auctionCollectionRef: &AnyResource{Auction.AuctionCollectionPublic}
     let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
-    let vaultCap: Capability<&{FungibleToken.Receiver}>
+    let vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let temporaryVault: @FUSD.Vault
 
     prepare(acct: AuthAccount) {
         let auctionOwner = getAccount(auction)       
         // get the references to the buyer's Vault and NFT Collection receiver
-        var collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        var collectionCap = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
         // if collection is not created yet we make it.
         if !collectionCap.check() {
@@ -37,7 +37,7 @@ transaction(
 
         self.vaultCap = fakeAcct.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
    
-        let vaultRef = acct.borrow<&FUSD.Vault.Vault>(from: /storage/fusdVault)
+        let vaultRef = acct.borrow<&FUSD.Vault>(from: /storage/fusdVault)
             ?? panic("Could not borrow owner's Vault reference")
         
           // withdraw tokens from the buyer's Vault

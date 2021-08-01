@@ -1,5 +1,5 @@
 import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken from 0x01cf0e2f2f715450
+import NonFungibleToken, FUSD from 0x01cf0e2f2f715450
 import Collectible, Edition, OpenEdition from  0x01cf0e2f2f715450
 
 transaction(
@@ -14,7 +14,7 @@ transaction(
 ) {
 
     let openEditionCollectionRef: &OpenEdition.OpenEditionCollection
-    let platformCap: Capability<&{FungibleToken.Receiver}>
+    let platformCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let metadata: Collectible.Metadata
     let royaltyCollectionRef: &Edition.EditionCollection
  
@@ -29,7 +29,7 @@ transaction(
         // Fake platform address, which is non-existen
         let platform = getAccount(Address(0x01cf0e2f2f715452))
 
-        self.platformCap = platform.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
+        self.platformCap = platform.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
 
         self.metadata = Collectible.Metadata(
             link: link,

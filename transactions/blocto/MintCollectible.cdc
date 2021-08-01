@@ -8,7 +8,7 @@ transaction(
         maxEdition: UInt64  
     ) {
         
-    let receiverRef: &{Collectible.CollectionPublic}
+    let receiverRef: &Collectible.Collection{Collectible.CollectionPublic}
     let minterRef: &Collectible.NFTMinter
     
     let editionCollectionRef: &Edition.EditionCollection
@@ -16,7 +16,7 @@ transaction(
     prepare(
         acct: AuthAccount     
     ) {
-        self.receiverRef = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        self.receiverRef = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow receiver reference")        
         

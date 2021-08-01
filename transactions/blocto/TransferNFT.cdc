@@ -6,7 +6,7 @@ transaction(
         id: UInt64   
     ) {
         
-    let receiverRef: &{Collectible.CollectionPublic}
+    let receiverRef: &Collectible.Collection{Collectible.CollectionPublic}
     let senderRef: &NonFungibleToken.Collection
 
     prepare(
@@ -15,7 +15,7 @@ transaction(
   
         let acctReceiver = getAccount(to)
        
-        self.receiverRef = acctReceiver.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        self.receiverRef = acctReceiver.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow receiver reference")        
 

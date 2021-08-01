@@ -3,11 +3,11 @@ import FungibleToken from 0xee82856bf20e2aa6
 
 transaction(tokenId: UInt64) {
 
-    let receiverRef: &{Collectible.CollectionPublic}
+    let receiverRef: &Collectible.Collection{Collectible.CollectionPublic}
     let saleRef: &MarketPlace.SaleCollection
 
     prepare(acct: AuthAccount) {
-        self.receiverRef = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        self.receiverRef = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
             .borrow()
             ?? panic("could not borrow receiver reference")     
             

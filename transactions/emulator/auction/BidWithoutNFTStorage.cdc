@@ -10,7 +10,7 @@ transaction(
 
     let auctionCollectionRef: &AnyResource{Auction.AuctionCollectionPublic}
     let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
-    let vaultCap: Capability<&{FungibleToken.Receiver}>
+    let vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let temporaryVault: @FUSD.Vault
 
     prepare(acct: AuthAccount) {

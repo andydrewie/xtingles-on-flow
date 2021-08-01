@@ -19,7 +19,7 @@ transaction(
     ) {
 
     let auctionCollectionRef: &Auction.AuctionCollection
-    let platformCap: Capability<&{FungibleToken.Receiver}>
+    let platformCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let minterRef: &Collectible.NFTMinter
     let editionCollectionRef: &Edition.EditionCollection
     let editionCap: Capability<&{Edition.EditionCollectionPublic}>
@@ -46,7 +46,7 @@ transaction(
         let platform = getAccount(platformAddress)
 
         // Capability to FUSD vault
-        self.platformCap = platform.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
+        self.platformCap = platform.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
 
         // Reference to resource mint NFT on the account
         self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: Collectible.MinterStoragePath)

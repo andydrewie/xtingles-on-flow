@@ -29,7 +29,7 @@ pub contract MarketPlace {
     pub resource interface SaleCollectionPublic {
         pub fun purchase(
             tokenID: UInt64,
-            recipientCap: Capability<&{Collectible.CollectionPublic}>,
+            recipientCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>,
             buyTokens: @FUSD.Vault     
         )
         pub fun idPrice(tokenID: UInt64): UFix64?
@@ -171,7 +171,7 @@ pub contract MarketPlace {
 
                 let account = getAccount(key) 
 
-                let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
+                let vaultCap = account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
 
                 if(vaultCap.check()) {
                     let vaultCommissionRecepientRef = vaultCap.borrow()!
@@ -195,7 +195,7 @@ pub contract MarketPlace {
         // purchase lets a user send tokens to purchase an NFT that is for sale
         pub fun purchase(
             tokenID: UInt64,
-            recipientCap: Capability<&{Collectible.CollectionPublic}>,
+            recipientCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>,
             buyTokens: @FUSD.Vault
         ) {
             pre {

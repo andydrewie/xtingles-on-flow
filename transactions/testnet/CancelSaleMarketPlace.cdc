@@ -3,11 +3,11 @@ import Collectible, MarketPlace from 0xfc747df8f5e61fcb
 
 transaction(tokenId: UInt64) {
 
-    let receiverRef: &{Collectible.CollectionPublic}
+    let receiverRef: &Collectible.Collection{Collectible.CollectionPublic}
     let saleRef: &MarketPlace.SaleCollection
 
     prepare(acct: AuthAccount) {
-        self.receiverRef = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        self.receiverRef = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
             .borrow()
             ?? panic("could not borrow receiver reference")     
             

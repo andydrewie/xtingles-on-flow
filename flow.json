@@ -114,11 +114,11 @@
 		},
 		"emulator": {
 			"emulator-account": [				
-				"NonFungibleToken",			
+				"NonFungibleToken",	
+				"FUSD",		
 				"Collectible",		
 				"Auction",
-				"Edition",
-				"FUSD",
+				"Edition",			
 				"MarketPlace"				
 			]
 		}

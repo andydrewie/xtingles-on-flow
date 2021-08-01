@@ -3,6 +3,7 @@ import FlowToken from "./FlowToken.cdc"
 import Collectible from "./Collectible.cdc"
 import NonFungibleToken from "./NonFungibleToken.cdc"
 import Edition from "./Edition.cdc"
+import FUSD from "./FUSD.cdc"
 
 pub contract OpenEdition {
 
@@ -89,7 +90,7 @@ pub contract OpenEdition {
         priv let metadata: Collectible.Metadata
 
         //The vault receive FUSD in case of the recipient of commissiona is unreachable 
-        priv let platformVaultCap: Capability<&{FungibleToken.Receiver}>   
+        priv let platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>   
 
         init(
             price: UFix64,
@@ -97,7 +98,7 @@ pub contract OpenEdition {
             saleLength: UFix64, 
             editionNumber: UInt64,
             metadata: Collectible.Metadata,
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>
+            platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
         ) {
             OpenEdition.totalOpenEditions = OpenEdition.totalOpenEditions + (1 as UInt64)
             self.price = price
@@ -167,7 +168,7 @@ pub contract OpenEdition {
 
                     let account = getAccount(key) 
 
-                    let vaultCap = account.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)    
+                    let vaultCap = account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)    
 
                     // vaultCap was checked during creation of commission info on Edition contract, therefore this is extra check
                     // if vault capability is not avaliable, the rest tokens will sent to platform vault                     
@@ -191,7 +192,7 @@ pub contract OpenEdition {
    
         pub fun purchase(
             buyerTokens: @FungibleToken.Vault,
-            buyerCollectionCap: Capability<&{Collectible.CollectionPublic}>,
+            buyerCollectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>,
             minterCap: Capability<&Collectible.NFTMinter>
         ) {
             pre {              
@@ -282,7 +283,7 @@ pub contract OpenEdition {
             saleLength: UFix64, 
             editionNumber: UInt64,
             metadata: Collectible.Metadata,
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>  
+            platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>  
         ) 
 
         pub fun getOpenEditionStatuses(): {UInt64: OpenEditionStatus}?
@@ -292,7 +293,7 @@ pub contract OpenEdition {
         pub fun purchase(
             id: UInt64, 
             buyerTokens: @FungibleToken.Vault,      
-            collectionCap: Capability<&{Collectible.CollectionPublic}>       
+            collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>       
         )
     }
 
@@ -321,7 +322,7 @@ pub contract OpenEdition {
             saleLength: UFix64, 
             editionNumber: UInt64,
             metadata: Collectible.Metadata,
-            platformVaultCap: Capability<&{FungibleToken.Receiver}>  
+            platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>  
         ) {
             pre {              
                 saleLength > 0.00 : "Sale lenght should be more than 0.00"
@@ -421,7 +422,7 @@ pub contract OpenEdition {
         pub fun purchase(
             id: UInt64, 
             buyerTokens: @FungibleToken.Vault,      
-            collectionCap: Capability<&{Collectible.CollectionPublic}>       
+            collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>       
         ) {
             pre {
                 self.openEditionsItems[id] != nil: "Open Edition does not exist"

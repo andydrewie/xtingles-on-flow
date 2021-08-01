@@ -6,7 +6,7 @@ transaction() {
     prepare(account: AuthAccount) {
 
         // get the references to the buyer's Vault and NFT Collection receiver
-        var collectionCap = account.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        var collectionCap = account.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
         // if collection is not created yet we make it.
         if !collectionCap.check() {
@@ -14,7 +14,7 @@ transaction() {
             account.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
 
             // publish a capability to the Collection in storage
-            account.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
+            account.link<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         }      
     }
 

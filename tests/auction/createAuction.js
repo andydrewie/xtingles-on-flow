@@ -61,10 +61,10 @@ export const testSuiteCreateAuction = () => describe("Auction create", () => {
       Collectible: admin,
       Edition: admin,      
     };
-
-    await deployContractByName({ to: admin, name: "Edition" });
+    
     await deployContractByName({ to: admin, name: "NonFungibleToken" });    
     await deployContractByName({ to: admin, name: "FUSD" }); 
+    await deployContractByName({ to: admin, name: "Edition" });
     await deployContractByName({ to: admin, name: "Collectible", addressMap });
     await deployContractByName({ to: admin, name: "Auction", addressMap });
 		done();

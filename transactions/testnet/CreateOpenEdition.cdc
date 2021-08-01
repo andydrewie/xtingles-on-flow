@@ -14,7 +14,7 @@ transaction(
 ) {
 
     let openEditionCollectionRef: &OpenEdition.OpenEditionCollection
-    let platformCap: Capability<&{FungibleToken.Receiver}>
+    let platformCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let metadata: Collectible.Metadata
     let royaltyCollectionRef: &Edition.EditionCollection
  
@@ -28,7 +28,7 @@ transaction(
 
         let platform = getAccount(platformAddress)
 
-        self.platformCap = platform.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
+        self.platformCap = platform.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
 
         self.metadata = Collectible.Metadata(
             link: link,

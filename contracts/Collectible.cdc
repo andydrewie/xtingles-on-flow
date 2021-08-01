@@ -237,7 +237,7 @@ pub contract Collectible: NonFungibleToken {
         var collectibleData: [CollectibleData] = []
         let account = getAccount(address)
 
-        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&{Collectible.CollectionPublic}>()  {
+        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&Collectible.Collection{Collectible.CollectionPublic}>()  {
             for id in CollectibleCollection.getIDs() {
                 var collectible = CollectibleCollection.borrowCollectible(id: id) 
                 collectibleData.append(CollectibleData(
@@ -259,7 +259,7 @@ pub contract Collectible: NonFungibleToken {
         self.MinterPrivatePath = /private/xtinglesNFTCollectibleMinter
 
         self.account.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
-        self.account.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
+        self.account.link<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         
         let minter <- create NFTMinter()         
         self.account.save(<-minter, to: self.MinterStoragePath)
