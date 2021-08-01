@@ -659,8 +659,8 @@ pub contract Auction {
 
     init() {
         self.totalAuctions = (0 as UInt64)
-        self.CollectionPublicPath = /public/xtinglesNFTAuction
-        self.CollectionStoragePath = /storage/xtinglesNFTAuction
+        self.CollectionPublicPath = /public/NFTxtinglesAuction
+        self.CollectionStoragePath = /storage/NFTxtinglesAuction
 
         let sale <- Auction.createAuctionCollection()
         self.account.save(<-sale, to:Auction.CollectionStoragePath)         

@@ -1,5 +1,6 @@
 import FungibleToken from 0x9a0766d93b6608b7
 import NonFungibleToken from 0x631e88ae7f1d7c20
+import FUSD from 0xe223d8a629e49c68
 import Collectible, OpenEdition from 0xfc747df8f5e61fcb
 
 transaction(
@@ -10,7 +11,7 @@ transaction(
     let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionCollectionPublic}
     let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
     let vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
-    let temporaryVault: @FungibleToken.Vault
+    let temporaryVault: @FUSD.Vault
 
     prepare(acct: AuthAccount) {
        
@@ -42,8 +43,7 @@ transaction(
         let amount = self.openEditionCollectionRef.getPrice(id)!
         
          // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: amount)
-
+        self.temporaryVault <- vaultRef.withdraw(amount: amount) as! @FUSD.Vault
     }
 
     execute {

@@ -456,8 +456,8 @@ pub contract OpenEdition {
 
     init() {
         self.totalOpenEditions = (0 as UInt64)
-        self.CollectionPublicPath = /public/xtinglesNFTOpenEdition
-        self.CollectionStoragePath = /storage/xtinglesNFTOpenEdition
+        self.CollectionPublicPath = /public/NFTxtinglesOpenEdition
+        self.CollectionStoragePath = /storage/NFTxtinglesOpenEdition
 
         let minterCap = self.account.getCapability<&Collectible.NFTMinter>(Collectible.MinterPrivatePath)!    
         let openEdition <- OpenEdition.createOpenEditionCollection(minterCap: minterCap)        

@@ -98,7 +98,7 @@ Open Edition (purchase with fixed time lengh to sell one item with sold number o
     saleLength: UFix64, - (length sale in sec)
     platformAddress: Address - (platform vault address to handle share commission fails)
 
-   flow transactions send ./transactions/testnet/CreateOpenEdition.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UFix64","value": "12.00"}, {"type": "UFix64","value": "1627829440.00"}, {"type": "UFix64","value": "300.00"}, {"type": "Address","value": "0x96c8ac9a55867f24"}]' --signer testnet-xtingles-1 --network=testnet
+   flow transactions send ./transactions/testnet/CreateOpenEdition.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UFix64","value": "12.00"}, {"type": "UFix64","value": "1627859017.00"}, {"type": "UFix64","value": "300.00"}, {"type": "Address","value": "0x96c8ac9a55867f24"}]' --signer testnet-xtingles-1 --network=testnet
 
 2. status: 
   --arg Address:"0xfc747df8f5e61fcb" - (account's address, where auction collection is stored)
