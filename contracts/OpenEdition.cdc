@@ -5,11 +5,6 @@ import NonFungibleToken from "./NonFungibleToken.cdc"
 import Edition from "./Edition.cdc"
 
 pub contract OpenEdition {
-    pub enum OpenEditionState: UInt8 {
-        pub case active
-        pub case completed
-        pub case cancelled
-    }
 
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
@@ -17,28 +12,37 @@ pub contract OpenEdition {
     pub struct OpenEditionStatus{
         pub let id: UInt64
         pub let price : UFix64
-        pub let state: OpenEditionState
+        pub let active: Bool
         pub let timeRemaining : Fix64
         pub let endTime : Fix64
         pub let startTime : Fix64
         pub let metadata: Collectible.Metadata?
+        pub let completed: Bool
+        pub let expired: Bool
+        pub let cancelled: Bool 
      
         init(
             id:UInt64, 
             price: UFix64,            
-            state: OpenEditionState, 
+            active: Bool, 
             timeRemaining:Fix64, 
             metadata: Collectible.Metadata?,            
             startTime: Fix64,
-            endTime: Fix64          
+            endTime: Fix64,
+            completed: Bool,
+            expired:Bool, 
+            cancelled: Bool
         ) {
             self.id = id
             self.price = price         
+            self.active = active
             self.timeRemaining = timeRemaining
             self.metadata = metadata        
             self.startTime = startTime
-            self.endTime = endTime
-            self.state = state
+            self.endTime = endTime          
+            self.completed = completed
+            self.expired = expired
+            self.cancelled = cancelled
         }
     }
 
@@ -72,8 +76,11 @@ pub contract OpenEdition {
         // The length in seconds for this open edition
         priv var saleLength: UFix64
 
-        // State of open edition
-        priv var state: OpenEditionState
+        // After settle open edition
+        priv var completed: Bool
+
+        // Set if an open edition will be cancelled
+        priv var cancelled: Bool
 
         // Common number for all copies one item
         priv let editionNumber: UInt64  
@@ -99,7 +106,8 @@ pub contract OpenEdition {
             self.editionNumber = editionNumber
             self.numberOfMintedNFT = 0
             self.openEditionID = OpenEdition.totalOpenEditions
-            self.state = OpenEditionState.active         
+            self.completed = false
+            self.cancelled = false
             self.metadata = metadata 
             self.platformVaultCap = platformVaultCap
         }        
@@ -107,12 +115,12 @@ pub contract OpenEdition {
         pub fun settleOpenEdition(clientEdition: &Edition.EditionCollection)  {
 
             pre {
-                self.state == OpenEditionState.cancelled : "Open edition was cancelled"
-                self.state == OpenEditionState.completed : "The open edition has already settled"            
+                !self.cancelled : "Open edition was cancelled"
+                !self.completed : "The open edition has already settled"            
                 self.isExpired() : "Open edtion time has not expired yet"
-            }     
+            }
          
-            self.state = OpenEditionState.completed 
+            self.completed = true 
 
             // Write final amount of copies for this NFT
             clientEdition.changeMaxEdition(id: self.editionNumber, maxEdition: self.numberOfMintedNFT)
@@ -189,7 +197,7 @@ pub contract OpenEdition {
             pre {              
                 self.startTime < getCurrentBlock().timestamp : "The open edition has not started yet"
                 !self.isExpired() : "The open edition time expired"     
-                self.state == OpenEditionState.cancelled : "Open edition was cancelled" 
+                !self.cancelled : "Open edition was cancelled"
                 buyerTokens.balance == self.price: "Not exact amount tokens to buy the NFT"                       
             }
 
@@ -235,25 +243,28 @@ pub contract OpenEdition {
         pub fun getOpenEditionStatus() : OpenEditionStatus {         
 
             return OpenEditionStatus(
-                id: self.openEditionID,
-                price: self.price, 
-                state: self.state,               
+                 id: self.openEditionID,
+                price: self.price,             
+                active: !self.completed && !self.isExpired(),
                 timeRemaining: self.timeRemaining(),
                 metadata: self.metadata,             
                 startTime: Fix64(self.startTime),
-                endTime: Fix64(self.startTime + self.saleLength)      
+                endTime: Fix64(self.startTime + self.saleLength),            
+                completed: self.completed,
+                expired: self.isExpired(),
+                cancelled: self.cancelled    
             )
         }
 
         pub fun cancelOpenEdition(clientEdition: &Edition.EditionCollection) {
             pre {
-               self.state == OpenEditionState.completed : "The open edition has already settled"              
-               self.state == OpenEditionState.cancelled : "Open edition has been cancelled earlier"   
+               !self.completed : "The open edition has already settled"              
+               !self.cancelled : "Open edition has been cancelled earlier" 
             }     
             // Write final amount of copies for this NFT
             clientEdition.changeMaxEdition(id: self.editionNumber, maxEdition: self.numberOfMintedNFT)  
             
-            self.state = OpenEditionState.cancelled
+            self.cancelled = true
         }
 
         destroy() {
@@ -434,8 +445,8 @@ pub contract OpenEdition {
         }
     }
 
-    // createOpenEditionCollection returns a OpenEditionCollection resource to the caller
-    pub fun createOpenEditionCollection(minterCap: Capability<&Collectible.NFTMinter>): @OpenEditionCollection {
+    // createOpenEditionCollection returns a OpenEditionCollection resource
+    priv fun createOpenEditionCollection(minterCap: Capability<&Collectible.NFTMinter>): @OpenEditionCollection {
         let openEditionCollection <- create OpenEditionCollection(minterCap: minterCap)
 
         emit OpenEditionCollectionCreated()
@@ -446,5 +457,10 @@ pub contract OpenEdition {
         self.totalOpenEditions = (0 as UInt64)
         self.CollectionPublicPath = /public/xtinglesOpenEdition
         self.CollectionStoragePath = /storage/xtinglesOpenEdition
+
+        let minterCap = self.account.getCapability<&Collectible.NFTMinter>(Collectible.MinterPrivatePath)!    
+        let openEdition <- OpenEdition.createOpenEditionCollection(minterCap: minterCap)        
+        self.account.save(<-openEdition, to: OpenEdition.CollectionStoragePath)         
+        self.account.link<&{OpenEdition.OpenEditionCollectionPublic}>(OpenEdition.CollectionPublicPath, target: OpenEdition.CollectionStoragePath)
     }   
 }

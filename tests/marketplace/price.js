@@ -266,7 +266,6 @@ export const testSuitePrice = () => describe("MarketPlace price", () => {
           
           expect(price).toEqual(null);
         } catch (e) {
-          console.log(e);
           error = e;
         }
         expect(error).toEqual(undefined);

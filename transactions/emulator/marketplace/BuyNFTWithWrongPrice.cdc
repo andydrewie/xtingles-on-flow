@@ -1,6 +1,6 @@
 import FungibleToken from 0xee82856bf20e2aa6
 import NonFungibleToken from 0x01cf0e2f2f715450
-import MarketPlace, Collectible from 0x01cf0e2f2f715450
+import MarketPlace, Collectible, FUSD from 0x01cf0e2f2f715450
 
 transaction(
     marketplace: Address,
@@ -12,7 +12,7 @@ transaction(
     let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     // Vault that will hold the tokens that will be used
     // to buy the NFT
-    let temporaryVault: @FungibleToken.Vault
+    let temporaryVault: @FUSD.Vault
 
     prepare(account: AuthAccount) {
 
@@ -31,24 +31,24 @@ transaction(
         self.collectionCap = collectionCap
         
                     
-        let vaultRef = account.borrow<&FungibleToken.Vault>(from: /storage/fusdVault)
+        let vaultRef = account.borrow<&FUSD.Vault>(from: /storage/fusdVault)
             ?? panic("Could not borrow owner's Vault reference")
         
         let acct = getAccount(marketplace)
 
-        let acctsaleRef = acct.getCapability<&AnyResource{MarketPlace.SalePublic}>(MarketPlace.CollectionPublicPath)
+        let acctsaleRef = acct.getCapability<&AnyResource{MarketPlace.SaleCollectionPublic}>(MarketPlace.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow nft sale reference")       
 
         // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: 10.00)
+        self.temporaryVault <- vaultRef.withdraw(amount: 10.00) as! @FUSD.Vault
     }
 
     execute {
         // get the read-only account storage of the seller
         let seller = getAccount(marketplace)
 
-        let marketplace= seller.getCapability(MarketPlace.CollectionPublicPath).borrow<&{MarketPlace.SalePublic}>()
+        let marketplace= seller.getCapability(MarketPlace.CollectionPublicPath).borrow<&{MarketPlace.SaleCollectionPublic}>()
             ?? panic("Could not borrow seller's sale reference")
 
         marketplace.purchase(

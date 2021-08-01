@@ -12,7 +12,6 @@ export const testSuiteSettleOpenEdition = () => describe("Open Edition settle", 
         cancelTransaction,
         openEditionStatusScript,    
         settleTransaction, 
-        createOpenEditionResourceTransaction,
         commission;
 
     beforeAll(async () => {
@@ -26,14 +25,6 @@ export const testSuiteSettleOpenEdition = () => describe("Open Edition settle", 
             ),
             "utf8"
         );   
-
-        createOpenEditionResourceTransaction = fs.readFileSync(
-            path.join(
-                __dirname,
-                `../../transactions/emulator/openedition/CreateOpenEditionResource.cdc`
-            ),
-            "utf8"
-        ); 
 
         cancelTransaction = fs.readFileSync(
             path.join(
@@ -124,13 +115,6 @@ export const testSuiteSettleOpenEdition = () => describe("Open Edition settle", 
         await deployContractByName({ to: admin, name: "FUSD" });
         await deployContractByName({ to: admin, name: "Collectible", addressMap });
         await deployContractByName({ to: admin, name: "OpenEdition", addressMap });
-
-        // Setup open edition resource
-        await sendTransaction({
-            code: createOpenEditionResourceTransaction,
-            args: [],
-            signers: [admin],
-        });
 
         // Setup FUSD Vault
         await sendTransaction({

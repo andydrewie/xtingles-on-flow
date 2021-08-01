@@ -19,16 +19,6 @@ transaction(
   
     prepare(acct: AuthAccount) {
 
-        let openEditionCap = acct.getCapability<&{OpenEdition.OpenEditionCollectionPublic}>(OpenEdition.CollectionPublicPath)
-
-        if !openEditionCap.check() {
-            let minterCap = acct.getCapability<&Collectible.NFTMinter>(Collectible.MinterPrivatePath)!    
-            let openEdition <- OpenEdition.createOpenEditionCollection(minterCap: minterCap)        
-            acct.save( <-openEdition, to: OpenEdition.CollectionStoragePath)         
-            acct.link<&{OpenEdition.OpenEditionCollectionPublic}>(OpenEdition.CollectionPublicPath, target: OpenEdition.CollectionStoragePath)
-            log("Open Edition Collection created for account")
-        } 
-
         self.openEditionCollectionRef = acct.borrow<&OpenEdition.OpenEditionCollection>(from: OpenEdition.CollectionStoragePath)
             ?? panic("could not borrow open edition collection reference")  
 

@@ -8,13 +8,13 @@ transaction(tokenId: UInt64, price: UFix64) {
 
     prepare(acct: AuthAccount) {
 
-        let marketplaceCap = acct.getCapability<&{MarketPlace.SalePublic}>(MarketPlace.CollectionPublicPath)
+        let marketplaceCap = acct.getCapability<&{MarketPlace.SaleCollectionPublic}>(MarketPlace.CollectionPublicPath)
 
         if !marketplaceCap.check() {
             let receiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
             let sale <- MarketPlace.createSaleCollection(ownerVault: receiver, )
             acct.save(<-sale, to: MarketPlace.CollectionStoragePath)
-            acct.link<&MarketPlace.SaleCollection{MarketPlace.SalePublic}>(MarketPlace.CollectionPublicPath, target: MarketPlace.CollectionStoragePath)
+            acct.link<&MarketPlace.SaleCollection{MarketPlace.SaleCollectionPublic}>(MarketPlace.CollectionPublicPath, target: MarketPlace.CollectionStoragePath)
             log("Sale Created for account")
         }  
 

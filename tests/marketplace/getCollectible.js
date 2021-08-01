@@ -275,8 +275,7 @@ export const testSuiteCollectibles = () => describe("MarketPlace collectibles", 
           // Check all collectibles on the account
           expect(collectibles).toEqual([]);
         } catch (e) {
-          console.log(e);
-          error = e;
+           error = e;
         }
         expect(error).toEqual(undefined);
     }); 

@@ -3,13 +3,9 @@ import FlowToken from "./FlowToken.cdc"
 import Collectible from "./Collectible.cdc"
 import Edition from "./Edition.cdc"
 import NonFungibleToken from "./NonFungibleToken.cdc"
+import FUSD from "./FUSD.cdc"
 
-pub contract MarketPlace {
-
-    pub init() {
-        self.CollectionPublicPath = /public/xtinglesCollectibleSale
-        self.CollectionStoragePath = /storage/xtinglesCollectibleSale
-    }
+pub contract MarketPlace {  
 
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
@@ -30,11 +26,11 @@ pub contract MarketPlace {
     pub event Earned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
     pub event FailEarned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
 
-    pub resource interface SalePublic {
+    pub resource interface SaleCollectionPublic {
         pub fun purchase(
             tokenID: UInt64,
             recipientCap: Capability<&{Collectible.CollectionPublic}>,
-            buyTokens: @FungibleToken.Vault     
+            buyTokens: @FUSD.Vault     
         )
         pub fun idPrice(tokenID: UInt64): UFix64?
         pub fun getIDs(): [UInt64]
@@ -46,20 +42,20 @@ pub contract MarketPlace {
     // NFT Collection object that allows a user to put their NFT up for sale
     // where others can send fungible tokens to purchase it
     //
-    pub resource SaleCollection: SalePublic {    
+    pub resource SaleCollection: SaleCollectionPublic {    
 
         // Dictionary of the NFTs that the user is putting up for sale
-        pub var forSale: @{UInt64: Collectible.NFT}
+        access(self) var forSale: @{UInt64: Collectible.NFT}
 
         // Dictionary of the prices for each NFT by ID
-        pub var prices: {UInt64: UFix64}
+        access(self) var prices: {UInt64: UFix64}
 
         // The fungible token vault of the owner of this sale.
         // When someone buys a token, this resource can deposit
         // tokens into their account.
-        access(account) let ownerVault: Capability<&AnyResource{FungibleToken.Receiver}>
+        access(account) let ownerVault: Capability<&FUSD.Vault{FungibleToken.Receiver}>
 
-        init (vault: Capability<&AnyResource{FungibleToken.Receiver}>) {
+        init (vault: Capability<&FUSD.Vault{FungibleToken.Receiver}>) {
             self.forSale <- {}
             self.ownerVault = vault
             self.prices = {}
@@ -67,8 +63,10 @@ pub contract MarketPlace {
 
         priv fun getEditionNumber(id: UInt64): UInt64? {
             let ref = self.borrowCollectible(id: id) 
-            if ref == nil { return nil }
-            return ref!.getEditionNumber()
+            if ref == nil { 
+                return nil 
+            }
+            return ref!.editionNumber
         }
 
         // withdraw gives the owner the opportunity to remove a sale from the collection
@@ -156,7 +154,7 @@ pub contract MarketPlace {
 
         priv fun handlePayments(
             tokenID: UInt64,
-            buyTokens: @FungibleToken.Vault,
+            buyTokens: @FUSD.Vault,
             price: UFix64 
         ) {
             let vaultRef = self.ownerVault.borrow() ?? panic("Could not borrow reference to owner token vault")
@@ -189,7 +187,7 @@ pub contract MarketPlace {
             let amount = buyTokens.balance
 
             // deposit the purchasing tokens into the owners vault
-            vaultRef.deposit(from: <- buyTokens)
+            vaultRef.deposit(from: <- (buyTokens as! @FungibleToken.Vault))
 
             emit Earned(nftID: tokenID, amount: amount, owner: vaultRef.owner!.address, type: "SELLER") 
         }
@@ -198,7 +196,7 @@ pub contract MarketPlace {
         pub fun purchase(
             tokenID: UInt64,
             recipientCap: Capability<&{Collectible.CollectionPublic}>,
-            buyTokens: @FungibleToken.Vault
+            buyTokens: @FUSD.Vault
         ) {
             pre {
                 self.forSale[tokenID] != nil && self.prices[tokenID] != nil: "No token matching this ID for sale!"
@@ -245,12 +243,12 @@ pub contract MarketPlace {
     }
 
     // get info for NFT including metadata
-    pub fun getCollectible(address: Address) : [SaleData] {
+    pub fun getSaleDatas(address: Address) : [SaleData] {
 
         var saleData: [SaleData] = []
         let account = getAccount(address)
 
-        let CollectibleCollection = account.getCapability<&AnyResource{MarketPlace.SalePublic}>(MarketPlace.CollectionPublicPath)
+        let CollectibleCollection = account.getCapability<&AnyResource{MarketPlace.SaleCollectionPublic}>(MarketPlace.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow sale reference")
      
@@ -269,7 +267,12 @@ pub contract MarketPlace {
     }      
 
     // createCollection returns a new collection resource to the caller
-    pub fun createSaleCollection(ownerVault: Capability<&{FungibleToken.Receiver}>): @SaleCollection {
+    pub fun createSaleCollection(ownerVault: Capability<&FUSD.Vault{FungibleToken.Receiver}>): @SaleCollection {
         return <- create SaleCollection(vault: ownerVault)
+    }
+
+    init() {
+        self.CollectionPublicPath = /public/xtinglesCollectibleSale
+        self.CollectionStoragePath = /storage/xtinglesCollectibleSale
     }
 }

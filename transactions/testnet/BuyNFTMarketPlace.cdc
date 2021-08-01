@@ -38,7 +38,7 @@ transaction(
         
         let acct = getAccount(marketplace)
 
-        let acctsaleRef = acct.getCapability<&AnyResource{MarketPlace.SalePublic}>(MarketPlace.CollectionPublicPath)
+        let acctsaleRef = acct.getCapability<&AnyResource{MarketPlace.SaleCollectionPublic}>(MarketPlace.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow nft sale reference")
         
@@ -52,7 +52,7 @@ transaction(
         // get the read-only account storage of the seller
         let seller = getAccount(marketplace)
 
-        let marketplace= seller.getCapability(MarketPlace.CollectionPublicPath).borrow<&{MarketPlace.SalePublic}>()
+        let marketplace= seller.getCapability(MarketPlace.CollectionPublicPath).borrow<&{MarketPlace.SaleCollectionPublic}>()
             ?? panic("Could not borrow seller's sale reference")
 
         marketplace.purchase(
