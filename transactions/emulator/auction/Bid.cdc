@@ -29,20 +29,10 @@ transaction(
 
         self.collectionCap = collectionCap 
 
-        let auctionCap = acct.getCapability<&{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath)
-
-        if !auctionCap.check() {          
-            let sale <- Auction.createAuctionCollection()
-            acct.save(<-sale, to:Auction.CollectionStoragePath)         
-            acct.link<&{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
-            log("Auction Collection Created for account")
-        }  
-        
+            
         self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath)
             .borrow()
-            ?? panic("Could not borrow auction reference")
-
-        
+            ?? panic("Could not borrow auction reference")       
 
         self.vaultCap = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
    
