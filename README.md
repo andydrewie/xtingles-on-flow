@@ -161,7 +161,7 @@ Marketplace.
   tokenId: UInt64 - (NFT id)
   price: UFix64 - (price) 
 
-  flow transactions send ./transactions/testnet/ChangePriceMarketPlace.cdc --args-json '[{"type": "UInt64","value": "1"},  {"type": "UFix64","value": "45.0"}]' --signer testnet-xtingles-3 --network=testnet
+  flow transactions send ./transactions/testnet/ChangePriceMarketPlace.cdc --args-json '[{"type": "UInt64","value": "1"},  {"type": "UFix64","value": "5.0"}]' --signer new-account --network=testnet
    
 
 
@@ -196,21 +196,21 @@ Edition.
 
     Edition and Collectible Contracts  are deployed to dev-account (testnet).
 
-    flow transactions send ./transactions/blocto/MintCollectible.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"}]' --signer dev-account --network=testnet
+    flow transactions send ./transactions/blocto/MintCollectible.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UInt64","value": "1"}]' --signer new-account --network=testnet
 
     // The firth 4 parameters are metadata.
     // The fifth is amount of issued tokens.
 
-    flow transactions send ./transactions/blocto/SetupNFTStorage.cdc --signer dev-account --network=testnet
+    flow transactions send ./transactions/blocto/SetupNFTStorage.cdc --signer new-account --network=testnet
 
     // Setup NFT storage
 
-    flow transactions send ./transactions/blocto/TransferNFT.cdc --args-json '[{"type": "Address","value": "0x96c8ac9a55867f24"}, {"type": "UInt64","value": "1"}]' --signer dev-account --network=testnet
+    flow transactions send ./transactions/blocto/TransferNFT.cdc --args-json '[{"type": "Address","value": "0x96c8ac9a55867f24"}, {"type": "UInt64","value": "1"}]' --signer new-account --network=testnet
 
     // Recipient of NFT
     // NFT id
 
-    flow scripts execute ./scripts/blocto/CheckCollectibles.cdc --arg Address:"0x1bc62b2c04dfd147" --arg Address:"0x1bc62b2c04dfd147" --network=testnet
+    flow scripts execute ./scripts/blocto/CheckCollectibles.cdc --arg Address:"0x01547a7e742007d9" --arg Address:"0x01547a7e742007d9" --network=testnet
 
     // Script to display NFT info in storage
     // The first argument is owner address

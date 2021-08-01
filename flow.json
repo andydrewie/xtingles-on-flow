@@ -97,13 +97,19 @@
 		"dev-account": {
 			"address": "0x1bc62b2c04dfd147",
 			"keys": "4c639685e38cf14d4f131b54299f3d8b968d1e67f40f2c366d03ae1704a4540d"
+		},
+		"new-account": {
+			"address": "0x01547a7e742007d9",
+			"keys": "8c9e98c825d98e9fa31d984a86d64a6cc6c19afe9fe93c8d5da1bc1136847416"
 		}
 	},
 	"deployments": {
 		"testnet": {
-			"dev-account": [	
+			"new-account": [	
 				"Collectible",		
-				"Edition"							
+				"Edition",
+				"MarketPlace",
+				"OpenEdition"							
 			]
 		},
 		"emulator": {

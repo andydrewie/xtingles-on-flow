@@ -1,4 +1,4 @@
-import Collectible, Edition from 0x1bc62b2c04dfd147
+import Collectible, Edition from 0x01547a7e742007d9
 
 transaction(
         link: String,          

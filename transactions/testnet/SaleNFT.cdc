@@ -1,5 +1,6 @@
 import FungibleToken from 0x9a0766d93b6608b7
-import Collectible, MarketPlace from 0xfc747df8f5e61fcb
+import FUSD from 0xe223d8a629e49c68
+import Collectible, MarketPlace from 0x01547a7e742007d9
 
 transaction(tokenId: UInt64, price: UFix64) {
 
@@ -11,7 +12,7 @@ transaction(tokenId: UInt64, price: UFix64) {
         let marketplaceCap = acct.getCapability<&{MarketPlace.SaleCollectionPublic}>(MarketPlace.CollectionPublicPath)
 
         if !marketplaceCap.check() {
-            let receiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
+            let receiver = acct.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
             let sale <- MarketPlace.createSaleCollection(ownerVault: receiver)
             acct.save(<-sale, to: MarketPlace.CollectionStoragePath)
             acct.link<&MarketPlace.SaleCollection{MarketPlace.SaleCollectionPublic}>(MarketPlace.CollectionPublicPath, target: MarketPlace.CollectionStoragePath)

@@ -1,5 +1,5 @@
 import NonFungibleToken from 0x631e88ae7f1d7c20
-import Collectible from 0x1bc62b2c04dfd147
+import Collectible from 0x01547a7e742007d9
 
 transaction() {
 
