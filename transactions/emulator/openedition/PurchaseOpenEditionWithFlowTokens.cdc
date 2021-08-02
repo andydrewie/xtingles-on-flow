@@ -9,7 +9,7 @@ transaction(
 
     let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionCollectionPublic}
     let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
-    let temporaryVault: @FUSD.Vault
+    let temporaryVault: @FungibleToken.Vault
 
     prepare(acct: AuthAccount) {
        
