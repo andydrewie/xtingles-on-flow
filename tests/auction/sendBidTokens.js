@@ -288,10 +288,15 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
           expect(secondBidEvents[2].data.to).toEqual(second);
           expect(parseInt(secondBidEvents[2].data.amount, 10)).toEqual(50);
 
-          // 4. TokensDeposited  to the admin account. The current bid
-          expect(secondBidEvents[3].type).toEqual(`A.${admin.substr(2)}.FUSD.TokensDeposited`);
-          expect(secondBidEvents[3].data.to).toEqual(admin);
-          expect(parseInt(secondBidEvents[3].data.amount, 10)).toEqual(60);
+          // 4. Bid return to the previous bidder
+          expect(secondBidEvents[3].type).toEqual(`A.${admin.substr(2)}.Auction.SendBidTokens`);
+          expect(secondBidEvents[3].data.to).toEqual(second);
+          expect(parseInt(secondBidEvents[3].data.amount, 10)).toEqual(50);
+
+          // 5. TokensDeposited  to the admin account. The current bid
+          expect(secondBidEvents[4].type).toEqual(`A.${admin.substr(2)}.FUSD.TokensDeposited`);
+          expect(secondBidEvents[4].data.to).toEqual(admin);
+          expect(parseInt(secondBidEvents[4].data.amount, 10)).toEqual(60);
 
       } catch(e) {
         expect(e).toEqual('');      
@@ -390,7 +395,7 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
 
           const { events: firstBidEvents } = resultBid1;
           const { events: secondBidEvents } = resultBid2;
-         
+             
           // There are events in row
           // The first bid
           // 1. TokensWithdrawn from the second account
@@ -422,10 +427,15 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
           expect(secondBidEvents[2].data.to).toEqual(admin);
           expect(parseInt(secondBidEvents[2].data.amount, 10)).toEqual(50);
 
-          // 4. TokensDeposited  to the admin account. The current bid
-          expect(secondBidEvents[3].type).toEqual(`A.${admin.substr(2)}.FUSD.TokensDeposited`);
+          // 4. Bid return to the previous bidder
+          expect(secondBidEvents[3].type).toEqual(`A.${admin.substr(2)}.Auction.FailSendBidTokens`);
           expect(secondBidEvents[3].data.to).toEqual(admin);
-          expect(parseInt(secondBidEvents[3].data.amount, 10)).toEqual(60);
+          expect(parseInt(secondBidEvents[3].data.amount, 10)).toEqual(50);
+
+          // 4. TokensDeposited  to the admin account. The current bid
+          expect(secondBidEvents[4].type).toEqual(`A.${admin.substr(2)}.FUSD.TokensDeposited`);
+          expect(secondBidEvents[4].data.to).toEqual(admin);
+          expect(parseInt(secondBidEvents[4].data.amount, 10)).toEqual(60);
 
       } catch(e) {
         expect(e).toEqual('');      

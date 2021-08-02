@@ -168,7 +168,7 @@ pub contract Auction {
         }
 
         // sendNFT sends the NFT to the Collection belonging to the provided Capability
-        pub fun sendNFT(_ capability: Capability<&Collectible.Collection{Collectible.CollectionPublic}>) {
+        priv fun sendNFT(_ capability: Capability<&Collectible.Collection{Collectible.CollectionPublic}>) {
             let nftId = self.NFT?.id!
             if let collectionRef = capability.borrow() {                
                 let NFT <- self.NFT <- nil
@@ -215,7 +215,7 @@ pub contract Auction {
                 if(bidVaultRef.balance > 0.0) {
                     ownerRef.deposit(from: <-bidVaultRef.withdraw(amount: balance))
                 }
-                emit SendBidTokens(auctionID: self.auctionID, amount: balance, to: ownerRef.owner!.address)
+                emit FailSendBidTokens(auctionID: self.auctionID, amount: balance, to: ownerRef.owner!.address)
                 return
             }
         }
@@ -459,6 +459,16 @@ pub contract Auction {
             emit AddNFT(auctionID: self.auctionID, nftID: nftID) 
         }
 
+        pub fun reclaimSendNFT(collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>)  {
+
+            pre {
+                self.auctionCompleted : "The auction has not been settled yet"
+                self.NFT != nil: "NFT in auction does not exist"      
+            }
+
+            self.sendNFT(collectionCap)         
+        }
+
         destroy() {
             log("destroy auction")
                        
@@ -648,6 +658,14 @@ pub contract Auction {
             let itemRef = &self.auctionItems[id] as &AuctionItem
 
             itemRef.addNFT(NFT: <- NFT)
+        }
+
+        pub fun reclaimSendNFT(id: UInt64, collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>) {
+            pre {
+                self.auctionItems[id] != nil: "Auction does not exist"
+            }
+            let itemRef = &self.auctionItems[id] as &AuctionItem           
+            itemRef.reclaimSendNFT(collectionCap: collectionCap)   
         }
 
         destroy() {

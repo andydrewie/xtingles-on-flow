@@ -1,0 +1,7 @@
+1. We don't use Cadence enum, because:
+
+Enum support was only recently added to the SDK and FCL.
+- SDK: 0.0.54 https://github.com/onflow/flow-js-sdk/blob/master/packages/sdk/CHANGELOG.md#0054----2021-07-23
+- FCL: 0.0.77-alpha.1 https://github.com/onflow/flow-js-sdk/blob/master/packages/fcl/CHANGELOG.md#0077-alpha1---2021-07-23
+
+FLOW-JS_TESTING doesn't support enum at all.

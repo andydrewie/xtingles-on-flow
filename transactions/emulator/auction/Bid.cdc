@@ -27,8 +27,7 @@ transaction(
             acct.link<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         }
 
-        self.collectionCap = collectionCap 
-
+        self.collectionCap = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
             
         self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath)
             .borrow()

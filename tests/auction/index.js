@@ -8,16 +8,18 @@ import { testSuitSettleAuction } from './settle';
 import { testSuitePayCommission } from './payCommission';
 import { testSuiteAuctionStatus } from './status';
 import { testSuiteSendNFT } from './sendNFT';
+import { testSuiteReclaimSendNFT  } from './reclaimSendNFT';
 
 export const testSuiteAuction = () => describe("Auction", () => {
-  testSuiteCreateAuction();
+  /*testSuiteCreateAuction();
   testSuiteAddNFT();
-  testSuiteBidAuction();
-  testSuiteSendBidTokens();
-  testSuiteCancelAuction();
-  testSuiteExtendAuction();
+  testSuiteBidAuction();*/
+//  testSuiteSendBidTokens();
+ //testSuiteCancelAuction();
+ /* testSuiteExtendAuction();
   testSuitSettleAuction(); 
   testSuitePayCommission();
-  testSuiteAuctionStatus();
-  testSuiteSendNFT();
+  testSuiteAuctionStatus();*/
+  //testSuiteSendNFT();
+  testSuiteReclaimSendNFT();
 });
