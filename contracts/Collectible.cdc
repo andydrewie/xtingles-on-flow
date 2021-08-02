@@ -24,8 +24,6 @@ pub contract Collectible: NonFungibleToken {
         pub let metadata: Metadata
         // Common number for all copies of the item
         pub let editionNumber: UInt64
-        // Common number for all copies of the item
-        pub fun getEditionNumber(): UInt64
     }
 
     pub struct Metadata {
@@ -38,7 +36,7 @@ pub contract Collectible: NonFungibleToken {
         // Description
         pub let description: String
         // Number of copy
-        pub (set) var edition: UInt64  
+        pub let edition: UInt64  
         // Additional properties to use in future
         pub let properties: AnyStruct    
 
@@ -76,10 +74,6 @@ pub contract Collectible: NonFungibleToken {
             self.id = initID   
             self.metadata = metadata     
             self.editionNumber = editionNumber
-        }
-
-        pub fun getEditionNumber(): UInt64 {
-            return self.editionNumber;
         }
     }
 
@@ -152,11 +146,13 @@ pub contract Collectible: NonFungibleToken {
   
         // Common number for all copies of the item
         pub fun getEditionNumber(id: UInt64): UInt64? {
-            if self.ownedNFTs[id] == nil { return nil }
+            if self.ownedNFTs[id] == nil { 
+                return nil
+            }
 
             let ref = self.getNFT(id: id)
 
-            return ref.getEditionNumber()
+            return ref.editionNumber
         }
 
         // borrowNFT
@@ -195,14 +191,13 @@ pub contract Collectible: NonFungibleToken {
         return <- create Collection()
     }
 
-    // mint NFTs for test purposes
     pub resource NFTMinter {
   
         pub fun mintNFT(metadata: Metadata, editionNumber: UInt64): @NFT {
-            let editionRef = Collectible.account.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath).borrow()! 
+            let editionRef = Collectible.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()! 
 
             // Check edition info in contract Edition in order to manage commission and all amount of copies of the same item
-            if editionRef.getEdition(editionNumber) == nil { panic("Edition does not exist") }
+            assert(editionRef.getEdition(editionNumber) != nil, message: "Edition does not exist")
         
             var newNFT <- create NFT(
                 initID: Collectible.totalSupply,
@@ -228,60 +223,43 @@ pub contract Collectible: NonFungibleToken {
     pub struct CollectibleData {
         pub let metadata: Collectible.Metadata
         pub let id: UInt64
-        init(metadata: Collectible.Metadata, id: UInt64) {
+        pub let editionNumber: UInt64
+        init(metadata: Collectible.Metadata, id: UInt64, editionNumber: UInt64) {
             self.metadata= metadata
             self.id=id
+            self.editionNumber=editionNumber
         }
     }
 
     // get info for NFT including metadata
-    pub fun getCollectible(address:Address) : [CollectibleData] {
+    pub fun getCollectibleDatas(address:Address) : [CollectibleData] {
 
         var collectibleData: [CollectibleData] = []
         let account = getAccount(address)
 
-        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&{Collectible.CollectionPublic}>()  {
+        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&Collectible.Collection{Collectible.CollectionPublic}>()  {
             for id in CollectibleCollection.getIDs() {
                 var collectible = CollectibleCollection.borrowCollectible(id: id) 
                 collectibleData.append(CollectibleData(
                     metadata: collectible!.metadata,
-                    id: id
+                    id: id,
+                    editionNumber: collectible!.editionNumber
                 ))
             }
         }
         return collectibleData
     } 
 
-    // mint NFT from other contract
-    access(account) fun mint(metadata: Metadata, editionNumber: UInt64) : @Collectible.NFT {
-        var newNFT <- create NFT(
-            initID: Collectible.totalSupply,
-            metadata: Metadata(
-                link: metadata.link,          
-                name: metadata.name, 
-                author: metadata.name,      
-                description: metadata.description,        
-                edition: metadata.edition, 
-                properties: metadata.properties            
-            ),
-            editionNumber: editionNumber
-        )
-        emit Created(id: Collectible.totalSupply)
-        
-        Collectible.totalSupply = Collectible.totalSupply + UInt64(1)
-        return <- newNFT
-    }
-
     init() {
         // Initialize the total supply
         self.totalSupply = 1
-        self.CollectionPublicPath = /public/xtinglesCollectibleCollection
-        self.CollectionStoragePath = /storage/xtinglesCollectibleCollection
-        self.MinterStoragePath = /storage/xtinglesCollectibleMinter
-        self.MinterPrivatePath = /private/xtinglesCollectibleMinter
+        self.CollectionPublicPath = /public/NFTxtinglesCollectibleCollection
+        self.CollectionStoragePath = /storage/NFTxtinglesCollectibleCollection
+        self.MinterStoragePath = /storage/NFTxtinglesCollectibleMinter
+        self.MinterPrivatePath = /private/NFTxtinglesCollectibleMinter
 
         self.account.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
-        self.account.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
+        self.account.link<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         
         let minter <- create NFTMinter()         
         self.account.save(<-minter, to: self.MinterStoragePath)

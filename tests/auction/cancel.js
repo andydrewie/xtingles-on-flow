@@ -603,7 +603,7 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
       const { events: cancelEvents } = resultCancel;
 
       // Only four events
-      expect(cancelEvents.length).toEqual(4);
+      expect(cancelEvents.length).toEqual(5);
 
       // The cancel
       // 1. TokensWithdrawn from the admin account. Return the previous bid
@@ -616,12 +616,16 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
       expect(cancelEvents[1].data.to).toEqual(second);
       expect(parseInt(cancelEvents[1].data.amount, 10)).toEqual(50);
 
-      // 3. Burn NFT
-      expect(cancelEvents[2].type).toEqual(`A.${admin.substr(2)}.Auction.BurnNFT`);
+      // 3. Return tokens to the previous bidder
+      expect(cancelEvents[2].type).toEqual(`A.${admin.substr(2)}.Auction.SendBidTokens`);
       expect(cancelEvents[2].data.auctionID).toEqual(auctionId);
 
-      // 4. Auction cancel
-      expect(cancelEvents[3].type).toEqual(`A.${admin.substr(2)}.Auction.Canceled`);
+      // 4. Burn NFT
+      expect(cancelEvents[3].type).toEqual(`A.${admin.substr(2)}.Auction.BurnNFT`);
+      expect(cancelEvents[3].data.auctionID).toEqual(auctionId);
+
+      // 5. Auction cancel
+      expect(cancelEvents[4].type).toEqual(`A.${admin.substr(2)}.Auction.Canceled`);
 
       expect(auctionBeforeCancel).toMatchObject({ cancelled: false });
       expect(auctionAfterCancel).toMatchObject({ cancelled: true });

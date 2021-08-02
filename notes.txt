@@ -1,0 +1,25 @@
+1. We don't use Cadence enum, because:
+
+Enum support was only recently added to the SDK and FCL.
+- SDK: 0.0.54 https://github.com/onflow/flow-js-sdk/blob/master/packages/sdk/CHANGELOG.md#0054----2021-07-23
+- FCL: 0.0.77-alpha.1 https://github.com/onflow/flow-js-sdk/blob/master/packages/fcl/CHANGELOG.md#0077-alpha1---2021-07-23
+
+FLOW-JS_TESTING doesn't support enum at all.
+In our project we use JS.
+
+2. NFT will be burn and the last bid will be released in 3 cases:
+    Auction is cancelled. In this case we display message about cancel auction on our site.
+    Nobody bids until the end of auction (No release bid in this case). Clients have no interest to our NFTs. Nobody cares.
+    In case of call destroy function. This behaivor is under our control, because contrcts will be deployed to our account.
+
+3. ReclaimSendNFT is added for case to handle sending NFT to winner. In failuer case, after winner connects to our suupot, 
+    we can change recipient capability in this case.
+
+4. In case of failure to return the bid to outbidded person, this bid will sent to platform vault and after we can handle this situation by support.
+Some events are added for this case.
+But this case extremely rarely, because FUSD should be destroyed on the account.
+
+5. If I attempt to outbid *myself*, will I lose my previous bid here?
+   No. Your bid will be accumulated. If you bid 10 and after 5, your bid will be 15. If somebody outbid you, all amount of FUSD will be returned.
+   
+

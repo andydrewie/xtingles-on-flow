@@ -1,5 +1,5 @@
 import OpenEdition, Edition from 0x01cf0e2f2f715450
-import FungibleToken from 0xee82856bf20e2aa6
+import FungibleToken  from 0xee82856bf20e2aa6
 import NonFungibleToken from 0x01cf0e2f2f715450
 
 transaction(id: UInt64) {
@@ -8,15 +8,7 @@ transaction(id: UInt64) {
     let clientEdition: &Edition.EditionCollection
     
     prepare(acct: AuthAccount) {
-        let editionCap = acct.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath)
-
-        if !editionCap.check() {        
-            let edition <- Edition.createEditionCollection()
-            acct.save(<- edition, to: Edition.CollectionStoragePath)         
-            acct.link<&{Edition.EditionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
-            log("Edition Collection Created for account")
-        }  
-
+  
         self.clientOpenEdition = acct.borrow<&OpenEdition.OpenEditionCollection>(from: OpenEdition.CollectionStoragePath) ?? panic("could not borrow open edition reference")
         self.clientEdition = acct.borrow<&Edition.EditionCollection>(from: Edition.CollectionStoragePath) ?? panic("could not borrow edition reference")
     }

@@ -5,7 +5,7 @@ import Collectible from 0xfc747df8f5e61fcb
  */
 pub fun main(address:Address) : [Collectible.CollectibleData] {
 
-    let collectible = Collectible.getCollectible(address: address)
+    let collectible = Collectible.getCollectibleDatas(address: address)
     
     return collectible
 }

@@ -265,8 +265,7 @@ export const testSuiteIDs = () => describe("MarketPlace get IDs", () => {
           }); 
     
           expect(keys).toEqual([]);
-        } catch (e) {
-          console.log(e);
+        } catch (e) { 
           error = e;
         }
         expect(error).toEqual(undefined);

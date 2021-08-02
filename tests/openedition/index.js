@@ -13,5 +13,5 @@ export const testSuiteOpenEdition = () => describe("Open Edition", () => {
    testSuitePurchaseOpenEdition();
    testSuiteCommissionPaymentsOpenEdition();
    testSuiteSettleOpenEdition();
-   testSuiteOpenEditionPrice();
+   testSuiteOpenEditionPrice(); 
 });

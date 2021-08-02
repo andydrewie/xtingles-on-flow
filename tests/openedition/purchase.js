@@ -10,8 +10,7 @@ export const testSuitePurchaseOpenEdition = () => describe("Open Edition purchas
         tickTransaction,
         mintFUSDTransaction,       
         purchaseTransaction,
-        purchaseFlowTokensTransaction,
-        createOpenEditionResourceTransaction,
+        purchaseFlowTokensTransaction,     
         purchaseOpenEditionWithoutNFTCollectionCapability,
         cancelTransaction,
         purchaseWithSetPriceTransaction,
@@ -52,14 +51,6 @@ export const testSuitePurchaseOpenEdition = () => describe("Open Edition purchas
             ),
             "utf8"
         );
-
-        createOpenEditionResourceTransaction = fs.readFileSync(
-            path.join(
-                __dirname,
-                `../../transactions/emulator/openedition/CreateOpenEditionResource.cdc`
-            ),
-            "utf8"
-        ); 
 
         purchaseOpenEditionWithoutNFTCollectionCapability = fs.readFileSync(
             path.join(
@@ -142,13 +133,6 @@ export const testSuitePurchaseOpenEdition = () => describe("Open Edition purchas
         await deployContractByName({ to: admin, name: "FUSD" });
         await deployContractByName({ to: admin, name: "Collectible", addressMap });
         await deployContractByName({ to: admin, name: "OpenEdition", addressMap });
-
-        // Setup open edition resource
-        await sendTransaction({
-            code: createOpenEditionResourceTransaction,
-            args: [],
-            signers: [admin],
-        });
 
         // Setup FUSD Vault
         await sendTransaction({
@@ -534,82 +518,6 @@ export const testSuitePurchaseOpenEdition = () => describe("Open Edition purchas
         } 
 
         expect(error).toMatch(/Not exact amount tokens to buy the NFT/);  
-    });    
-
-    test("purchase throws error, when try to buy for Flow tokens", async () => { 
-        let error;
-        try {
-            const admin = await getAccountAddress("admin");    
-            const second = await getAccountAddress("second");    
-            const third = await getAccountAddress("third");    
-            
-            const price = 10;
-
-            const openEditionParameters = [
-                // Link to IPFS
-                ["https://www.ya.ru", t.String],
-                // Name
-                ["Great NFT!", t.String],
-                // Author
-                ["Brad Pitt", t.String],
-                // Description
-                ["Awesome", t.String],
-                // Initial price
-                [price.toFixed(2), t.UFix64],
-                // Start time
-                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
-                // Initial auction length  
-                ["1000.00", t.UFix64],
-                // Platftom address
-                [admin, t.Address]
-            ];     
-            
-            const commission = `{
-                Address(${third}) : Edition.CommissionStructure(
-                    firstSalePercent: 1.00,
-                    secondSalePercent: 2.00,
-                    description: "xxx"
-                ),
-                Address(${admin}) : Edition.CommissionStructure(
-                    firstSalePercent: 99.00,
-                    secondSalePercent: 7.00,
-                    description: "xxx"
-                )
-            }`;
-            
-            await sendTransaction({
-                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
-                signers: [admin],
-            }); 
-
-            await new Promise((r) => setTimeout(r, 3000));
-
-            // The transaction to change add block with the last timestamp
-            await sendTransaction({
-                code: tickTransaction,
-                args: [], 
-                signers: [admin],
-            }); 
-            
-            const result = await sendTransaction({
-                code: purchaseFlowTokensTransaction,
-                args: [
-                    // Platftom address
-                    [admin, t.Address],
-                    // Open edtion id
-                    [1, t.UInt64]
-                ], 
-                signers: [second],
-            }); 
-
-            expect(result).toEqual('');
-
-        } catch(e) {
-            error = e;
-        } 
-
-        expect(error).toMatch(/Cannot deposit an incompatible token type/);  
     });    
 
     test("purchase check events during succesfull case", async () => { 

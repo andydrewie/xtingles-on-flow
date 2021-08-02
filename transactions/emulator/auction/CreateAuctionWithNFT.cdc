@@ -1,5 +1,5 @@
 import FungibleToken from 0xee82856bf20e2aa6
-import Auction, Collectible, Edition, NonFungibleToken from 0x01cf0e2f2f715450
+import Auction, Collectible, Edition, NonFungibleToken, FUSD from 0x01cf0e2f2f715450
 
 transaction(      
         minimumBidIncrement: UFix64, 
@@ -17,29 +17,20 @@ transaction(
     ) {
 
     let auctionCollectionRef: &Auction.AuctionCollection
-    let platformCap: Capability<&{FungibleToken.Receiver}>
+    let platformCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let minterRef: &Collectible.NFTMinter
     let editionCollectionRef: &Edition.EditionCollection
-    let editionCap: Capability<&{Edition.EditionPublic}>
+    let editionCap: Capability<&{Edition.EditionCollectionPublic}>
     let metadata: Collectible.Metadata
   
     prepare(acct: AuthAccount) {
-
-        let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath)
-
-        if !auctionCap.check() {          
-            let sale <- Auction.createAuctionCollection()
-            acct.save(<-sale, to:Auction.CollectionStoragePath)         
-            acct.link<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
-            log("Auction Collection Created for account")
-        }  
 
         self.auctionCollectionRef = acct.borrow<&Auction.AuctionCollection>(from:Auction.CollectionStoragePath)
             ?? panic("could not borrow minter reference")    
      
         let platform = getAccount(platformAddress)
 
-        self.platformCap = platform.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
+        self.platformCap = platform.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
 
         self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: Collectible.MinterStoragePath)
             ?? panic("could not borrow minter reference")
@@ -53,16 +44,7 @@ transaction(
             properties: {}   
         ) 
 
-        let editionCap = acct.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath)
-
-        if !editionCap.check() {        
-            let edition <- Edition.createEditionCollection()
-            acct.save( <- edition, to: Edition.CollectionStoragePath)         
-            acct.link<&{Edition.EditionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
-            log("Edition Collection Created for account")
-        }  
-
-        self.editionCap = acct.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath)
+        self.editionCap = acct.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath)
 
         self.editionCollectionRef = acct.borrow<&Edition.EditionCollection>(from: Edition.CollectionStoragePath)
             ?? panic("could not borrow edition reference reference")     

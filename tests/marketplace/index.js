@@ -13,11 +13,11 @@ export const testSuiteMarketPlace = () => describe("Market Place", () => {
    testSuitePrice();
    testSuiteIDs();
    testSuiteBorrowCollectible();
-   testSuiteCollectibles();
+   testSuiteCollectibles(); 
    testSuiteChangePrice();
    testSuiteMarketPlaceWithdrawFromSale();
    testSuitePurchase(); 
-   testSuitePayments();
+   testSuitePayments(); 
  });
 
 

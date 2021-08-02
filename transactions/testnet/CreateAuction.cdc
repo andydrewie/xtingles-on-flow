@@ -1,5 +1,6 @@
 import FungibleToken from 0x9a0766d93b6608b7
 import NonFungibleToken from 0x631e88ae7f1d7c20
+import FUSD from 0xe223d8a629e49c68
 import Auction, Collectible, Edition from 0xfc747df8f5e61fcb
 
 transaction(      
@@ -19,24 +20,13 @@ transaction(
     ) {
 
     let auctionCollectionRef: &Auction.AuctionCollection
-    let platformCap: Capability<&{FungibleToken.Receiver}>
+    let platformCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let minterRef: &Collectible.NFTMinter
     let editionCollectionRef: &Edition.EditionCollection
-    let editionCap: Capability<&{Edition.EditionPublic}>
+    let editionCap: Capability<&{Edition.EditionCollectionPublic}>
     let metadata: Collectible.Metadata
   
     prepare(acct: AuthAccount) {
-
-        // Capability to auctions resource
-        let auctionCap = acct.getCapability<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath)
-
-        // Create auction resource on the account 
-        if !auctionCap.check() {          
-            let sale <- Auction.createAuctionCollection()
-            acct.save(<-sale, to:Auction.CollectionStoragePath)         
-            acct.link<&{Auction.AuctionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
-            log("Auction Collection Created for account")
-        }  
 
         // Auction refrerence
         self.auctionCollectionRef = acct.borrow<&Auction.AuctionCollection>(from:Auction.CollectionStoragePath)
@@ -46,7 +36,7 @@ transaction(
         let platform = getAccount(platformAddress)
 
         // Capability to FUSD vault
-        self.platformCap = platform.getCapability<&{FungibleToken.Receiver}>(/public/fusdReceiver)
+        self.platformCap = platform.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
 
         // Reference to resource mint NFT on the account
         self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: Collectible.MinterStoragePath)
@@ -64,18 +54,7 @@ transaction(
             properties: {}   
         ) 
 
-        // Capability to handle the common information for the all copies of one item
-        let editionCap = acct.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath)
-
-        // Create Edition resource on the account 
-        if !editionCap.check() {        
-            let edition <- Edition.createEditionCollection()
-            acct.save( <- edition, to: Edition.CollectionStoragePath)         
-            acct.link<&{Edition.EditionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
-            log("Edition Collection Created for account")
-        }  
-
-        self.editionCap = acct.getCapability<&{Edition.EditionPublic}>(Edition.CollectionPublicPath)
+        self.editionCap = acct.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath)
 
         self.editionCollectionRef = acct.borrow<&Edition.EditionCollection>(from: Edition.CollectionStoragePath)
             ?? panic("could not borrow edition reference reference")     

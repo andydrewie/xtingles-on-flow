@@ -27,8 +27,8 @@ pub contract Edition {
     }
 
     // Events  
-    pub event CreateEdition(editionId: UInt64, royalty: { Address: CommissionStructure }, maxEdition: UInt64) 
-    pub event ChangeCommision(editionId: UInt64, royalty: { Address: CommissionStructure }) 
+    pub event CreateEdition(editionId: UInt64, maxEdition: UInt64) 
+    pub event ChangeCommision(editionId: UInt64) 
     pub event ChangeMaxEdition(editionId: UInt64, maxEdition: UInt64) 
 
     // Edition's status(commission and amount copies of the same item)
@@ -80,7 +80,7 @@ pub contract Edition {
            royalty: { Address: CommissionStructure }     
         ) {
             self.royalty = royalty
-            emit ChangeCommision(editionId: self.editionId, royalty: royalty)
+            emit ChangeCommision(editionId: self.editionId)
         }
 
         // Change count of copies. This is used for Open Edition, because the eventual amount of copies are known only after finish of sale       
@@ -102,15 +102,15 @@ pub contract Edition {
         }
     }    
 
-    // EditionPublic is a resource interface that restricts users to
+    // EditionCollectionPublic is a resource interface that restricts users to
     // retreiving the edition's information
-    pub resource interface EditionPublic {
+    pub resource interface EditionCollectionPublic {
         pub fun getEdition(_ id: UInt64): EditionStatus?
     }
 
     //EditionCollection contains a dictionary EditionItems and provides
     // methods for manipulating EditionItems
-    pub resource EditionCollection: EditionPublic  {
+    pub resource EditionCollection: EditionCollectionPublic  {
 
         // Edition Items
         access(account) var editionItems: @{UInt64: EditionItem} 
@@ -142,9 +142,13 @@ pub contract Edition {
                 }
             }      
 
-            if firstSummaryPercent != 100.00 { panic("The first summary sale percent should be 100 %") }
+            if firstSummaryPercent != 100.00 { 
+                panic("The first summary sale percent should be 100 %")
+            }
 
-            if secondSummaryPercent >= 100.00 { panic("The second summary sale percent should be less than 100 %") }            
+            if secondSummaryPercent >= 100.00 { 
+                panic("The second summary sale percent should be less than 100 %")
+            }            
         }
 
         // Create edition (common information for all copies of the same item)
@@ -167,13 +171,15 @@ pub contract Edition {
             
             destroy oldItem
 
-            emit CreateEdition(editionId: id, royalty: royalty, maxEdition: maxEdition) 
+            emit CreateEdition(editionId: id, maxEdition: maxEdition) 
 
             return id
         }
      
         pub fun getEdition(_ id: UInt64): EditionStatus? {
-            if self.editionItems[id] == nil { return nil }         
+            if self.editionItems[id] == nil { 
+                return nil
+            }         
 
             // Get the edition item resources
             let itemRef = &self.editionItems[id] as &EditionItem
@@ -221,7 +227,7 @@ pub contract Edition {
     }   
 
     // createEditionCollection returns a new createEditionCollection resource to the caller
-    pub fun createEditionCollection(): @EditionCollection {
+    priv fun createEditionCollection(): @EditionCollection {
         let editionCollection <- create EditionCollection()
 
         return <- editionCollection
@@ -229,7 +235,11 @@ pub contract Edition {
 
     init() {
         self.totalEditions = (0 as UInt64)
-        self.CollectionPublicPath = /public/xtinglesEdition
-        self.CollectionStoragePath = /storage/xtinglesEdition
+        self.CollectionPublicPath = /public/NFTxtinglesEdition
+        self.CollectionStoragePath = /storage/NFTxtinglesEdition
+
+        let edition <- Edition.createEditionCollection()
+        self.account.save(<- edition, to: Edition.CollectionStoragePath)         
+        self.account.link<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath, target: Edition.CollectionStoragePath)
     }   
 }

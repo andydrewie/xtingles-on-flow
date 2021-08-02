@@ -9,8 +9,7 @@ export const testSuiteCommissionPaymentsOpenEdition = () => describe("Open Editi
         setupFUSDTransaction,
         tickTransaction,
         mintFUSDTransaction,      
-        purchaseTransaction,
-        createOpenEditionResourceTransaction,
+        purchaseTransaction,     
         purchaseOpenEditionWithoutNFTCollectionCapability,
         unlinkFUSDVault;
     
@@ -33,14 +32,6 @@ export const testSuiteCommissionPaymentsOpenEdition = () => describe("Open Editi
             ),
             "utf8"
         );   
-
-        createOpenEditionResourceTransaction = fs.readFileSync(
-            path.join(
-                __dirname,
-                `../../transactions/emulator/openedition/CreateOpenEditionResource.cdc`
-            ),
-            "utf8"
-        ); 
 
         purchaseOpenEditionWithoutNFTCollectionCapability = fs.readFileSync(
             path.join(
@@ -111,13 +102,7 @@ export const testSuiteCommissionPaymentsOpenEdition = () => describe("Open Editi
         await deployContractByName({ to: admin, name: "Collectible", addressMap });
         await deployContractByName({ to: admin, name: "OpenEdition", addressMap });
 
-        // Setup open edition resource
-        await sendTransaction({
-            code: createOpenEditionResourceTransaction,
-            args: [],
-            signers: [admin],
-        });
-
+     
         // Setup FUSD Vault
         await sendTransaction({
             code: setupFUSDTransaction,

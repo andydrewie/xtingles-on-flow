@@ -8,8 +8,7 @@ export const testSuiteOpenEditionStatus = () => describe("Open Edition status", 
     let createOpenEditionTransaction,
         setupFUSDTransaction,
         tickTransaction,
-        mintFUSDTransaction,
-        createOpenEditionResourceTransaction, 
+        mintFUSDTransaction,        
         openEditionStatusesScript,
         openEditionStatusScript,
         commission;    
@@ -24,15 +23,7 @@ export const testSuiteOpenEditionStatus = () => describe("Open Edition status", 
                 `../../transactions/emulator/openedition/CreateOpenEdition.cdc`
             ),
             "utf8"
-        );   
-
-        createOpenEditionResourceTransaction = fs.readFileSync(
-            path.join(
-                __dirname,
-                `../../transactions/emulator/openedition/CreateOpenEditionResource.cdc`
-            ),
-            "utf8"
-        );   
+        );       
 
         setupFUSDTransaction = fs.readFileSync(
             path.join(
@@ -115,13 +106,6 @@ export const testSuiteOpenEditionStatus = () => describe("Open Edition status", 
         await deployContractByName({ to: admin, name: "FUSD" });
         await deployContractByName({ to: admin, name: "Collectible", addressMap });
         await deployContractByName({ to: admin, name: "OpenEdition", addressMap });
-
-        // Setup open edition resource
-        await sendTransaction({
-            code: createOpenEditionResourceTransaction,
-            args: [],
-            signers: [admin],
-        });
 
         // Setup FUSD Vault
         await sendTransaction({
@@ -236,7 +220,7 @@ export const testSuiteOpenEditionStatus = () => describe("Open Edition status", 
                   [admin, t.Address],       
                 ]
             });    
-            
+
             const status = statuses['1'];   
   
             expect(status).toMatchObject({
@@ -250,10 +234,10 @@ export const testSuiteOpenEditionStatus = () => describe("Open Edition status", 
                     description: 'Awesome',
                     edition: 0,
                     properties: {}
-                },
+                }, 
                 completed: false,
                 expired: false,
-                cancelled: false
+                cancelled: false                   
             });              
 
         } catch(e) {
