@@ -50,7 +50,7 @@ Auction (english type of auction with extended lenght).
   author: String - (metadata NFT: author)   
   description: String - (metadata NFT: description)   
 
-  flow transactions send ./transactions/testnet/CreateAuction.cdc --args-json '[ {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1624529487.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=testnet
+  flow transactions send ./transactions/testnet/CreateAuction.cdc --args-json '[ {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "2627906804.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=testnet
 
 2. check auction status: 
   --arg Address:"0xfc747df8f5e61fcb" - (account's address, where auction collection is stored)
@@ -82,7 +82,7 @@ Auction (english type of auction with extended lenght).
 
  id: UInt64 - auction id
 
-flow transactions send --code ./transactions/testnet/CancelAuction.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-xtingles-1 --network=testnet
+flow transactions send ./transactions/testnet/CancelAuction.cdc --args-json '[{"type": "UInt64","value": "2"}]' --signer testnet-xtingles-1 --network=testnet
 
 
 Open Edition (purchase with fixed time lengh to sell one item with sold number of copies).

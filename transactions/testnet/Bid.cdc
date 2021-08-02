@@ -1,5 +1,6 @@
 import Auction, Collectible from 0xfc747df8f5e61fcb
 import FungibleToken from 0x9a0766d93b6608b7
+import FUSD from 0xe223d8a629e49c68
 import NonFungibleToken from 0x631e88ae7f1d7c20
 
 transaction(
@@ -14,7 +15,7 @@ transaction(
     let auctionCollectionRef: &AnyResource{Auction.AuctionCollectionPublic}
     let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
     let vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
-    let temporaryVault: @FungibleToken.Vault
+    let temporaryVault: @FUSD.Vault
 
     prepare(acct: AuthAccount) {
         let auctionOwner = getAccount(address)       
@@ -43,7 +44,7 @@ transaction(
             ?? panic("Could not borrow owner's Vault reference")
         
         // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: amount)
+        self.temporaryVault <- vaultRef.withdraw(amount: amount) as! @FUSD.Vault
 
     }
 
