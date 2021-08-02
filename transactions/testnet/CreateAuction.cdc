@@ -1,5 +1,6 @@
 import FungibleToken from 0x9a0766d93b6608b7
 import NonFungibleToken from 0x631e88ae7f1d7c20
+import FUSD from 0xe223d8a629e49c68
 import Auction, Collectible, Edition from 0xfc747df8f5e61fcb
 
 transaction(      
@@ -26,17 +27,6 @@ transaction(
     let metadata: Collectible.Metadata
   
     prepare(acct: AuthAccount) {
-
-        // Capability to auctions resource
-        let auctionCap = acct.getCapability<&{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath)
-
-        // Create auction resource on the account 
-        if !auctionCap.check() {          
-            let sale <- Auction.createAuctionCollection()
-            acct.save(<-sale, to:Auction.CollectionStoragePath)         
-            acct.link<&{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
-            log("Auction Collection Created for account")
-        }  
 
         // Auction refrerence
         self.auctionCollectionRef = acct.borrow<&Auction.AuctionCollection>(from:Auction.CollectionStoragePath)
