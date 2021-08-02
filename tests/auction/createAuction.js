@@ -61,10 +61,10 @@ export const testSuiteCreateAuction = () => describe("Auction create", () => {
       Collectible: admin,
       Edition: admin,      
     };
-
-    await deployContractByName({ to: admin, name: "Edition" });
+    
     await deployContractByName({ to: admin, name: "NonFungibleToken" });    
     await deployContractByName({ to: admin, name: "FUSD" }); 
+    await deployContractByName({ to: admin, name: "Edition" });
     await deployContractByName({ to: admin, name: "Collectible", addressMap });
     await deployContractByName({ to: admin, name: "Auction", addressMap });
 		done();
@@ -159,7 +159,7 @@ export const testSuiteCreateAuction = () => describe("Auction create", () => {
     } catch(e) {
       error = e;
     } 
-    expect(error).toMatch(/Start bid should be less than 999 999.99/);  
+    expect(error).toMatch(/Start bid should be less than 1 000 000.00/);  
   });
 
   test("createAuction check events", async () => { 

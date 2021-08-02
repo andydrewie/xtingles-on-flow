@@ -313,8 +313,9 @@ export const testSuiteSendNFT = () => describe("Auction send NFT", () => {
 
       // There are no events to deposit NFT to leader
       expect(collectibleDepositEvents.length).toEqual(0);
+      
       // This event is burn NFT
-      expect(burnNFTEvents.length).toEqual(1);
+      expect(burnNFTEvents.length).toEqual(0);
 
     } catch (e) {
       error = e;

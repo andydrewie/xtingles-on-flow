@@ -7,8 +7,7 @@ import { sendTransaction, mintFlow, getAccountAddress, init, emulator, deployCon
 export const testSuiteOpenEditionPrice = () => describe("Open Edition price", () => {
     let createOpenEditionTransaction,
         setupFUSDTransaction,
-        mintFUSDTransaction,
-        createOpenEditionResourceTransaction, 
+        mintFUSDTransaction,   
         openEditionPriceScript,
         commission;
 
@@ -22,15 +21,7 @@ export const testSuiteOpenEditionPrice = () => describe("Open Edition price", ()
                 `../../transactions/emulator/openedition/CreateOpenEdition.cdc`
             ),
             "utf8"
-        );   
-
-        createOpenEditionResourceTransaction = fs.readFileSync(
-            path.join(
-                __dirname,
-                `../../transactions/emulator/openedition/CreateOpenEditionResource.cdc`
-            ),
-            "utf8"
-        );   
+        );    
 
         setupFUSDTransaction = fs.readFileSync(
             path.join(
@@ -97,13 +88,6 @@ export const testSuiteOpenEditionPrice = () => describe("Open Edition price", ()
         await deployContractByName({ to: admin, name: "FUSD" });
         await deployContractByName({ to: admin, name: "Collectible", addressMap });
         await deployContractByName({ to: admin, name: "OpenEdition", addressMap });
-
-        // Setup open edition resource
-        await sendTransaction({
-            code: createOpenEditionResourceTransaction,
-            args: [],
-            signers: [admin],
-        });
 
         // Setup FUSD Vault
         await sendTransaction({

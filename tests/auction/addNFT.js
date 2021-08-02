@@ -9,7 +9,6 @@ export const testSuiteAddNFT = () => describe("Auction add NFT", () => {
   let createAuctionTransaction,
       addNFTInAuctionTransaction,
       createAuctionTransactionWithNFT,
-      createEditionResourceTransaction,
       checkAuctionStatusScript,
       createEditionTransaction,
       setupFUSDTransaction,
@@ -82,16 +81,7 @@ export const testSuiteAddNFT = () => describe("Auction add NFT", () => {
           `../../transactions/emulator/CreateEdition.cdc`
       ),
       "utf8"    
-    );  
-         
-    createEditionResourceTransaction = fs.readFileSync(
-      path.join(
-          __dirname,
-          `../../transactions/emulator/CreateEditionResource.cdc`
-      ),
-      "utf8"    
-    );   
-
+    );           
   });
 
   beforeEach(async (done) => {
@@ -167,13 +157,6 @@ export const testSuiteAddNFT = () => describe("Auction add NFT", () => {
         ],
         signers: [admin],
     });
-
-    // Create editon resource to store commission information
-    await sendTransaction({
-      code: createEditionResourceTransaction,
-      args: [], 
-      signers: [admin],
-    });  
 
     commission = `{
       Address(${second}) : Edition.CommissionStructure(
