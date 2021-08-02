@@ -79,6 +79,9 @@ pub contract Auction {
     pub event AddNFT(auctionID: UInt64, nftID: UInt64) 
     pub event BurnNFT(auctionID: UInt64, nftID: UInt64) 
     pub event SendNFT(auctionID: UInt64, nftID: UInt64, to: Address)   
+    pub event FailSendNFT(auctionID: UInt64, nftID: UInt64, to: Address) 
+    pub event SendBidTokens(auctionID: UInt64, amount: UFix64, to: Address)   
+    pub event FailSendBidTokens(auctionID: UInt64, amount: UFix64, to: Address) 
 
     // AuctionItem contains the Resources and metadata for a single auction
     pub resource AuctionItem {
@@ -165,20 +168,18 @@ pub contract Auction {
         }
 
         // sendNFT sends the NFT to the Collection belonging to the provided Capability
-        access(contract) fun sendNFT(_ capability: Capability<&Collectible.Collection{Collectible.CollectionPublic}>) {
-            if let collectionRef = capability.borrow() {
-                let nftId = self.NFT?.id!
+        pub fun sendNFT(_ capability: Capability<&Collectible.Collection{Collectible.CollectionPublic}>) {
+            let nftId = self.NFT?.id!
+            if let collectionRef = capability.borrow() {                
                 let NFT <- self.NFT <- nil
                 collectionRef.deposit(token: <-NFT!)
                 emit SendNFT(auctionID: self.auctionID, nftID: nftId, to: collectionRef.owner!.address)  
                 return
-            }     
-            
-            // This NFT will be burned if the recipien storage is unavaliable
-            self.burnNFT()
+            }    
+            emit FailSendNFT(auctionID: self.auctionID, nftID: nftId, to: self.recipientVaultCap!.borrow()!.owner!.address)
         }
 
-        access(contract) fun burnNFT() {   
+        priv fun burnNFT() {   
             
             if(self.NFT == nil) { 
                 return
@@ -194,23 +195,27 @@ pub contract Auction {
         }
         
         // sendBidTokens sends the bid tokens to the previous bidder
-        access(contract) fun sendBidTokens(_ capability: Capability<&FUSD.Vault{FungibleToken.Receiver}>) {
+        priv fun sendBidTokens(_ capability: Capability<&FUSD.Vault{FungibleToken.Receiver}>) {
             // borrow a reference to the prevous bidder's vault
             if let vaultRef = capability.borrow() {
                 let bidVaultRef = &self.bidVault as &FUSD.Vault
-
+                let balance = bidVaultRef.balance
                 if(bidVaultRef.balance > 0.0) {
-                    vaultRef.deposit(from: <- bidVaultRef.withdraw(amount: bidVaultRef.balance))
+                    vaultRef.deposit(from: <- bidVaultRef.withdraw(amount: balance))
                 }
+
+                emit SendBidTokens(auctionID: self.auctionID, amount: balance, to: vaultRef.owner!.address)
                 return
             }
 
             //  platform vault get money in case the previous bidder vault is unreachable
             if let ownerRef = self.platformVaultCap.borrow() {
                 let bidVaultRef = &self.bidVault as &FUSD.Vault
+                let balance = bidVaultRef.balance
                 if(bidVaultRef.balance > 0.0) {
-                    ownerRef.deposit(from: <-bidVaultRef.withdraw(amount: bidVaultRef.balance))
+                    ownerRef.deposit(from: <-bidVaultRef.withdraw(amount: balance))
                 }
+                emit SendBidTokens(auctionID: self.auctionID, amount: balance, to: ownerRef.owner!.address)
                 return
             }
         }
@@ -457,11 +462,13 @@ pub contract Auction {
         destroy() {
             log("destroy auction")
                        
-            // if there's a bidder...
+            // if there's a bidder, therefore minumum one bid
             if let vaultCap = self.recipientVaultCap {
                 // ...send the bid tokens back to the bidder
                 self.sendBidTokens(vaultCap)
             }
+
+            self.burnNFT()
 
             destroy self.NFT
             destroy self.bidVault
