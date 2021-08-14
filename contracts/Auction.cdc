@@ -489,17 +489,6 @@ pub contract Auction {
     // retreiving the auction price list and placing bids
     pub resource interface AuctionCollectionPublic {
 
-        pub fun createAuction(
-            minimumBidIncrement: UFix64, 
-            auctionLength: UFix64,           
-            extendedLength: UFix64,  
-            remainLengthToExtend: UFix64,
-            auctionStartTime: UFix64,
-            startPrice: UFix64, 
-            platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>,         
-            editionCap: Capability<&{Edition.EditionCollectionPublic}>
-        ): UInt64
-
         pub fun getAuctionStatuses(): {UInt64: AuctionStatus}
         pub fun getAuctionStatus(_ id:UInt64): AuctionStatus?
         pub fun getTimeLeft(_ id: UInt64): Fix64?

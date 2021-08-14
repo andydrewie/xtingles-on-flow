@@ -277,15 +277,6 @@ pub contract OpenEdition {
     // retreiving the auction price list and placing bids
     pub resource interface OpenEditionCollectionPublic {
 
-        pub fun createOpenEdition(
-            price: UFix64,
-            startTime: UFix64,
-            saleLength: UFix64, 
-            editionNumber: UInt64,
-            metadata: Collectible.Metadata,
-            platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>  
-        ) 
-
         pub fun getOpenEditionStatuses(): {UInt64: OpenEditionStatus}?
         pub fun getOpenEditionStatus(_ id : UInt64):  OpenEditionStatus?
         pub fun getPrice(_ id:UInt64): UFix64? 
