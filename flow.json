@@ -110,7 +110,8 @@
 				"Collectible",			
 				"MarketPlace",
 				"OpenEdition",
-				"Auction"						
+				"Auction",
+				"AuthChecker"						
 			]
 		},
 		"emulator": {
