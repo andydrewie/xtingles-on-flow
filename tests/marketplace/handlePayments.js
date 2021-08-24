@@ -482,8 +482,6 @@ export const testSuitePayments = () => describe("MarketPlace Payments", () => {
 
         const { events } = result;
 
-        console.log(events);
-
         const FUSDDepositedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.FUSD.TokensDeposited`);
         const marketPlaceEarnedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.MarketPlace.Earned`);
        

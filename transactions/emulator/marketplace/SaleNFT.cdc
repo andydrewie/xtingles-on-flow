@@ -3,7 +3,7 @@ import Collectible, MarketPlace, FUSD from 0x01cf0e2f2f715450
 
 transaction(tokenId: UInt64, price: UFix64) {
 
-    let collectionRef: &Collectible.Collection{Collectible.CollectionPublic}
+    let collectionRef: &Collectible.Collection
     let saleRef: &MarketPlace.SaleCollection
 
     prepare(acct: AuthAccount) {
@@ -17,13 +17,12 @@ transaction(tokenId: UInt64, price: UFix64) {
             acct.link<&MarketPlace.SaleCollection{MarketPlace.SaleCollectionPublic}>(MarketPlace.CollectionPublicPath, target: MarketPlace.CollectionStoragePath)
             log("Sale Created for account")
         }  
-
-        self.collectionRef = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
-            .borrow()
-            ?? panic("Could not borrow receiver reference")  
+   
+        self.collectionRef = acct.borrow<&Collectible.Collection>(from: Collectible.CollectionStoragePath)
+             ?? panic("Could not borrow seller reference")  
 
         self.saleRef = acct.borrow<&MarketPlace.SaleCollection>(from: MarketPlace.CollectionStoragePath)
-            ?? panic("could not borrow minter reference")     
+            ?? panic("could not borrow sale reference")     
     }
 
     execute {    
