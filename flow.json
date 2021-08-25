@@ -37,6 +37,7 @@
 		"Auction": "./contracts/Auction.cdc",
 		"Edition": "./contracts/Edition.cdc",
 		"OpenEdition": "./contracts/OpenEdition.cdc",
+		"AuthChecker": "./contracts/AuthChecker.cdc",
 		"Drawing": "./contracts/Drawing.cdc",
 		"Pack": "./contracts/Pack.cdc",
 		"PackSale": "./contracts/PackSale.cdc"				
@@ -105,12 +106,12 @@
 	},
 	"deployments": {
 		"testnet": {
-			"testnet-xtingles-1": [	
+			"testnet-account": [	
 				"Edition",
 				"Collectible",			
 				"MarketPlace",
 				"OpenEdition",
-				"Auction",
+				"Auction", 
 				"AuthChecker"						
 			]
 		},
