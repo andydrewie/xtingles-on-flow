@@ -235,8 +235,8 @@ pub contract Edition {
 
     init() {
         self.totalEditions = (0 as UInt64)
-        self.CollectionPublicPath = /public/NFTxtinglesEdition
-        self.CollectionStoragePath = /storage/NFTxtinglesEdition
+        self.CollectionPublicPath = /public/bloctoXtinglesEdition
+        self.CollectionStoragePath = /storage/bloctoXtinglesEdition
 
         let edition <- Edition.createEditionCollection()
         self.account.save(<- edition, to: Edition.CollectionStoragePath)         
