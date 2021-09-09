@@ -161,7 +161,7 @@ Marketplace.
   tokenId: UInt64 - (NFT id)
   price: UFix64 - (price) 
 
-  flow transactions send ./transactions/testnet/ChangePriceMarketPlace.cdc --args-json '[{"type": "UInt64","value": "1"},  {"type": "UFix64","value": "5.0"}]' --signer testnet-xtingles-4 --network=testnet
+  flow transactions send ./transactions/testnet/ChangePriceMarketPlace.cdc --args-json '[{"type": "UInt64","value": "1"},  {"type": "UFix64","value": "5.0"}]' --signer testnet-xtingles-2 --network=testnet
    
 
 
