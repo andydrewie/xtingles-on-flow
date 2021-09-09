@@ -9,14 +9,14 @@ transaction(
     ) {
 
     let auctionCollectionRef: &AnyResource{Auction.AuctionCollectionPublic}
-    let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
+    let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     let vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let temporaryVault: @FUSD.Vault
 
     prepare(acct: AuthAccount) {
         let auctionOwner = getAccount(auction)       
         // get the references to the buyer's Vault and NFT Collection receiver
-        var collectionCap = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        var collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
         // if collection is not created yet we make it.
         if !collectionCap.check() {
@@ -24,7 +24,7 @@ transaction(
             acct.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
 
             // publish a capability to the Collection in storage
-            acct.link<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
+            acct.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         }
 
         self.collectionCap = collectionCap

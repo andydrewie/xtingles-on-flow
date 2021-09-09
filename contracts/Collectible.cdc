@@ -236,7 +236,7 @@ pub contract Collectible: NonFungibleToken {
         var collectibleData: [CollectibleData] = []
         let account = getAccount(address)
 
-        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&Collectible.Collection{Collectible.CollectionPublic}>()  {
+        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&{Collectible.CollectionPublic}>()  {
             for id in CollectibleCollection.getIDs() {
                 var collectible = CollectibleCollection.borrowCollectible(id: id) 
                 collectibleData.append(CollectibleData(

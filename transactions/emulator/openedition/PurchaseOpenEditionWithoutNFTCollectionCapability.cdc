@@ -8,7 +8,7 @@ transaction(
     ) {
 
     let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionCollectionPublic}
-    let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
+    let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     let temporaryVault: @FUSD.Vault
 
     prepare(acct: AuthAccount) {
@@ -16,7 +16,7 @@ transaction(
         let openEditionOwner = getAccount(openEditionAddress)     
           
         // get the references to the buyer's Vault and NFT Collection receiver        
-        self.collectionCap = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
       
         self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionCollectionPublic}>(OpenEdition.CollectionPublicPath)
             .borrow()

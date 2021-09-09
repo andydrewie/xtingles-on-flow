@@ -106,11 +106,15 @@
 		"test-account-2": {
 			"address": "0x4d22a8ba50c8da9f",
 			"keys": "0189ca5c1e8dd38f2afeb347739c44618914987659c2c0c22d53ee0e6b18a3dc"
+		},
+		"new-account-2": {
+			"address": "0xbf117454d836d021",
+			"keys": "5dfb36bf6974be8bffc88d3ac63103356eef6809730c4c46824083fa3bc3137d"
 		}
 	},
 	"deployments": {
 		"testnet": {
-			"test-account-2": [	
+			"new-account-2": [	
 				"Edition",
 				"Collectible",			
 				"MarketPlace",

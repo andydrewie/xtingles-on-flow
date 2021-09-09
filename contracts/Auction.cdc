@@ -123,7 +123,7 @@ pub contract Auction {
         priv var currentPrice: UFix64
 
         //the capability that points to the resource where you want the NFT transfered to if you win this bid. 
-        priv var recipientCollectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>?
+        priv var recipientCollectionCap: Capability<&{Collectible.CollectionPublic}>?
 
         //the capablity to send the escrow bidVault to if you are outbid
         priv var recipientVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>?
@@ -168,7 +168,7 @@ pub contract Auction {
         }
 
         // sendNFT sends the NFT to the Collection belonging to the provided Capability
-        priv fun sendNFT(_ capability: Capability<&Collectible.Collection{Collectible.CollectionPublic}>) {
+        priv fun sendNFT(_ capability: Capability<&{Collectible.CollectionPublic}>) {
             let nftId = self.NFT?.id!
             if let collectionRef = capability.borrow() {                
                 let NFT <- self.NFT <- nil
@@ -356,7 +356,7 @@ pub contract Auction {
         }
 
         // This method should probably use preconditions more
-        pub fun placeBid(bidTokens: @FUSD.Vault, vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>, collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>) {
+        pub fun placeBid(bidTokens: @FUSD.Vault, vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>, collectionCap: Capability<&{Collectible.CollectionPublic}>) {
 
             pre {
                 vaultCap.check() : "Fungible token storage is not initialized on account"
@@ -459,7 +459,7 @@ pub contract Auction {
             emit AddNFT(auctionID: self.auctionID, nftID: nftID) 
         }
 
-        pub fun reclaimSendNFT(collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>)  {
+        pub fun reclaimSendNFT(collectionCap: Capability<&{Collectible.CollectionPublic}>)  {
 
             pre {
                 self.auctionCompleted : "The auction has not been settled yet"
@@ -497,7 +497,7 @@ pub contract Auction {
             id: UInt64, 
             bidTokens: @FUSD.Vault, 
             vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>, 
-            collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>
+            collectionCap: Capability<&{Collectible.CollectionPublic}>
         )
     }
 
@@ -624,7 +624,7 @@ pub contract Auction {
 
         // placeBid sends the bidder's tokens to the bid vault and updates the
         // currentPrice of the current auction item
-        pub fun placeBid(id: UInt64, bidTokens: @FUSD.Vault, vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>, collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>) {
+        pub fun placeBid(id: UInt64, bidTokens: @FUSD.Vault, vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>, collectionCap: Capability<&{Collectible.CollectionPublic}>) {
             pre {
                 self.auctionItems[id] != nil:
                     "Auction does not exist in this drop"
@@ -649,7 +649,7 @@ pub contract Auction {
             itemRef.addNFT(NFT: <- NFT)
         }
 
-        pub fun reclaimSendNFT(id: UInt64, collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>) {
+        pub fun reclaimSendNFT(id: UInt64, collectionCap: Capability<&{Collectible.CollectionPublic}>) {
             pre {
                 self.auctionItems[id] != nil: "Auction does not exist"
             }

@@ -192,7 +192,7 @@ pub contract OpenEdition {
    
         pub fun purchase(
             buyerTokens: @FUSD.Vault,
-            buyerCollectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>,
+            buyerCollectionCap: Capability<&{Collectible.CollectionPublic}>,
             minterCap: Capability<&Collectible.NFTMinter>
         ) {
             pre {              
@@ -284,7 +284,7 @@ pub contract OpenEdition {
         pub fun purchase(
             id: UInt64, 
             buyerTokens: @FUSD.Vault,      
-            collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>       
+            collectionCap: Capability<&{Collectible.CollectionPublic}>       
         )
     }
 
@@ -413,7 +413,7 @@ pub contract OpenEdition {
         pub fun purchase(
             id: UInt64, 
             buyerTokens: @FUSD.Vault,      
-            collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>       
+            collectionCap: Capability<&{Collectible.CollectionPublic}>       
         ) {
             pre {
                 self.openEditionsItems[id] != nil: "Open Edition does not exist"

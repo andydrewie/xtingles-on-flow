@@ -8,7 +8,7 @@ transaction(
     ) {
 
     let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionCollectionPublic}
-    let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
+    let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     let temporaryVault: @FungibleToken.Vault
 
     prepare(acct: AuthAccount) {
@@ -16,7 +16,7 @@ transaction(
         let openEditionOwner = getAccount(openEditionAddress)     
           
         // get the references to the buyer's Vault and NFT Collection receiver        
-        var collectionCap = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        var collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
         // if collection is not created yet we make it.
         if !collectionCap.check() {
@@ -24,10 +24,10 @@ transaction(
             acct.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
 
             // publish a capability to the Collection in storage
-            acct.link<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
+            acct.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         }
 
-        self.collectionCap = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
         
         self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionCollectionPublic}>(OpenEdition.CollectionPublicPath)
             .borrow()
