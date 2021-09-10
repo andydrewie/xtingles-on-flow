@@ -4,7 +4,7 @@ import Collectible, MarketPlace from 0xfc747df8f5e61fcb
 
 transaction(tokenId: UInt64, price: UFix64) {
 
-    let collectionRef: &Collectible.Collection{Collectible.CollectionPublic}
+    let collectionRef: &{Collectible.CollectionPublic}
     let saleRef: &MarketPlace.SaleCollection
 
     prepare(acct: AuthAccount) {
@@ -19,7 +19,7 @@ transaction(tokenId: UInt64, price: UFix64) {
             log("Sale Created for account")
         }  
 
-        self.collectionRef = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        self.collectionRef = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow receiver reference")  
 

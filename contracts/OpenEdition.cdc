@@ -192,7 +192,7 @@ pub contract OpenEdition {
    
         pub fun purchase(
             buyerTokens: @FUSD.Vault,
-            buyerCollectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>,
+            buyerCollectionCap: Capability<&{Collectible.CollectionPublic}>,
             minterCap: Capability<&Collectible.NFTMinter>
         ) {
             pre {              
@@ -284,7 +284,7 @@ pub contract OpenEdition {
         pub fun purchase(
             id: UInt64, 
             buyerTokens: @FUSD.Vault,      
-            collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>       
+            collectionCap: Capability<&{Collectible.CollectionPublic}>       
         )
     }
 
@@ -413,7 +413,7 @@ pub contract OpenEdition {
         pub fun purchase(
             id: UInt64, 
             buyerTokens: @FUSD.Vault,      
-            collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}>       
+            collectionCap: Capability<&{Collectible.CollectionPublic}>       
         ) {
             pre {
                 self.openEditionsItems[id] != nil: "Open Edition does not exist"
@@ -447,8 +447,8 @@ pub contract OpenEdition {
 
     init() {
         self.totalOpenEditions = (0 as UInt64)
-        self.CollectionPublicPath = /public/NFTxtinglesOpenEdition
-        self.CollectionStoragePath = /storage/NFTxtinglesOpenEdition
+        self.CollectionPublicPath = /public/NFTbloctoXtinglesOpenEdition
+        self.CollectionStoragePath = /storage/NFTbloctoXtinglesOpenEdition
 
         let minterCap = self.account.getCapability<&Collectible.NFTMinter>(Collectible.MinterPrivatePath)!    
         let openEdition <- OpenEdition.createOpenEditionCollection(minterCap: minterCap)        

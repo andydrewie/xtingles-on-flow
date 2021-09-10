@@ -1,7 +1,7 @@
 import FungibleToken from 0x9a0766d93b6608b7
 import NonFungibleToken from 0x631e88ae7f1d7c20
 import FUSD from 0xe223d8a629e49c68
-import Collectible, OpenEdition from 0xfc747df8f5e61fcb
+import Collectible, OpenEdition from 0xef28e7ce9a3cea1d
 
 transaction(
         openEditionAddress: Address,
@@ -9,7 +9,7 @@ transaction(
     ) {
 
     let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionCollectionPublic}
-    let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
+    let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     let vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let temporaryVault: @FUSD.Vault
 
@@ -18,7 +18,7 @@ transaction(
         let openEditionOwner = getAccount(openEditionAddress)     
           
         // get the references to the buyer's Vault and NFT Collection receiver        
-        var collectionCap = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        var collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
         // if collection is not created yet we make it.
         if !collectionCap.check() {
@@ -26,10 +26,10 @@ transaction(
             acct.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
 
             // publish a capability to the Collection in storage
-            acct.link<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
+            acct.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         }
 
-        self.collectionCap = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
         
         self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionCollectionPublic}>(OpenEdition.CollectionPublicPath)
             .borrow()

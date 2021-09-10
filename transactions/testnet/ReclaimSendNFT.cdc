@@ -5,11 +5,11 @@ import NonFungibleToken from 0x01cf0e2f2f715450
 transaction(id: UInt64, recipient: Address) {
 
     let client: &Auction.AuctionCollection
-    let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
+    let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     
     prepare(acct: AuthAccount) {
         let recipientAcct = getAccount(recipient)    
-        self.collectionCap = recipientAcct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        self.collectionCap = recipientAcct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
         self.client = acct.borrow<&Auction.AuctionCollection>(from:Auction.CollectionStoragePath) ?? panic("could not load admin storage for auction")
     }
 

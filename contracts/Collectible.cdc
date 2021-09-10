@@ -236,7 +236,7 @@ pub contract Collectible: NonFungibleToken {
         var collectibleData: [CollectibleData] = []
         let account = getAccount(address)
 
-        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&Collectible.Collection{Collectible.CollectionPublic}>()  {
+        if let CollectibleCollection = account.getCapability(self.CollectionPublicPath).borrow<&{Collectible.CollectionPublic}>()  {
             for id in CollectibleCollection.getIDs() {
                 var collectible = CollectibleCollection.borrowCollectible(id: id) 
                 collectibleData.append(CollectibleData(
@@ -252,13 +252,13 @@ pub contract Collectible: NonFungibleToken {
     init() {
         // Initialize the total supply
         self.totalSupply = 1
-        self.CollectionPublicPath = /public/NFTxtinglesCollectibleCollection
-        self.CollectionStoragePath = /storage/NFTxtinglesCollectibleCollection
-        self.MinterStoragePath = /storage/NFTxtinglesCollectibleMinter
-        self.MinterPrivatePath = /private/NFTxtinglesCollectibleMinter
+        self.CollectionPublicPath = /public/bloctoXtinglesCollectibleCollection
+        self.CollectionStoragePath = /storage/bloctoXtinglesCollectibleCollection
+        self.MinterStoragePath = /storage/bloctoXtinglesCollectibleMinter
+        self.MinterPrivatePath = /private/bloctoXtinglesCollectibleMinter
 
         self.account.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
-        self.account.link<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
+        self.account.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         
         let minter <- create NFTMinter()         
         self.account.save(<-minter, to: self.MinterStoragePath)

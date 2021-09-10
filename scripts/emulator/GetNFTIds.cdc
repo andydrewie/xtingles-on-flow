@@ -5,7 +5,7 @@ pub fun main(address:Address) : [UInt64] {
 
     let acct = getAccount(address)
 
-    let receiverRef = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+    let receiverRef = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
         .borrow()
         ?? panic("Could not borrow receiver reference")    
      

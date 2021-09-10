@@ -9,14 +9,14 @@ transaction(
     ) {
 
     let auctionCollectionRef: &AnyResource{Auction.AuctionCollectionPublic}
-    let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
+    let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     let vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let temporaryVault: @FUSD.Vault
 
     prepare(acct: AuthAccount) {
         let auctionOwner = getAccount(auction) 
 
-        self.collectionCap = acct.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
         self.auctionCollectionRef = auctionOwner.getCapability<&AnyResource{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath)
             .borrow()

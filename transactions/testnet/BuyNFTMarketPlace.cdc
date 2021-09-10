@@ -1,7 +1,7 @@
 import FungibleToken from 0x9a0766d93b6608b7
 import NonFungibleToken from 0x631e88ae7f1d7c20
 import FUSD from 0xe223d8a629e49c68
-import Collectible, MarketPlace from 0xfc747df8f5e61fcb
+import Collectible, MarketPlace from 0xef28e7ce9a3cea1d
 
 transaction(
     marketplace: Address,
@@ -11,7 +11,7 @@ transaction(
     // will store the bought NFT
 
     let vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
-    let collectionCap: Capability<&Collectible.Collection{Collectible.CollectionPublic}> 
+    let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     // Vault that will hold the tokens that will be used
     // to buy the NFT
     let temporaryVault: @FUSD.Vault
@@ -19,7 +19,7 @@ transaction(
     prepare(account: AuthAccount) {
 
         // get the references to the buyer's Vault and NFT Collection receiver
-        var collectionCap = account.getCapability<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
+        var collectionCap = account.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
         // if collection is not created yet we make it.
         if !collectionCap.check() {
@@ -27,7 +27,7 @@ transaction(
             account.save<@NonFungibleToken.Collection>(<- Collectible.createEmptyCollection(), to: Collectible.CollectionStoragePath)
 
             // publish a capability to the Collection in storage
-            account.link<&Collectible.Collection{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
+            account.link<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath, target: Collectible.CollectionStoragePath)
         }
 
         self.collectionCap = collectionCap
