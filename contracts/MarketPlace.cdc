@@ -272,7 +272,7 @@ pub contract MarketPlace {
     }
 
     init() {
-        self.CollectionPublicPath = /public/NFTxtinglesCollectibleSale
-        self.CollectionStoragePath = /storage/NFTxtinglesCollectibleSale
+        self.CollectionPublicPath = /public/NFTbloctoXtinglesCollectibleSale
+        self.CollectionStoragePath = /storage/NFTbloctoXtinglesCollectibleSale
     }
 }
