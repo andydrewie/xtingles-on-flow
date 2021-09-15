@@ -73,11 +73,19 @@
 		},
 		"testnet-third-account": {
 			"address": "96c8ac9a55867f24",
-			"keys": "3b0248d3bf3b06b339bdd3d534d3ea8429c3deb3e9a8044856d8a6d9f07c5e21"
+			"keys": "3dee6904f1bdd6e7159029f224e249e2d555efa3ce1c6a272acab20d31c3faff"		
 		},
 		"testnet-xtingles-1": {
-			"address": "0xfc747df8f5e61fcb",
-			"keys": "1c0495acc9ceff7911026381031ea0d6a5b480dac6ca9f1d5085af00d1cd0544"
+			"address": "0xf5b0eb433389ac3f",
+			"keys": [{
+				"type": "hex",
+				"index": 5,
+				"signatureAlgorithm": "ECDSA_P256",
+				"hashAlgorithm": "SHA3_256",
+				"context": {
+					"privateKey": ""
+				}
+			}]
 		},
 		"testnet-xtingles-2": {
 			"address": "0xefb501878aa34730",

@@ -1,14 +1,14 @@
 import FungibleToken from 0x9a0766d93b6608b7
 import NonFungibleToken from 0x631e88ae7f1d7c20
 import FUSD from 0xe223d8a629e49c68
-import Collectible, OpenEdition from 0xef28e7ce9a3cea1d
+import Collectible, OpenEditionV2 from 0xef28e7ce9a3cea1d
 
 transaction(
         openEditionAddress: Address,
         id: UInt64 
     ) {
 
-    let openEditionCollectionRef: &AnyResource{OpenEdition.OpenEditionCollectionPublic}
+    let openEditionCollectionRef: &AnyResource{OpenEditionV2.OpenEditionCollectionPublic}
     let collectionCap: Capability<&{Collectible.CollectionPublic}> 
     let vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let temporaryVault: @FUSD.Vault
@@ -31,7 +31,7 @@ transaction(
 
         self.collectionCap = acct.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
         
-        self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEdition.OpenEditionCollectionPublic}>(OpenEdition.CollectionPublicPath)
+        self.openEditionCollectionRef = openEditionOwner.getCapability<&AnyResource{OpenEditionV2.OpenEditionCollectionPublic}>(OpenEditionV2.CollectionPublicPath)
             .borrow()
             ?? panic("Could not borrow nft sale reference")
 
