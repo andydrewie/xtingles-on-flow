@@ -106,11 +106,19 @@
 		"new-account-2": {
 			"address": "0xef28e7ce9a3cea1d",
 			"keys": "991928bb081e126dee9564ffcde04b76a15e176e485be085b027a524acbfdee2"
+		},
+		"new-account-3": {
+			"address": "0xab005be2763cbc61",
+			"keys": "e07ae911bf353b51ad91dcc8fe97e50ae9a3909c109d3ae1b29ede25b0ee46ad"
+		},
+		"new-account-4": {
+			"address": "0xb67e0c4823bdc829",
+			"keys": "1fd0bb2cc9f44a9dc1efd7b827d1909b5abe1a6d23664761ea6aaf91af7d8910"
 		}
 	},
 	"deployments": {
 		"testnet": {
-			"new-account-2": [	
+			"new-account-4": [	
 				"Edition",
 				"Collectible",			
 				"MarketPlace",

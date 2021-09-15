@@ -1,9 +1,7 @@
-import Collectible from 0xfc747df8f5e61fcb
-
 transaction {
 
   prepare(signer: AuthAccount) {
-    let x <- signer.load<@Collectible.Collection>(from: /storage/xtinglesNFTCollectibleCollection)
+    let x <- signer.load<@AnyResource>(from: /storage/bloctoXtinglesCollectibleCollection)
     destroy x    
  
   }
