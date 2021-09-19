@@ -5,7 +5,7 @@ import NonFungibleToken from "./NonFungibleToken.cdc"
 import Edition from "./Edition.cdc"
 import FUSD from "./FUSD.cdc"
 
-pub contract OpenEdition {
+pub contract OpenEditionV2 {
 
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
@@ -20,7 +20,7 @@ pub contract OpenEdition {
         pub let metadata: Collectible.Metadata?
         pub let completed: Bool
         pub let expired: Bool
-        pub let cancelled: Bool 
+        pub let cancelled: Bool
      
         init(
             id:UInt64, 
@@ -100,13 +100,13 @@ pub contract OpenEdition {
             metadata: Collectible.Metadata,
             platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
         ) {
-            OpenEdition.totalOpenEditions = OpenEdition.totalOpenEditions + (1 as UInt64)
+            OpenEditionV2.totalOpenEditions = OpenEditionV2.totalOpenEditions + (1 as UInt64)
             self.price = price
             self.startTime = startTime
             self.saleLength = saleLength
             self.editionNumber = editionNumber
             self.numberOfMintedNFT = 0
-            self.openEditionID = OpenEdition.totalOpenEditions
+            self.openEditionID = OpenEditionV2.totalOpenEditions
             self.completed = false
             self.cancelled = false
             self.metadata = metadata 
@@ -153,7 +153,7 @@ pub contract OpenEdition {
 
         priv fun sendCommissionPayments(buyerTokens: @FUSD.Vault, tokenID: UInt64) {
             // Capability to resource with commission information
-            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()! 
+            let editionRef = OpenEditionV2.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()! 
         
             // Commission informaton for all copies of on item
             let editionStatus = editionRef.getEdition(self.editionNumber)!
@@ -323,7 +323,7 @@ pub contract OpenEdition {
                 platformVaultCap.check() : "Platform vault should be reachable"
             }     
 
-            let editionRef = OpenEdition.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()! 
+            let editionRef = OpenEditionV2.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()! 
 
             // Check edition info in contract Edition in order to manage commission and all amount of copies of the same item
             // This error throws inside Edition contract. But I put this check for redundant
@@ -446,10 +446,13 @@ pub contract OpenEdition {
     }
 
     init() {
-       self.totalOpenEditions = (0 as UInt64)
+        self.totalOpenEditions = (0 as UInt64)
         self.CollectionPublicPath = /public/NFTbloctoXtinglesOpenEdition
         self.CollectionStoragePath = /storage/NFTbloctoXtinglesOpenEdition
 
-      
+        let minterCap = self.account.getCapability<&Collectible.NFTMinter>(Collectible.MinterPrivatePath)!    
+        let openEdition <- OpenEditionV2.createOpenEditionCollection(minterCap: minterCap)        
+        self.account.save(<-openEdition, to: OpenEditionV2.CollectionStoragePath)         
+        self.account.link<&{OpenEditionV2.OpenEditionCollectionPublic}>(OpenEditionV2.CollectionPublicPath, target: OpenEditionV2.CollectionStoragePath)
     }   
 }

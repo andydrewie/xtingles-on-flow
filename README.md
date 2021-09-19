@@ -50,7 +50,7 @@ Auction (english type of auction with extended lenght).
   author: String - (metadata NFT: author)   
   description: String - (metadata NFT: description)   
 
-  flow transactions send ./transactions/testnet/CreateAuction.cdc --args-json '[ {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1631563808.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=testnet
+  flow transactions send ./transactions/testnet/CreateAuction.cdc --args-json '[ {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1631563808.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=mainnet
 
 2. check auction status: 
   --arg Address:"0xfc747df8f5e61fcb" - (account's address, where auction collection is stored)
@@ -222,15 +222,27 @@ Edition.
 
 
 
-    flow scripts execute ./scripts/blocto/CheckCollectibles.cdc --arg Address:"0x01547a7e742007d9" --arg Address:"0x01547a7e742007d9" --network=testnet
+    flow scripts execute ./scripts/blocto/CheckCollectibles.cdc --arg Address:"0x01547a7e742007d9" --network=testnet
 
 
       flow transactions send ./transactions/checkLogin.cdc --args-json '[{"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=mainnet
 
 
 
-    flow transactions send ./transactions/blocto/TransferNFT.cdc --args-json '[{"type": "UInt8","value": "7d37f16852fab5a7a287f5a95234a399b3b4d3c86e275571f57b9b18ed5ede584bdb64ad7f76eb8035dca841813f0991ae4d60c6b0f5a4ac11706a05fbba3213"}]' --signer testnet-xtingles-1 --network=mainnet
+    flow transactions send ./transactions/AddKey.cdc --args-json '[{"type": "String","value": "82db8e6544c20df4fce368155e1bd6ae70fb8b239a7da977b62e97f912e7ff0055729656b0927cc1118126343e2c53455a839b9004d93d8acac5281ddac80648"}]' --signer testnet-xtingles-1 --network=mainnet
 
  flow scripts execute ./scripts/testnet/CheckCollectible.cdc --arg Address:"0x4cf4918adcd96011" --network=mainnet
 
  flow transactions send ./transactions/RevokeKey.cdc --signer testnet-xtingles-1 --network=mainnet
+
+
+ flow transactions send ./transactions/Transaction.cdc --signer testnet-xtingles-1 --network=mainnet
+
+
+
+ flow scripts execute ./scripts/testnet/xxx.cdc --network=mainnet
+
+
+  flow transactions send ./transactions/transfer_tokens.cdc --args-json '[{"type": "UFix64","value": "0.5"}, {"type": "Address","value": "0xf5b0eb433389ac3f"}]' --signer testnet-xtingles-4 --network=mainnet
+
+flow transactions send ./transactions/RemoveCapability.cdc --signer staging-account --network=testnet

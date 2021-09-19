@@ -1,6 +1,6 @@
 transaction {
 
   prepare(signer: AuthAccount) {
-    signer.unlink(/public/bloctoXtinglesCollectibleCollection) 
+    signer.unlink(/public/NFTbloctoXtinglesOpenEdition) 
   }
 }

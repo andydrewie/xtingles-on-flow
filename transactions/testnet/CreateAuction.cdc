@@ -1,7 +1,9 @@
-import FungibleToken from 0x9a0766d93b6608b7
-import NonFungibleToken from 0x631e88ae7f1d7c20
-import FUSD from 0xe223d8a629e49c68
-import Auction, Collectible, Edition from 0xef28e7ce9a3cea1d
+import FungibleToken from 0xf233dcee88fe0abe
+import FUSD from 0x3c5959b568896393
+import Collectible from 0xf5b0eb433389ac3f
+import NonFungibleToken from 0x1d7e57aa55817448
+import Edition from 0xf5b0eb433389ac3f
+import Auction from 0xf5b0eb433389ac3f
 
 transaction(      
         minimumBidIncrement: UFix64, 
@@ -39,8 +41,8 @@ transaction(
         self.platformCap = platform.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
 
         // Reference to resource mint NFT on the account
-        self.minterRef = acct.borrow<&Collectible.NFTMinter>(from: Collectible.MinterStoragePath)
-            ?? panic("could not borrow minter reference")
+        let minterRef = signer.borrow<&Collectible.NFTMinter>(from: Collectible.MinterStoragePath)
+           ?? panic("could not borrow minter reference")
 
         // Create metadata for NFT
         self.metadata = Collectible.Metadata(
