@@ -50,7 +50,7 @@ Auction (english type of auction with extended lenght).
   author: String - (metadata NFT: author)   
   description: String - (metadata NFT: description)   
 
-  flow transactions send ./transactions/testnet/CreateAuction.cdc --args-json '[ {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "600.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1631563808.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=mainnet
+  flow transactions send ./transactions/testnet/CreateAuction.cdc --args-json '[ {"type": "UFix64","value": "10.0"}, {"type": "UFix64","value": "60000.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1632256046.00"},{"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer testnet-xtingles-2 --network=testnet
 
 2. check auction status: 
   --arg Address:"0xfc747df8f5e61fcb" - (account's address, where auction collection is stored)
@@ -66,8 +66,8 @@ Auction (english type of auction with extended lenght).
     // bid amount
     amount: UFix64
 
-   flow transactions send ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0xef28e7ce9a3cea1d"},
-       {"type": "UInt64","value": "1"}, {"type": "UFix64","value": "25.0"}]' --signer testnet-xtingles-4 --network=testnet
+   flow transactions send ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0xefb501878aa34730"},
+       {"type": "UInt64","value": "1"}, {"type": "UFix64","value": "5.0"}]' --signer testnet-xtingles-3 --network=testnet
 
    flow transactions send ./transactions/RemoveCapability.cdc --signer testnet-xtingles-3 --network=testnet
 
@@ -102,7 +102,7 @@ Open Edition (purchase with fixed time lengh to sell one item with sold number o
     saleLength: UFix64, - (length sale in sec)
     platformAddress: Address - (platform vault address to handle share commission fails)
 
-   flow transactions send ./transactions/testnet/CreateOpenEdition.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UFix64","value": "12.00"}, {"type": "UFix64","value": "1631563808.00"}, {"type": "UFix64","value": "300000.00"}, {"type": "Address","value": "0x96c8ac9a55867f24"}]' --signer testnet-xtingles-1 --network=testnet
+   flow transactions send ./transactions/testnet/CreateOpenEdition.cdc --args-json '[{"type": "String","value": "https://www.youtube.com/watch?v=Bsk72CLUc9Y&ab_channel=0xAlchemist"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "UFix64","value": "12.00"}, {"type": "UFix64","value": "1632263543.00"}, {"type": "UFix64","value": "300000.00"}, {"type": "Address","value": "0x96c8ac9a55867f24"}]' --signer testnet-xtingles-2 --network=testnet
 
 2. status: 
   --arg Address:"0xfc747df8f5e61fcb" - (account's address, where auction collection is stored)
@@ -117,7 +117,7 @@ Open Edition (purchase with fixed time lengh to sell one item with sold number o
     // open edition id
     id: UInt64,    
  
-   flow transactions send ./transactions/testnet/PurchaseOpenEdition.cdc --args-json '[{"type": "Address","value": "0xfc747df8f5e61fcb"}, {"type": "UInt64","value": "1"}]' --signer testnet-xtingles-4 --network=testnet
+   flow transactions send ./transactions/testnet/PurchaseOpenEdition.cdc --args-json '[{"type": "Address","value": "0xefb501878aa34730"}, {"type": "UInt64","value": "1"}]' --signer testnet-xtingles-2 --network=testnet
 
 4. settle: 
   after open edition time is expired, open edition should be settled. settle is set final amount of the all sold copies.
@@ -140,7 +140,7 @@ Marketplace.
    tokenId: UInt64, - (NFT id)
    price: UFix64 - (price) 
 
-   flow transactions send ./transactions/testnet/SaleNFT.cdc --args-json '[{"type": "UInt64","value": "1"}, {"type": "UFix64","value": "4.0"}]' --signer testnet-xtingles-4 --network=testnet
+   flow transactions send ./transactions/testnet/SaleNFT.cdc --args-json '[{"type": "UInt64","value": "86"}, {"type": "UFix64","value": "4.0"}]' --signer testnet-xtingles-2 --network=testnet
 
 2. check sale (/storage/CollectibleSale): 
    
@@ -153,13 +153,13 @@ Marketplace.
   marketplace: Address, - (seller address)
   tokenId: UInt64, - (NFT id, which to buy)
 
- flow transactions send ./transactions/testnet/BuyNFTMarketPlace.cdc --args-json '[{"type": "Address","value": "0xf9e164b413a74d51"}, {"type": "UInt64","value": "1"}]' --signer testnet-xtingles-2 --network=testnet
+ flow transactions send ./transactions/testnet/BuyNFTMarketPlace.cdc --args-json '[{"type": "Address","value": "0xefb501878aa34730"}, {"type": "UInt64","value": "90"}]' --signer testnet-xtingles-3 --network=testnet
 
 4. cancel ((transfer from /storage/CollectibleSale to /storage/CollectibleCollection):
 
  tokenId: UInt64, - (NFT id)
 
- flow transactions send ./transactions/testnet/CancelSaleMarketPlace.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-xtingles-4 --network=testnet
+ flow transactions send ./transactions/testnet/CancelSaleMarketPlace.cdc --args-json '[{"type": "UInt64","value": "89"}]' --signer testnet-xtingles-2 --network=testnet
 
 5. change price: 
   tokenId: UInt64 - (NFT id)
@@ -187,7 +187,7 @@ Edition.
     maxEditon - amount of copies
     editionId -  unique editionNumber
 
-3. check editionNumber (unique for all copies of the item) for NFT:
+3. check editionNumber (unique for all copies of the item) for NFT:1631563808
     --arg Address:"0x0bd2b85a9b5947ef" - (NFT owner's address)
     --arg UInt64:1 - (NFT id)
     
@@ -245,4 +245,9 @@ Edition.
 
   flow transactions send ./transactions/transfer_tokens.cdc --args-json '[{"type": "UFix64","value": "0.5"}, {"type": "Address","value": "0xf5b0eb433389ac3f"}]' --signer testnet-xtingles-4 --network=mainnet
 
-flow transactions send ./transactions/RemoveCapability.cdc --signer staging-account --network=testnet
+flow transactions send ./transactions/RemoveCapability.cdc --signer testnet-xtingles-4 --network=testnet
+
+
+  flow transactions send ./transactions/blocto/MintCollectible.cdc --args-json '[{"type": "String","value": "https://nft.blocto.app/xtingles/xBloctopus.mp4"}, {"type": "String","value": "Bloctopus"}, {"type": "String","value": "xtingles"}, {"type": "String","value": "This collaborative NFT between Blocto and xtingles presents a serene oceanic landscape.\\nWorking closely with the Blocto team, we crafted an environment with themes and elements that inspire both brands.\\n\\nThe surfacing icon showcases the aspect of freedom through weightlessness.\\nPaired with the calming environment and soothing ASMR soundscapes crafted by the xtingles team, the NFT exudes the calming quality of ASMR.\\nPlayful tentacles hint at \\''Bloctopus\\''; Blocto\\''s broad reach into all types of crypto,  DeFi, and NFTs.\\nLike waves, you can float effortlessly."}, {"type": "UInt64","value": "200"}, {"type": "Address","value": "0x671de4faf26fc927"}]' --signer staging-account --network=testnet --gas-limit=9999
+
+ 

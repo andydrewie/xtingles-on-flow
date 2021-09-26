@@ -1,7 +1,7 @@
 import FungibleToken from 0x9a0766d93b6608b7
 import NonFungibleToken from 0x631e88ae7f1d7c20
 import FUSD from 0xe223d8a629e49c68
-import Collectible, Edition, OpenEdition from 0xef28e7ce9a3cea1d
+import Collectible, Edition, OpenEditionV2 from 0xefb501878aa34730
 
 transaction(
     link: String,
@@ -14,7 +14,7 @@ transaction(
     platformAddress: Address 
 ) {
 
-    let openEditionCollectionRef: &OpenEdition.OpenEditionCollection
+    let openEditionCollectionRef: &OpenEditionV2.OpenEditionCollection
     let platformCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let metadata: Collectible.Metadata
     let royaltyCollectionRef: &Edition.EditionCollection
@@ -24,7 +24,7 @@ transaction(
         self.royaltyCollectionRef = acct.borrow<&Edition.EditionCollection>(from: Edition.CollectionStoragePath)
             ?? panic("could not borrow edition reference")            
 
-        self.openEditionCollectionRef = acct.borrow<&OpenEdition.OpenEditionCollection>(from: OpenEdition.CollectionStoragePath)
+        self.openEditionCollectionRef = acct.borrow<&OpenEditionV2.OpenEditionCollection>(from: OpenEditionV2.CollectionStoragePath)
             ?? panic("could not borrow open edition collection reference")  
 
         let platform = getAccount(platformAddress)

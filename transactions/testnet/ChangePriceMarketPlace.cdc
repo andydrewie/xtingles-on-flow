@@ -1,6 +1,6 @@
 import FungibleToken from 0x9a0766d93b6608b7
 import FUSD from 0xe223d8a629e49c68
-import Collectible, MarketPlace from 0xfc747df8f5e61fcb
+import Collectible, MarketPlace from 0xefb501878aa34730
 
 transaction(tokenId: UInt64, price: UFix64) {
 

@@ -81,7 +81,7 @@
 				"signatureAlgorithm": "ECDSA_P256",
 				"hashAlgorithm": "SHA3_256",
 				"context": {
-					"privateKey": ""
+					"privateKey": "3bd892709af008989f566be977450eaa1ac8744abdeb49db9dc5d573eba131ba"
 				}
 			}]
 		},
@@ -120,11 +120,15 @@
 		"new-account-4": {
 			"address": "0xb67e0c4823bdc829",
 			"keys": "1fd0bb2cc9f44a9dc1efd7b827d1909b5abe1a6d23664761ea6aaf91af7d8910"
+		},
+		"new-account-5": {
+			"address": "0xd2ce65ed1902b095",
+			"keys": "1b991e536b3377d1178b8f718f45d095f3ef30a1b4b10dedd9bcd6209d0128cd"
 		}
 	},
 	"deployments": {
 		"testnet": {
-			"testnet-account": [	
+			"testnet-xtingles-2": [	
 				"Edition",
 				"Collectible",			
 				"MarketPlace",
