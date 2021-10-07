@@ -81,7 +81,7 @@
 				"signatureAlgorithm": "ECDSA_P256",
 				"hashAlgorithm": "SHA3_256",
 				"context": {
-					"privateKey": "3bd892709af008989f566be977450eaa1ac8744abdeb49db9dc5d573eba131ba"
+					"privateKey": ""
 				}
 			}]
 		},

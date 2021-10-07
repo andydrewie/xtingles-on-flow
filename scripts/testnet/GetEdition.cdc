@@ -1,4 +1,4 @@
-import Edition from 0xfc747df8f5e61fcb
+import Edition from 0xf5b0eb433389ac3f
 
 pub fun main(address: Address, id: UInt64 ): Edition.EditionStatus? {
     let acct = getAccount(address)

@@ -32,7 +32,7 @@ Collectible.
     
     --arg Address:"0xf9e164b413a74d51" - (account's address)
 
-    flow scripts execute ./scripts/testnet/CheckCollectible.cdc --arg Address:"0xf9e164b413a74d51" --network=testnet
+    flow scripts execute ./scripts/testnet/CheckCollectible.cdc --arg Address:"0x5dbf3321dc1b66e8" --network=mainnet
 
 Auction (english type of auction with extended lenght).
 
@@ -248,6 +248,11 @@ Edition.
 flow transactions send ./transactions/RemoveCapability.cdc --signer testnet-xtingles-4 --network=testnet
 
 
-  flow transactions send ./transactions/blocto/MintCollectible.cdc --args-json '[{"type": "String","value": "https://nft.blocto.app/xtingles/xBloctopus.mp4"}, {"type": "String","value": "Bloctopus"}, {"type": "String","value": "xtingles"}, {"type": "String","value": "This collaborative NFT between Blocto and xtingles presents a serene oceanic landscape.\\nWorking closely with the Blocto team, we crafted an environment with themes and elements that inspire both brands.\\n\\nThe surfacing icon showcases the aspect of freedom through weightlessness.\\nPaired with the calming environment and soothing ASMR soundscapes crafted by the xtingles team, the NFT exudes the calming quality of ASMR.\\nPlayful tentacles hint at \\''Bloctopus\\''; Blocto\\''s broad reach into all types of crypto,  DeFi, and NFTs.\\nLike waves, you can float effortlessly."}, {"type": "UInt64","value": "200"}, {"type": "Address","value": "0x671de4faf26fc927"}]' --signer staging-account --network=testnet --gas-limit=9999
+  flow transactions send ./transactions/blocto/MintCollectible.cdc --args-json '[{"type": "Address","value": "0x55370037286514e7"}, {"type": "UInt64","value": "${value}"}]' --signer staging-account --network=testnet --gas-limit=9999
 
  
+  flow scripts execute ./scripts/blocto/CheckCollectible.cdc --arg Address:"0x5f14b7e68e0bc3c3" --network=mainnet
+
+ flow transactions send ./transactions/blocto/SetupNFTStorage.cdc  --signer new-account-5 --network=testnet 
+
+  flow transactions send ./transactions/blocto/CreateEdition.cdc  --signer testnet-xtingles-1 --network=mainnet 

@@ -1,12 +1,8 @@
-import Collectible, Edition from 0x85080f371da20cc1
+import Collectible, Edition from 0xf5b0eb433389ac3f
 
 transaction(
-        link: String,          
-        name: String, 
-        author: String,      
-        description: String,        
-        maxEdition: UInt64, 
-        receiver: Address
+        receiver: Address,
+        start: UInt64
     ) {
         
     let receiverRef: &{Collectible.CollectionPublic}
@@ -32,36 +28,27 @@ transaction(
 
     execute {
 
-        var edition = 101 as UInt64;
+        var edition = UInt64(1) +  UInt64(100) * (start - UInt64(1));
 
-        let editionNumber = self.editionCollectionRef.createEdition(
-            royalty: {
-                Address(0xefb501878aa34730) : Edition.CommissionStructure(
-                    firstSalePercent: 100.00,
-                    secondSalePercent: 2.00,
-                    description: "PLATFORM"
-                )
-            },
-            maxEdition: 0
-        )  
-
-        while edition <= maxEdition {
+        while edition <= UInt64(100) * start {
              
             let metadata = Collectible.Metadata(
-                link: link,
-                name: name,           
-                author: author, 
-                description: description,     
-                edition: edition,
+                link: "QmekZMSjQjieh4P5pPAgH9Xmdyd2UjkoyFuhLRz3cMqhJn",
+                name: "Bubble Flow",           
+                author: "xtingles", 
+                description: "Hear the sound of water bubbles and listen to them pop as the tension builds up.",     
+                edition: UInt64(edition),
                 properties: {}
             )
                     
-            let newNFT <- self.minterRef.mintNFT(metadata: metadata, editionNumber: editionNumber)
+            let newNFT <- self.minterRef.mintNFT(metadata: metadata, editionNumber: 12)
         
             self.receiverRef.deposit(token: <-newNFT)
             edition = edition + 1;
         }
        
         log("NFTs Minted and deposited to Account's Collection")
+
+        log(edition)
     }
 }

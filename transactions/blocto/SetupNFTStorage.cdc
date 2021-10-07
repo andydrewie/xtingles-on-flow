@@ -1,11 +1,12 @@
 import NonFungibleToken from 0x631e88ae7f1d7c20
-import Collectible from 0x01547a7e742007d9
+
+import Collectible from 0x85080f371da20cc1
 
 transaction() {
 
     prepare(account: AuthAccount) {
 
-        // get the references to the buyer's Vault and NFT Collection receiver
+        // get the references to the NFT Collection receiver
         var collectionCap = account.getCapability<&{Collectible.CollectionPublic}>(Collectible.CollectionPublicPath)
 
         // if collection is not created yet we make it.
