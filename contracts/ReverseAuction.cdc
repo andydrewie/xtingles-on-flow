@@ -4,12 +4,12 @@ import Collectible from "./Collectible.cdc"
 import NonFungibleToken from "./NonFungibleToken.cdc"
 import Edition from "./Edition.cdc"
 
-pub contract ReverseAuction {
+pub contract Auction {
 
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
 
-    pub struct ReverseAuctionStatus{
+    pub struct AuctionStatus{
         pub let id: UInt64
         pub let price : UFix64
         pub let bidIncrement : UFix64
@@ -18,6 +18,7 @@ pub contract ReverseAuction {
         pub let timeRemaining : Fix64
         pub let endTime : Fix64
         pub let startTime : Fix64
+        pub let startBidTime : Fix64
         pub let metadata: Collectible.Metadata?
         pub let collectibleId: UInt64?     
         pub let leader: Address?
@@ -38,6 +39,7 @@ pub contract ReverseAuction {
             leader:Address?, 
             bidIncrement: UFix64,           
             startTime: Fix64,
+            startBidTime: Fix64,
             endTime: Fix64,
             minNextBid:UFix64,
             completed: Bool,
@@ -55,6 +57,7 @@ pub contract ReverseAuction {
             self.leader = leader
             self.bidIncrement = bidIncrement       
             self.startTime = startTime
+            self.startBidTime = startBidTime
             self.endTime = endTime
             self.minNextBid = minNextBid
             self.completed = completed
@@ -64,58 +67,61 @@ pub contract ReverseAuction {
         }
     }
 
-    // The total amount of ReverseAuctionItems that have been created
-    pub var totalReverseAuctions: UInt64
+    // The total amount of AuctionItems that have been created
+    pub var totalAuctions: UInt64
 
     // Events
     pub event CollectionCreated()
-    pub event Created(reverseAuctionID: UInt64, owner: Address, startPrice: UFix64, reverseAuctionLength: UFix64)
-    pub event Bid(reverseAuctionID: UInt64, bidderAddress: Address, bidPrice: UFix64, placedAt: Fix64)
-    pub event SetStartTime(reverseAuctionID: UInt64, startReserveAuctionTime: Fix64)
-    pub event Settled(reverseAuctionID: UInt64, price: UFix64)
-    pub event Canceled(reverseAuctionID: UInt64)
+    pub event Created(auctionID: UInt64, owner: Address, startPrice: UFix64, startTime: UFix64, auctionLength: UFix64, startBidTime: UFix64)
+    pub event Bid(auctionID: UInt64, bidderAddress: Address, bidPrice: UFix64, placedAt: Fix64)
+    pub event SetStartTime(auctionID: UInt64, startAuctionTime: Fix64)
+    pub event Settled(auctionID: UInt64, price: UFix64)
+    pub event Canceled(auctionID: UInt64)
     pub event Earned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
     pub event FailEarned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
-    pub event Extend(reverseAuctionID: UInt64, reverseAuctionLengthFrom: UFix64, reverseAuctionLengthTo: UFix64) 
-    pub event AddNFT(reverseAuctionID: UInt64, nftID: UInt64) 
-    pub event BurnNFT(reverseAuctionID: UInt64, nftID: UInt64) 
-    pub event SendNFT(reverseAuctionID: UInt64, nftID: UInt64, to: Address)   
-    pub event FailSendNFT(reverseAuctionID: UInt64, nftID: UInt64, to: Address) 
-    pub event SendBidTokens(reverseAuctionID: UInt64, amount: UFix64, to: Address)   
-    pub event FailSendBidTokens(reverseAuctionID: UInt64, amount: UFix64, to: Address) 
+    pub event Extend(auctionID: UInt64, auctionLengthFrom: UFix64, auctionLengthTo: UFix64) 
+    pub event AddNFT(auctionID: UInt64, nftID: UInt64) 
+    pub event BurnNFT(auctionID: UInt64, nftID: UInt64) 
+    pub event SendNFT(auctionID: UInt64, nftID: UInt64, to: Address)   
+    pub event FailSendNFT(auctionID: UInt64, nftID: UInt64, to: Address) 
+    pub event SendBidTokens(auctionID: UInt64, amount: UFix64, to: Address)   
+    pub event FailSendBidTokens(auctionID: UInt64, amount: UFix64, to: Address) 
 
-    // ReverseAuctionItem contains the Resources and metadata for a single reverseAuction
-    pub resource ReverseAuctionItem {
+    // AuctionItem contains the Resources and metadata for a single auction
+    pub resource AuctionItem {
         
         //Number of bids made, that is aggregated to the status struct
         priv var numberOfBids: UInt64
 
-        //The Item that is sold at this reverseAuction
+        //The Item that is sold at this auction
         priv var NFT: @Collectible.NFT?
 
         //This is the escrow vault that holds the tokens for the current largest bid
         priv let bidVault: @FUSD.Vault
 
-        //The id of this individual reverseAuction
-        pub let reverseAuctionID: UInt64
+        //The id of this individual auction
+        pub let auctionID: UInt64
 
-        //The minimum increment for a bid. This is an english reverseAuction style system where bids increase
+        //The minimum increment for a bid. This is an english auction style system where bids increase
         priv let minimumBidIncrement: UFix64
 
-        //the time the reverseAuction should start at
-        priv var reverseAuctionStartTime: UFix64
+        //the time the auction should start at
+        priv var auctionStartTime: UFix64
 
-        //The length in seconds for this reverseAuction
-        priv var reverseAuctionLength: UFix64
+        //the start time for bids
+        priv var auctionStartBidTime: UFix64
 
-        //The period of time to extend reverseAuction reverseAuction
+        //The length in seconds for this auction
+        priv var auctionLength: UFix64
+
+        //The period of time to extend auction
         priv var extendedLength: UFix64
 
         //The period of time of rest to extend
         priv var remainLengthToExtend: UFix64
 
         //Right now the dropitem is not moved from the collection when it ends, it is just marked here that it has ended 
-        priv var reverseAuctionCompleted: Bool
+        priv var auctionCompleted: Bool
 
         //Start price
         access(account) var startPrice: UFix64
@@ -133,37 +139,40 @@ pub contract ReverseAuction {
         priv let platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
 
         //This action was cancelled
-        priv var reverseAuctionCancelled: Bool
+        priv var auctionCancelled: Bool
 
         // Manage royalty for copies of the same items
         priv let editionCap: Capability<&{Edition.EditionCollectionPublic}>
 
         init(          
             minimumBidIncrement: UFix64,
+            auctionStartTime: UFix64,     
             startPrice: UFix64, 
-            reverseAuctionLength: UFix64,         
+            auctionStartBidTime: UFix64,
+            auctionLength: UFix64,         
             extendedLength: UFix64, 
             remainLengthToExtend: UFix64, 
             platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>,         
             editionCap: Capability<&{Edition.EditionCollectionPublic}>
         ) {
-            ReverseAuction.totalReverseAuctions = ReverseAuction.totalReverseAuctions + (1 as UInt64)
+            Auction.totalAuctions = Auction.totalAuctions + (1 as UInt64)
             self.NFT <- nil
             self.bidVault <- FUSD.createEmptyVault()
-            self.reverseAuctionID = ReverseAuction.totalReverseAuctions
+            self.auctionID = Auction.totalAuctions
             self.minimumBidIncrement = minimumBidIncrement
-            self.reverseAuctionLength = reverseAuctionLength            
+            self.auctionLength = auctionLength            
             self.extendedLength = extendedLength
             self.remainLengthToExtend = remainLengthToExtend
             self.startPrice = startPrice
             self.currentPrice = 0.0
-            self.reverseAuctionStartTime = 0.0
-            self.reverseAuctionCompleted = false
+            self.auctionStartTime = auctionStartTime
+            self.auctionStartBidTime = auctionStartBidTime
+            self.auctionCompleted = false
             self.recipientCollectionCap = nil
             self.recipientVaultCap = nil         
             self.platformVaultCap = platformVaultCap
             self.numberOfBids = 0
-            self.reverseAuctionCancelled = false
+            self.auctionCancelled = false
             self.editionCap = editionCap
         }
 
@@ -173,10 +182,10 @@ pub contract ReverseAuction {
             if let collectionRef = capability.borrow() {                
                 let NFT <- self.NFT <- nil
                 collectionRef.deposit(token: <-NFT!)
-                emit SendNFT(reverseAuctionID: self.reverseAuctionID, nftID: nftId, to: collectionRef.owner!.address)  
+                emit SendNFT(auctionID: self.auctionID, nftID: nftId, to: collectionRef.owner!.address)  
                 return
             }    
-            emit FailSendNFT(reverseAuctionID: self.reverseAuctionID, nftID: nftId, to: self.recipientVaultCap!.borrow()!.owner!.address)
+            emit FailSendNFT(auctionID: self.auctionID, nftID: nftId, to: self.recipientVaultCap!.borrow()!.owner!.address)
         }
 
         priv fun burnNFT() {   
@@ -191,7 +200,7 @@ pub contract ReverseAuction {
 
             destroy NFT 
 
-            emit BurnNFT(reverseAuctionID: self.reverseAuctionID, nftID: nftId)          
+            emit BurnNFT(auctionID: self.auctionID, nftID: nftId)          
         }
         
         // sendBidTokens sends the bid tokens to the previous bidder
@@ -204,7 +213,7 @@ pub contract ReverseAuction {
                     vaultRef.deposit(from: <- bidVaultRef.withdraw(amount: balance))
                 }
 
-                emit SendBidTokens(reverseAuctionID: self.reverseAuctionID, amount: balance, to: vaultRef.owner!.address)
+                emit SendBidTokens(auctionID: self.auctionID, amount: balance, to: vaultRef.owner!.address)
                 return
             }
 
@@ -215,7 +224,7 @@ pub contract ReverseAuction {
                 if(bidVaultRef.balance > 0.0) {
                     ownerRef.deposit(from: <-bidVaultRef.withdraw(amount: balance))
                 }
-                emit FailSendBidTokens(reverseAuctionID: self.reverseAuctionID, amount: balance, to: ownerRef.owner!.address)
+                emit FailSendBidTokens(auctionID: self.auctionID, amount: balance, to: ownerRef.owner!.address)
                 return
             }
         }
@@ -271,20 +280,20 @@ pub contract ReverseAuction {
             }
         }
 
-        pub fun settleReverseAuction()  {
+        pub fun settleAuction()  {
 
             pre {
-                !self.reverseAuctionCancelled : "The reverseAuction was cancelled"
-                !self.reverseAuctionCompleted : "The reverseAuction has been already settled"
-                self.NFT != nil: "NFT in reverseAuction does not exist"
-                self.isReverseAuctionExpired() : "ReverseAuction has not completed yet"               
+                !self.auctionCancelled : "The auction was cancelled"
+                !self.auctionCompleted : "The auction has been already settled"
+                self.NFT != nil: "NFT in auction does not exist"
+                self.isAuctionExpired() : "Auction has not completed yet"               
             }
 
             // burn token if there are no bids to settle
             if self.currentPrice == 0.0 {
                 self.burnNFT()
-                self.reverseAuctionCompleted = true
-                emit Settled(reverseAuctionID: self.reverseAuctionID, price: self.currentPrice)
+                self.auctionCompleted = true
+                emit Settled(auctionID: self.auctionID, price: self.currentPrice)
                 return
             }       
 
@@ -292,29 +301,25 @@ pub contract ReverseAuction {
            
             self.sendNFT(self.recipientCollectionCap!)
          
-            self.reverseAuctionCompleted = true
+            self.auctionCompleted = true
             
-            emit Settled(reverseAuctionID: self.reverseAuctionID, price: self.currentPrice)
+            emit Settled(auctionID: self.auctionID, price: self.currentPrice)
         }
 
         //this can be negative if is expired
         pub fun timeRemaining() : Fix64 {
-            if(self.reverseAuctionStartTime == 0.0) {
-              return 91999999999.9
-            }
+            let auctionLength = self.auctionLength
 
-            let reverseAuctionLength = self.reverseAuctionLength
-
-            let startTime = self.reverseAuctionStartTime
+            let startTime = self.auctionStartTime
 
             let currentTime = getCurrentBlock().timestamp
 
-            let remaining = Fix64(startTime + reverseAuctionLength) - Fix64(currentTime)
+            let remaining = Fix64(startTime + auctionLength) - Fix64(currentTime)
 
             return remaining
         }
 
-        pub fun isReverseAuctionExpired(): Bool {
+        pub fun isAuctionExpired(): Bool {
             let timeRemaining = self.timeRemaining()
             return timeRemaining < Fix64(0.0)
         }
@@ -329,13 +334,13 @@ pub contract ReverseAuction {
             return self.startPrice
         }
 
-        priv fun extendReverseAuction() {
+        priv fun extendAuction() {
             if (
-                //ReverseAuction time left is less than remainLengthToExtend
-                self.timeRemaining() < Fix64(self.remainLengthToExtend)     
+                //Auction time left is less than remainLengthToExtend
+                self.timeRemaining() < Fix64(self.remainLengthToExtend) 
             ) {
-                self.reverseAuctionLength = self.reverseAuctionLength + self.extendedLength
-                emit Extend(reverseAuctionID: self.reverseAuctionID, reverseAuctionLengthFrom: self.reverseAuctionLength - self.extendedLength, reverseAuctionLengthTo: self.reverseAuctionLength)
+                self.auctionLength = self.auctionLength + self.extendedLength
+                emit Extend(auctionID: self.auctionID, auctionLengthFrom: self.auctionLength - self.extendedLength, auctionLengthTo: self.auctionLength)
             }            
         }
 
@@ -365,11 +370,12 @@ pub contract ReverseAuction {
             pre {
                 vaultCap.check() : "Fungible token storage is not initialized on account"
                 collectionCap.check() : "NFT storage is not initialized on account"
-                !self.reverseAuctionCancelled : "ReverseAuction was cancelled"
-                self.NFT != nil: "NFT in reverseAuction does not exist"
-                self.reverseAuctionStartTime < getCurrentBlock().timestamp : "The reverseAuction has not started yet"             
-                !self.isReverseAuctionExpired() : "Time expired"
-                bidTokens.balance <= 999999.99 : "Bid should be less than 1 000 000.00"  
+                !self.auctionCancelled : "Auction was cancelled"
+                self.NFT != nil: "NFT in auction does not exist"
+                self.auctionStartTime < getCurrentBlock().timestamp : "The auction has not started yet"             
+                !self.isAuctionExpired() : "Time expired"
+                bidTokens.balance <= 999999.99 : "Bid should be less than 1 000 000.00" 
+                self.auctionStartBidTime < getCurrentBlock().timestamp : "The auction bid time has not started yet"       
             }
 
             let bidderAddress = vaultCap.borrow()!.owner!.address
@@ -387,9 +393,9 @@ pub contract ReverseAuction {
                 panic("Bid is less than min acceptable")
             }
 
-            // The first bid sets start reverseAuction time
+            // The first bid sets start auction time
             if self.bidVault.balance == 0.0 {
-               self.reverseAuctionStartTime = getCurrentBlock().timestamp
+               self.auctionStartTime = getCurrentBlock().timestamp
             }
 
             if self.bidder() != bidderAddress {
@@ -412,13 +418,13 @@ pub contract ReverseAuction {
             self.recipientCollectionCap = collectionCap
             self.numberOfBids = self.numberOfBids + (1 as UInt64)
 
-            // Extend reverseAuction according to time left and extened length
-            self.extendReverseAuction() 
+            // Extend auction according to time left and extened length
+            self.extendAuction() 
 
-            emit Bid(reverseAuctionID: self.reverseAuctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice, placedAt: Fix64(getCurrentBlock().timestamp))
+            emit Bid(auctionID: self.auctionID, bidderAddress: bidderAddress, bidPrice: self.currentPrice, placedAt: Fix64(getCurrentBlock().timestamp))
         }
 
-        pub fun getReverseAuctionStatus() : ReverseAuctionStatus {
+        pub fun getAuctionStatus() : AuctionStatus {
 
             var leader : Address? = nil
             
@@ -426,60 +432,61 @@ pub contract ReverseAuction {
                 leader = recipient.borrow()!.owner!.address
             }
 
-            return ReverseAuctionStatus(
-                id: self.reverseAuctionID,
+            return AuctionStatus(
+                id: self.auctionID,
                 currentPrice: self.currentPrice, 
                 bids: self.numberOfBids,
-                active: !self.reverseAuctionCompleted && !self.isReverseAuctionExpired(),
+                active: !self.auctionCompleted && !self.isAuctionExpired(),
                 timeRemaining: self.timeRemaining(),
                 metadata: self.NFT?.metadata,
                 collectibleId: self.NFT?.id,
                 leader: leader,
                 bidIncrement: self.minimumBidIncrement,         
-                startTime: Fix64(self.reverseAuctionStartTime),
-                endTime: Fix64(self.reverseAuctionStartTime+self.reverseAuctionLength),
+                startTime: Fix64(self.auctionStartTime),
+                startBidTime: Fix64(self.auctionStartBidTime),
+                endTime: Fix64(self.auctionStartTime+self.auctionLength),
                 minNextBid: self.minNextBid(),
-                completed: self.reverseAuctionCompleted,
-                expired: self.isReverseAuctionExpired(),
-                cancelled: self.reverseAuctionCancelled,
-                currentLength: self.reverseAuctionLength
+                completed: self.auctionCompleted,
+                expired: self.isAuctionExpired(),
+                cancelled: self.auctionCancelled,
+                currentLength: self.auctionLength
             )
         }
 
-        pub fun cancelReverseAuction() {
+        pub fun cancelAuction() {
             pre {
-                !self.reverseAuctionCancelled : "The reverseAuction has been already cancelled"
-                !self.reverseAuctionCompleted : "The reverseAuction was settled"           
+                !self.auctionCancelled : "The auction has been already cancelled"
+                !self.auctionCompleted : "The auction was settled"           
             }
             self.releasePreviousBid()
             self.burnNFT()
-            self.reverseAuctionCancelled = true
+            self.auctionCancelled = true
         }
 
         pub fun addNFT(NFT: @Collectible.NFT) {
             pre {
-                self.NFT == nil : "NFT in reverseAuction has already existed"
+                self.NFT == nil : "NFT in auction has already existed"
             }
 
             let nftID = NFT.id
 
             self.NFT <-! NFT
 
-            emit AddNFT(reverseAuctionID: self.reverseAuctionID, nftID: nftID) 
+            emit AddNFT(auctionID: self.auctionID, nftID: nftID) 
         }
 
         pub fun reclaimSendNFT(collectionCap: Capability<&{Collectible.CollectionPublic}>)  {
 
             pre {
-                self.reverseAuctionCompleted : "The reverseAuction has not been settled yet"
-                self.NFT != nil: "NFT in reverseAuction does not exist"      
+                self.auctionCompleted : "The auction has not been settled yet"
+                self.NFT != nil: "NFT in auction does not exist"      
             }
 
             self.sendNFT(collectionCap)         
         }
 
         destroy() {
-            log("destroy reverseAuction")
+            log("destroy auction")
                        
             // if there's a bidder, therefore minumum one bid
             if let vaultCap = self.recipientVaultCap {
@@ -494,12 +501,12 @@ pub contract ReverseAuction {
         }
     }    
 
-    // ReverseAuctionCollectionPublic is a resource interface that restricts users to
-    // retreiving the reverseAuction price list and placing bids
-    pub resource interface ReverseAuctionCollectionPublic {
+    // AuctionCollectionPublic is a resource interface that restricts users to
+    // retreiving the auction price list and placing bids
+    pub resource interface AuctionCollectionPublic {
 
-        pub fun getReverseAuctionStatuses(): {UInt64: ReverseAuctionStatus}
-        pub fun getReverseAuctionStatus(_ id:UInt64): ReverseAuctionStatus?
+        pub fun getAuctionStatuses(): {UInt64: AuctionStatus}
+        pub fun getAuctionStatus(_ id:UInt64): AuctionStatus?
         pub fun getTimeLeft(_ id: UInt64): Fix64?
      
         pub fun placeBid(
@@ -510,134 +517,140 @@ pub contract ReverseAuction {
         )
     }
 
-    // ReverseAuctionCollection contains a dictionary of ReverseAuctionItems and provides
-    // methods for manipulating the ReverseAuctionItems
-    pub resource ReverseAuctionCollection: ReverseAuctionCollectionPublic {
+    // AuctionCollection contains a dictionary of AuctionItems and provides
+    // methods for manipulating the AuctionItems
+    pub resource AuctionCollection: AuctionCollectionPublic {
 
-        // ReverseAuction Items
-        access(account) var reverseAuctionItems: @{UInt64: ReverseAuctionItem}       
+        // Auction Items
+        access(account) var auctionItems: @{UInt64: AuctionItem}       
 
         init() { 
-            self.reverseAuctionItems <- {}
+            self.auctionItems <- {}
         }
 
         pub fun keys() : [UInt64] {
-            return self.reverseAuctionItems.keys
+            return self.auctionItems.keys
         }
 
-        // addTokenToReverseAuctionItems adds an NFT to the reverseAuction items and sets the meta data
-        // for the reverseAuction item
-        pub fun createReverseAuction(       
+        // addTokenToAuctionItems adds an NFT to the auction items and sets the meta data
+        // for the auction item
+        pub fun createAuction(       
             minimumBidIncrement: UFix64, 
-            reverseAuctionLength: UFix64,           
+            auctionLength: UFix64,           
             extendedLength: UFix64, 
             remainLengthToExtend: UFix64,
+            auctionStartTime: UFix64,
             startPrice: UFix64,           
+            startBidTime: UFix64,      
             platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>,         
             editionCap: Capability<&{Edition.EditionCollectionPublic}>
         ): UInt64 {
 
             pre {              
-                reverseAuctionLength > 0.00 : "ReverseAuction lenght should be more than 0.00"
+                auctionLength > 0.00 : "Auction lenght should be more than 0.00"
+                auctionStartTime > getCurrentBlock().timestamp || auctionStartTime == 0.0: "Auction start time can't be in the past"
                 startPrice > 0.00 : "Start price should be more than 0.00"
                 startPrice <= 999999.99 : "Start bid should be less than 1 000 000.00"
                 minimumBidIncrement > 0.00 : "Minimum bid increment should be more than 0.00"
                 platformVaultCap.check() : "Platform vault should be reachable"
+                startBidTime > getCurrentBlock().timestamp || startBidTime == 0.0: "Auction start bid time can't be in the past"
             }
             
-            // create a new reverseAuction items resource container
-            let item <- create ReverseAuctionItem(         
-                minimumBidIncrement: minimumBidIncrement,
+            // create a new auction items resource container
+            let item <- create AuctionItem(         
+                minimumBidIncrement: minimumBidIncrement, 
+                auctionStartTime: auctionStartTime,  
                 startPrice: startPrice,
-                reverseAuctionLength: reverseAuctionLength,           
+                auctionStartBidTime: startBidTime,
+                auctionLength: auctionLength,           
                 extendedLength: extendedLength,    
                 remainLengthToExtend:  remainLengthToExtend,                
                 platformVaultCap: platformVaultCap,
                 editionCap: editionCap
             )
 
-            let id = item.reverseAuctionID
+            let id = item.auctionID
 
-            // update the reverseAuction items dictionary with the new resources
-            let oldItem <- self.reverseAuctionItems[id] <- item
+            // update the auction items dictionary with the new resources
+            let oldItem <- self.auctionItems[id] <- item
             
             destroy oldItem
 
             let owner = platformVaultCap.borrow()!.owner!.address
 
-            emit Created(reverseAuctionID: id, owner: owner, startPrice: startPrice, reverseAuctionLength: reverseAuctionLength)
+            emit Created(auctionID: id, owner: owner, startPrice: startPrice,  startTime: auctionStartTime, auctionLength: auctionLength, startBidTime: startBidTime)
 
             return id
         }
 
-        // getReverseAuctionPrices returns a dictionary of available NFT IDs with their current price
-        pub fun getReverseAuctionStatuses(): {UInt64: ReverseAuctionStatus} {
+        // getAuctionPrices returns a dictionary of available NFT IDs with their current price
+        pub fun getAuctionStatuses(): {UInt64: AuctionStatus} {
            
-            if self.reverseAuctionItems.keys.length == 0 { 
+            if self.auctionItems.keys.length == 0 { 
                 return {} 
             }           
 
-            let priceList: {UInt64: ReverseAuctionStatus} = {}
+            let priceList: {UInt64: AuctionStatus} = {}
 
-            for id in self.reverseAuctionItems.keys {
-                let itemRef = &self.reverseAuctionItems[id] as? &ReverseAuctionItem
-                priceList[id] = itemRef.getReverseAuctionStatus()
+            for id in self.auctionItems.keys {
+                let itemRef = &self.auctionItems[id] as? &AuctionItem
+                priceList[id] = itemRef.getAuctionStatus()
             }
             
             return priceList
         }
 
-        pub fun getReverseAuctionStatus(_ id:UInt64): ReverseAuctionStatus? {
+        pub fun getAuctionStatus(_ id:UInt64): AuctionStatus? {
     
-            if  self.reverseAuctionItems[id] == nil {
+            if  self.auctionItems[id] == nil {
                 return  nil
             }        
 
-            // Get the reverseAuction item resources
-            let itemRef = &self.reverseAuctionItems[id] as &ReverseAuctionItem
-            return itemRef.getReverseAuctionStatus()
+            // Get the auction item resources
+            let itemRef = &self.auctionItems[id] as &AuctionItem
+            return itemRef.getAuctionStatus()
         }
 
         pub fun getTimeLeft(_ id: UInt64): Fix64? {
-            if(self.reverseAuctionItems[id] == nil) {
+            if(self.auctionItems[id] == nil) {
                 return nil
             }
 
-            // Get the reverseAuction item resources
-            let itemRef = &self.reverseAuctionItems[id] as &ReverseAuctionItem
+            // Get the auction item resources
+            let itemRef = &self.auctionItems[id] as &AuctionItem
             return itemRef.timeRemaining()
         }
 
-        // settleReverseAuction sends the reverseAuction item to the highest bidder
-        // and deposits the FungibleTokens into the reverseAuction owner's account
-        pub fun settleReverseAuction(_ id: UInt64) {
+        // settleAuction sends the auction item to the highest bidder
+        // and deposits the FungibleTokens into the auction owner's account
+        pub fun settleAuction(_ id: UInt64) {
             pre {
-                self.reverseAuctionItems[id] != nil: "ReverseAuction does not exist"
+                self.auctionItems[id] != nil: "Auction does not exist"
             }
 
-            let itemRef = &self.reverseAuctionItems[id] as &ReverseAuctionItem
-            itemRef.settleReverseAuction()
+            let itemRef = &self.auctionItems[id] as &AuctionItem
+            itemRef.settleAuction()
         }
 
-        pub fun cancelReverseAuction(_ id: UInt64) {
+        pub fun cancelAuction(_ id: UInt64) {
             pre {
-                self.reverseAuctionItems[id] != nil: "ReverseAuction does not exist"
+                self.auctionItems[id] != nil: "Auction does not exist"
             }
-            let itemRef = &self.reverseAuctionItems[id] as &ReverseAuctionItem           
-            itemRef.cancelReverseAuction()
-            emit Canceled(reverseAuctionID: id)
+            let itemRef = &self.auctionItems[id] as &AuctionItem           
+            itemRef.cancelAuction()
+            emit Canceled(auctionID: id)
         }
 
         // placeBid sends the bidder's tokens to the bid vault and updates the
-        // currentPrice of the current reverseAuction item
+        // currentPrice of the current auction item
         pub fun placeBid(id: UInt64, bidTokens: @FUSD.Vault, vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>, collectionCap: Capability<&{Collectible.CollectionPublic}>) {
             pre {
-                self.reverseAuctionItems[id] != nil:
-                    "ReverseAuction does not exist in this drop"
+                self.auctionItems[id] != nil:
+                    "Auction does not exist in this drop"
             }
 
-            // Get the reverseAuction item resources
-            let itemRef = &self.reverseAuctionItems[id] as &ReverseAuctionItem
+            // Get the auction item resources
+            let itemRef = &self.auctionItems[id] as &AuctionItem
             itemRef.placeBid(
                 bidTokens: <- bidTokens, 
                 vaultCap : vaultCap, 
@@ -647,43 +660,43 @@ pub contract ReverseAuction {
 
         pub fun addNFT(id: UInt64, NFT: @Collectible.NFT) {
             pre {
-                self.reverseAuctionItems[id] != nil:
-                    "ReverseAuction does not exist"
+                self.auctionItems[id] != nil:
+                    "Auction does not exist"
             }
-            let itemRef = &self.reverseAuctionItems[id] as &ReverseAuctionItem
+            let itemRef = &self.auctionItems[id] as &AuctionItem
 
             itemRef.addNFT(NFT: <- NFT)
         }
 
         pub fun reclaimSendNFT(id: UInt64, collectionCap: Capability<&{Collectible.CollectionPublic}>) {
             pre {
-                self.reverseAuctionItems[id] != nil: "ReverseAuction does not exist"
+                self.auctionItems[id] != nil: "Auction does not exist"
             }
-            let itemRef = &self.reverseAuctionItems[id] as &ReverseAuctionItem           
+            let itemRef = &self.auctionItems[id] as &AuctionItem           
             itemRef.reclaimSendNFT(collectionCap: collectionCap)   
         }
 
         destroy() {
-            log("destroy reverseAuction collection")
+            log("destroy auction collection")
             // destroy the empty resources
-            destroy self.reverseAuctionItems
+            destroy self.auctionItems
         }
     }
 
-    // createReverseAuctionCollection returns a new ReverseAuctionCollection resource to the caller
-    priv fun createReverseAuctionCollection(): @ReverseAuctionCollection {
-        let reverseAuctionCollection <- create ReverseAuctionCollection()
+    // createAuctionCollection returns a new AuctionCollection resource to the caller
+    priv fun createAuctionCollection(): @AuctionCollection {
+        let auctionCollection <- create AuctionCollection()
     
-        return <- reverseAuctionCollection
+        return <- auctionCollection
     }
 
     init() {
-        self.totalReverseAuctions = (0 as UInt64)
-        self.CollectionPublicPath = /public/NFTXtinglesBloctoReverseAuction
-        self.CollectionStoragePath = /storage/NFTXtinglesBloctoReverseAuction
+        self.totalAuctions = (0 as UInt64)
+        self.CollectionPublicPath = /public/NFTXtinglesBloctoAuction
+        self.CollectionStoragePath = /storage/NFTXtinglesBloctoAuction
 
-        let sale <- ReverseAuction.createReverseAuctionCollection()
-        self.account.save(<-sale, to:ReverseAuction.CollectionStoragePath)         
-        self.account.link<&{ReverseAuction.ReverseAuctionCollectionPublic}>(ReverseAuction.CollectionPublicPath, target:ReverseAuction.CollectionStoragePath)
+        let sale <- Auction.createAuctionCollection()
+        self.account.save(<-sale, to:Auction.CollectionStoragePath)         
+        self.account.link<&{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
     }   
 }

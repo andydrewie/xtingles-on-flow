@@ -516,7 +516,7 @@ pub contract Auction {
             return self.auctionItems.keys
         }
 
-        // addTokenToauctionItems adds an NFT to the auction items and sets the meta data
+        // addTokenToAuctionItems adds an NFT to the auction items and sets the meta data
         // for the auction item
         pub fun createAuction(       
             minimumBidIncrement: UFix64, 
