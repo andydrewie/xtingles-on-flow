@@ -133,7 +133,7 @@
 	},
 	"deployments": {
 		"testnet": {
-			"new-account-6": [	
+			"dev-account": [	
 				"Edition",
 				"Collectible",			
 				"MarketPlace",

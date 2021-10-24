@@ -69,9 +69,9 @@ Auction (english type of auction with extended lenght).
    flow transactions send ./transactions/testnet/Bid.cdc --args-json '[{"type": "Address","value": "0xefb501878aa34730"},
        {"type": "UInt64","value": "1"}, {"type": "UFix64","value": "5.0"}]' --signer testnet-xtingles-3 --network=testnet
 
-   flow transactions send ./transactions/RemoveCapability.cdc --signer testnet-xtingles-3 --network=testnet
+   flow transactions send ./transactions/RemoveCapability.cdc --signer dev-account --network=testnet
 
-  flow transactions send ./transactions/UnlinkCapability.cdc --signer testnet-xtingles-3 --network=testnet
+  flow transactions send ./transactions/UnlinkCapability.cdc --signer dev-account --network=testnet
 
 4. settle: 
   after auction time is expired, auction should be settled. settle is to pay commision and send NFT to winner.
@@ -256,3 +256,24 @@ flow transactions send ./transactions/RemoveCapability.cdc --signer testnet-xtin
  flow transactions send ./transactions/blocto/SetupNFTStorage.cdc  --signer new-account-5 --network=testnet 
 
   flow transactions send ./transactions/blocto/CreateEdition.cdc  --signer testnet-xtingles-1 --network=mainnet 
+
+
+AuctionV2
+
+  1. Create
+  flow transactions send ./transactions/testnet/CreateAuctionV2.cdc --args-json '[ {"type": "UFix64","value": "5.0"}, {"type": "UFix64","value": "60000.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "0.0"},
+{"type": "UFix64","value": "1632256046.00"}, {"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer dev-account --network=testnet
+
+  2. Status 
+  flow scripts execute ./scripts/testnet/CheckAuctionV2Status.cdc --arg Address:"0x1bc62b2c04dfd147" --arg UInt64:9 --network=testnet
+
+  3. bid:
+    // auction owner address
+    address: Address,
+    // auction id
+    id: UInt64,    
+    // bid amount
+    amount: UFix64
+
+   flow transactions send ./transactions/testnet/BidAuctionV2.cdc --args-json '[{"type": "Address","value": "0x1bc62b2c04dfd147"},
+       {"type": "UInt64","value": "9"}, {"type": "UFix64","value": "5.0"}]' --signer dev-account --network=testnet
