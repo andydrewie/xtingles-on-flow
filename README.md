@@ -261,11 +261,11 @@ flow transactions send ./transactions/RemoveCapability.cdc --signer testnet-xtin
 AuctionV2
 
   1. Create
-  flow transactions send ./transactions/testnet/CreateAuctionV2.cdc --args-json '[ {"type": "UFix64","value": "5.0"}, {"type": "UFix64","value": "60000.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "0.0"},
-{"type": "UFix64","value": "1632256046.00"}, {"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer dev-account --network=testnet
+  flow transactions send ./transactions/testnet/CreateAuctionV2.cdc --args-json '[ {"type": "UFix64","value": "5.0"}, {"type": "UFix64","value": "60000.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1635108918.00"},
+{"type": "UFix64","value": "0.00"}, {"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer dev-account --network=testnet
 
   2. Status 
-  flow scripts execute ./scripts/testnet/CheckAuctionV2Status.cdc --arg Address:"0x1bc62b2c04dfd147" --arg UInt64:9 --network=testnet
+  flow scripts execute ./scripts/testnet/CheckAuctionV2Status.cdc --arg Address:"0x1bc62b2c04dfd147" --arg UInt64:11 --network=testnet
 
   3. bid:
     // auction owner address
@@ -276,4 +276,13 @@ AuctionV2
     amount: UFix64
 
    flow transactions send ./transactions/testnet/BidAuctionV2.cdc --args-json '[{"type": "Address","value": "0x1bc62b2c04dfd147"},
-       {"type": "UInt64","value": "9"}, {"type": "UFix64","value": "5.0"}]' --signer dev-account --network=testnet
+       {"type": "UInt64","value": "11"}, {"type": "UFix64","value": "20.0"}]' --signer dev-account --network=testnet
+
+
+ 4. Settle
+
+  flow transactions send ./transactions/testnet/SettleAuctionV2.cdc --args-json '[{"type": "UInt64","value": "10"}]' --signer dev-account --network=testnet
+
+  5. Cancel 
+    
+flow transactions send ./transactions/testnet/CancelAuctionV2.cdc --args-json '[{"type": "UInt64","value": "9"}]'  --signer dev-account  --network=testnet

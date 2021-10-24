@@ -450,7 +450,7 @@ pub contract AuctionV2 {
                 bidIncrement: self.minimumBidIncrement,         
                 startTime: Fix64(self.auctionStartTime),
                 startBidTime: Fix64(self.auctionStartBidTime),
-                endTime: Fix64(self.auctionStartTime+self.auctionLength),
+                endTime: self.auctionStartTime > 0.0 ? Fix64(self.auctionStartTime+self.auctionLength) : Fix64(0.0),
                 minNextBid: self.minNextBid(),
                 completed: self.auctionCompleted,
                 expired: self.isAuctionExpired(),
