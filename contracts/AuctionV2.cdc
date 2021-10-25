@@ -4,7 +4,7 @@ import Collectible from "./Collectible.cdc"
 import NonFungibleToken from "./NonFungibleToken.cdc"
 import Edition from "./Edition.cdc"
 
-pub contract Auction {
+pub contract AuctionV2 {
 
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
@@ -18,6 +18,7 @@ pub contract Auction {
         pub let timeRemaining : Fix64
         pub let endTime : Fix64
         pub let startTime : Fix64
+        pub let startBidTime : Fix64
         pub let metadata: Collectible.Metadata?
         pub let collectibleId: UInt64?     
         pub let leader: Address?
@@ -38,6 +39,7 @@ pub contract Auction {
             leader:Address?, 
             bidIncrement: UFix64,           
             startTime: Fix64,
+            startBidTime: Fix64,
             endTime: Fix64,
             minNextBid:UFix64,
             completed: Bool,
@@ -55,6 +57,7 @@ pub contract Auction {
             self.leader = leader
             self.bidIncrement = bidIncrement       
             self.startTime = startTime
+            self.startBidTime = startBidTime
             self.endTime = endTime
             self.minNextBid = minNextBid
             self.completed = completed
@@ -69,8 +72,9 @@ pub contract Auction {
 
     // Events
     pub event CollectionCreated()
-    pub event Created(auctionID: UInt64, owner: Address, startPrice: UFix64, startTime: UFix64)
+    pub event Created(auctionID: UInt64, owner: Address, startPrice: UFix64, startTime: UFix64, auctionLength: UFix64, startBidTime: UFix64)
     pub event Bid(auctionID: UInt64, bidderAddress: Address, bidPrice: UFix64, placedAt: Fix64)
+    pub event SetStartTime(auctionID: UInt64, startAuctionTime: UFix64)
     pub event Settled(auctionID: UInt64, price: UFix64)
     pub event Canceled(auctionID: UInt64)
     pub event Earned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
@@ -104,10 +108,13 @@ pub contract Auction {
         //the time the auction should start at
         priv var auctionStartTime: UFix64
 
+        //the start time for bids
+        priv var auctionStartBidTime: UFix64
+
         //The length in seconds for this auction
         priv var auctionLength: UFix64
 
-        //The period of time to extend auction 
+        //The period of time to extend auction
         priv var extendedLength: UFix64
 
         //The period of time of rest to extend
@@ -139,18 +146,19 @@ pub contract Auction {
 
         init(          
             minimumBidIncrement: UFix64,
-            auctionStartTime: UFix64,
+            auctionStartTime: UFix64,     
             startPrice: UFix64, 
+            auctionStartBidTime: UFix64,
             auctionLength: UFix64,         
             extendedLength: UFix64, 
             remainLengthToExtend: UFix64, 
             platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>,         
             editionCap: Capability<&{Edition.EditionCollectionPublic}>
         ) {
-            Auction.totalAuctions = Auction.totalAuctions + (1 as UInt64)
+            AuctionV2.totalAuctions = AuctionV2.totalAuctions + (1 as UInt64)
             self.NFT <- nil
             self.bidVault <- FUSD.createEmptyVault()
-            self.auctionID = Auction.totalAuctions
+            self.auctionID = AuctionV2.totalAuctions
             self.minimumBidIncrement = minimumBidIncrement
             self.auctionLength = auctionLength            
             self.extendedLength = extendedLength
@@ -158,6 +166,7 @@ pub contract Auction {
             self.startPrice = startPrice
             self.currentPrice = 0.0
             self.auctionStartTime = auctionStartTime
+            self.auctionStartBidTime = auctionStartBidTime
             self.auctionCompleted = false
             self.recipientCollectionCap = nil
             self.recipientVaultCap = nil         
@@ -328,7 +337,7 @@ pub contract Auction {
         priv fun extendAuction() {
             if (
                 //Auction time left is less than remainLengthToExtend
-                self.timeRemaining() < Fix64(self.remainLengthToExtend)     
+                self.timeRemaining() < Fix64(self.remainLengthToExtend) 
             ) {
                 self.auctionLength = self.auctionLength + self.extendedLength
                 emit Extend(auctionID: self.auctionID, auctionLengthFrom: self.auctionLength - self.extendedLength, auctionLengthTo: self.auctionLength)
@@ -363,9 +372,10 @@ pub contract Auction {
                 collectionCap.check() : "NFT storage is not initialized on account"
                 !self.auctionCancelled : "Auction was cancelled"
                 self.NFT != nil: "NFT in auction does not exist"
-                self.auctionStartTime < getCurrentBlock().timestamp : "The auction has not started yet"             
+                self.auctionStartTime < getCurrentBlock().timestamp || self.auctionStartTime == 0.0: "The auction has not started yet"             
                 !self.isAuctionExpired() : "Time expired"
-                bidTokens.balance <= 999999.99 : "Bid should be less than 1 000 000.00"  
+                bidTokens.balance <= 999999.99 : "Bid should be less than 1 000 000.00" 
+                self.auctionStartBidTime < getCurrentBlock().timestamp || self.auctionStartBidTime == 0.0: "The auction bid time has not started yet"       
             }
 
             let bidderAddress = vaultCap.borrow()!.owner!.address
@@ -381,6 +391,12 @@ pub contract Auction {
 
             if amountYouAreBidding < minNextBid {
                 panic("Bid is less than min acceptable")
+            }
+
+            // The first bid sets start auction time if auctionStartTime is not defined
+            if self.bidVault.balance == 0.0 && self.auctionStartTime == 0.0 {
+               self.auctionStartTime = getCurrentBlock().timestamp
+               emit SetStartTime(auctionID: self.auctionID, startAuctionTime: self.auctionStartTime)
             }
 
             if self.bidder() != bidderAddress {
@@ -428,6 +444,7 @@ pub contract Auction {
                 leader: leader,
                 bidIncrement: self.minimumBidIncrement,         
                 startTime: Fix64(self.auctionStartTime),
+                startBidTime: Fix64(self.auctionStartBidTime),
                 endTime: Fix64(self.auctionStartTime+self.auctionLength),
                 minNextBid: self.minNextBid(),
                 completed: self.auctionCompleted,
@@ -525,24 +542,29 @@ pub contract Auction {
             remainLengthToExtend: UFix64,
             auctionStartTime: UFix64,
             startPrice: UFix64,           
+            startBidTime: UFix64,      
             platformVaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>,         
             editionCap: Capability<&{Edition.EditionCollectionPublic}>
         ): UInt64 {
 
             pre {              
                 auctionLength > 0.00 : "Auction lenght should be more than 0.00"
-                auctionStartTime > getCurrentBlock().timestamp : "Auction start time can't be in the past"
+                auctionStartTime > getCurrentBlock().timestamp || auctionStartTime == 0.0: "Auction start time can't be in the past"
                 startPrice > 0.00 : "Start price should be more than 0.00"
                 startPrice <= 999999.99 : "Start bid should be less than 1 000 000.00"
                 minimumBidIncrement > 0.00 : "Minimum bid increment should be more than 0.00"
                 platformVaultCap.check() : "Platform vault should be reachable"
+                startBidTime > getCurrentBlock().timestamp || startBidTime == 0.0: "Auction start bid time can't be in the past"
+                (startBidTime == 0.0 && auctionStartTime == 0.0) == false: "Start bid time and auction start time can't equal 0.0 both"
+                (startBidTime > 0.0 && auctionStartTime > 0.0) == false: "Start bid time and auction start time can't be more than 0.0 both"
             }
             
             // create a new auction items resource container
             let item <- create AuctionItem(         
-                minimumBidIncrement: minimumBidIncrement,
-                auctionStartTime: auctionStartTime,
+                minimumBidIncrement: minimumBidIncrement, 
+                auctionStartTime: auctionStartTime,  
                 startPrice: startPrice,
+                auctionStartBidTime: startBidTime,
                 auctionLength: auctionLength,           
                 extendedLength: extendedLength,    
                 remainLengthToExtend:  remainLengthToExtend,                
@@ -559,7 +581,7 @@ pub contract Auction {
 
             let owner = platformVaultCap.borrow()!.owner!.address
 
-            emit Created(auctionID: id, owner: owner, startPrice: startPrice, startTime: auctionStartTime)
+            emit Created(auctionID: id, owner: owner, startPrice: startPrice,  startTime: auctionStartTime, auctionLength: auctionLength, startBidTime: startBidTime)
 
             return id
         }
@@ -672,12 +694,12 @@ pub contract Auction {
     }
 
     init() {
-        self.totalAuctions = (0 as UInt64)
-        self.CollectionPublicPath = /public/NFTXtinglesBloctoAuction
-        self.CollectionStoragePath = /storage/NFTXtinglesBloctoAuction
+        self.totalAuctions = (8 as UInt64)
+        self.CollectionPublicPath = /public/NFTXtinglesBloctoAuctionV2
+        self.CollectionStoragePath = /storage/NFTXtinglesBloctoAuctionV2
 
-        let sale <- Auction.createAuctionCollection()
-        self.account.save(<-sale, to:Auction.CollectionStoragePath)         
-        self.account.link<&{Auction.AuctionCollectionPublic}>(Auction.CollectionPublicPath, target:Auction.CollectionStoragePath)
+        let sale <- AuctionV2.createAuctionCollection()
+        self.account.save(<-sale, to:AuctionV2.CollectionStoragePath)         
+        self.account.link<&{AuctionV2.AuctionCollectionPublic}>(AuctionV2.CollectionPublicPath, target:AuctionV2.CollectionStoragePath)
     }   
 }
