@@ -308,6 +308,11 @@ pub contract AuctionV2 {
 
         //this can be negative if is expired
         pub fun timeRemaining() : Fix64 {
+            // Case, when auction time ddi not start, because nobody set the first bid
+            if(self.auctionStartBidTime > 0.0 && self.numberOfBids == 0) {
+              return 0.0
+            }
+
             let auctionLength = self.auctionLength
 
             let startTime = self.auctionStartTime
@@ -445,7 +450,7 @@ pub contract AuctionV2 {
                 bidIncrement: self.minimumBidIncrement,         
                 startTime: Fix64(self.auctionStartTime),
                 startBidTime: Fix64(self.auctionStartBidTime),
-                endTime: Fix64(self.auctionStartTime+self.auctionLength),
+                endTime: self.auctionStartTime > 0.0 ? Fix64(self.auctionStartTime+self.auctionLength) : Fix64(0.0),
                 minNextBid: self.minNextBid(),
                 completed: self.auctionCompleted,
                 expired: self.isAuctionExpired(),
