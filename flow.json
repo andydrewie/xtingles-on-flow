@@ -38,7 +38,8 @@
 		"Edition": "./contracts/Edition.cdc",
 		"OpenEdition": "./contracts/OpenEdition.cdc",
 		"AuthChecker": "./contracts/AuthChecker.cdc",
-		"OpenEditionV2": "./contracts/OpenEditionV2.cdc"
+		"OpenEditionV2": "./contracts/OpenEditionV2.cdc",
+		"AuctionV2": "./contracts/AuctionV2.cdc"
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -81,7 +82,7 @@
 				"signatureAlgorithm": "ECDSA_P256",
 				"hashAlgorithm": "SHA3_256",
 				"context": {
-					"privateKey": ""
+					"privateKey": "3dee6904f1bdd6e7159029f224e249e2d555efa3ce1c6a272acab20d31c3faff"
 				}
 			}]
 		},
@@ -124,17 +125,22 @@
 		"new-account-5": {
 			"address": "0xd2ce65ed1902b095",
 			"keys": "1b991e536b3377d1178b8f718f45d095f3ef30a1b4b10dedd9bcd6209d0128cd"
+		},
+		"new-account-6": {
+			"address": "0x5206af36e48f59d8",
+			"keys": "311d379f36ad7a6c3b1c6d575918ae5bdd6b4249ebb172abc2fb2a190c73ee1d"
 		}
 	},
 	"deployments": {
 		"testnet": {
-			"testnet-xtingles-2": [	
+			"new-account-6": [	
 				"Edition",
 				"Collectible",			
 				"MarketPlace",
 				"OpenEditionV2",
 				"Auction", 
-				"AuthChecker"			
+				"AuthChecker",
+				"AuctionV2" 			
 			]
 		},
 		"emulator": {
