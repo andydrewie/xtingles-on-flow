@@ -459,7 +459,7 @@ pub contract OpenEditionV3 {
     }
 
     init() {
-        self.totalOpenEditions = (18 as UInt64)
+        self.totalOpenEditions = (10 as UInt64)
         self.CollectionPublicPath = /public/NFTbloctoXtinglesOpenEditionV3
         self.CollectionStoragePath = /storage/NFTbloctoXtinglesOpenEditionV3
 

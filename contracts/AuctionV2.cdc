@@ -699,7 +699,7 @@ pub contract AuctionV2 {
     }
 
     init() {
-        self.totalAuctions = (8 as UInt64)
+        self.totalAuctions = (10 as UInt64)
         self.CollectionPublicPath = /public/NFTXtinglesBloctoAuctionV2
         self.CollectionStoragePath = /storage/NFTXtinglesBloctoAuctionV2
 
