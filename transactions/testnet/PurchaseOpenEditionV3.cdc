@@ -5,13 +5,14 @@ import Collectible, OpenEditionV3 from 0x2695ea898b04f0c0
 
 transaction(
         openEditionAddress: Address,
-        id: UInt64 
+        id: UInt64,
+        amountNfts: UInt64
     ) {
 
     let openEditionCollectionRef: &AnyResource{OpenEditionV3.OpenEditionCollectionPublic}
     let collectionCap: Capability<&{Collectible.CollectionPublic}> 
-    let vaultCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
-    let temporaryVault: @FUSD.Vault
+    let vaultRef: &FUSD.Vault
+    let amount: UFix64
 
     prepare(acct: AuthAccount) {
        
@@ -35,23 +36,31 @@ transaction(
             .borrow()
             ?? panic("Could not borrow nft sale reference")
 
-        self.vaultCap = acct.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
-   
-        let vaultRef = acct.borrow<&FUSD.Vault>(from: /storage/fusdVault)
+        self.vaultRef = acct.borrow<&FUSD.Vault>(from: /storage/fusdVault)
             ?? panic("Could not borrow owner's Vault reference")
 
-        let amount = self.openEditionCollectionRef.getPrice(id)!
-        
-         // withdraw tokens from the buyer's Vault
-        self.temporaryVault <- vaultRef.withdraw(amount: amount) as! @FUSD.Vault
+        self.amount = self.openEditionCollectionRef.getPrice(id)!  
+       
     }
 
     execute {
+     
+        var edition = UInt64(1)
+
+     
+        while edition <= amountNfts  {
+                   
+            // withdraw tokens from the buyer's Vault
+            var temporaryVault <- self.vaultRef.withdraw(amount: self.amount) as! @FUSD.Vault
+
+            self.openEditionCollectionRef.purchase(
+                id: id, 
+                buyerTokens: <- temporaryVault,
+                collectionCap: self.collectionCap
+            ) 
+            
+            edition = edition + 1;
+        }
        
-        self.openEditionCollectionRef.purchase(
-            id: id, 
-            buyerTokens: <- self.temporaryVault,
-            collectionCap: self.collectionCap
-        )       
     }
 }
