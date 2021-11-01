@@ -39,7 +39,8 @@
 		"OpenEdition": "./contracts/OpenEdition.cdc",
 		"AuthChecker": "./contracts/AuthChecker.cdc",
 		"OpenEditionV2": "./contracts/OpenEditionV2.cdc",
-		"AuctionV2": "./contracts/AuctionV2.cdc"
+		"AuctionV2": "./contracts/AuctionV2.cdc",
+		"OpenEditionV3": "./contracts/OpenEditionV3.cdc"
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -133,14 +134,15 @@
 	},
 	"deployments": {
 		"testnet": {
-			"dev-account": [	
+			"testnet-account": [	
 				"Edition",
 				"Collectible",			
 				"MarketPlace",
 				"OpenEditionV2",
 				"Auction", 
 				"AuthChecker",
-				"AuctionV2" 			
+				"AuctionV2",
+				"OpenEditionV3" 			
 			]
 		},
 		"emulator": {
