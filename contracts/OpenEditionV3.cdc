@@ -53,7 +53,7 @@ pub contract OpenEditionV3 {
     // Events
     pub event OpenEditionCollectionCreated()
     pub event Created(id: UInt64, price: UFix64, startTime: UFix64, numberOfMaxNFT: UInt64)
-    pub event Purchase(openEditionId: UInt64, buyer: Address, price: UFix64, NFTid: UInt64, edition: UInt64)
+    pub event Purchase(openEditionId: UInt64, buyer: Address, price: UFix64, NFTid: UInt64, edition: UInt64, purchaseTime: UFix64)
     pub event Earned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
     pub event FailEarned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
     pub event Settled(id: UInt64, price: UFix64, amountMintedNFT: UInt64)
@@ -123,7 +123,7 @@ pub contract OpenEditionV3 {
             pre {
                 !self.cancelled : "Open edition was cancelled"
                 !self.completed : "The open edition has already settled"            
-                self.isExpired() || (self.numberOfMaxNFT == self.numberOfMintedNFT && self.numberOfMintedNFT > 0): "Open edition time has not expired yet and number of minted nfts have not reached max value"
+                self.isExpired() : "Open edition time has not expired yet"
             }
          
             self.completed = true 
@@ -241,10 +241,15 @@ pub contract OpenEditionV3 {
             self.sendCommissionPayments(
                 buyerTokens: <- buyerTokens,
                 tokenID: NFTid
-            )         
+            )     
+
+            // Set end of purchases, when amount of purchased nfts attained max value
+            if (self.numberOfMaxNFT == self.numberOfMintedNFT && self.numberOfMintedNFT > 0)  {
+                self.saleLength = getCurrentBlock().timestamp - self.startTime;
+            }
 
             // Purchase event
-            emit Purchase(openEditionId: self.openEditionID, buyer: buyerCollectionCap.borrow()!.owner!.address, price: self.price, NFTid: NFTid, edition: self.numberOfMintedNFT)
+            emit Purchase(openEditionId: self.openEditionID, buyer: buyerCollectionCap.borrow()!.owner!.address, price: self.price, NFTid: NFTid, edition: self.numberOfMintedNFT, purchaseTime: getCurrentBlock().timestamp)
         }
 
         pub fun getOpenEditionStatus() : OpenEditionStatus {         
@@ -454,7 +459,7 @@ pub contract OpenEditionV3 {
     }
 
     init() {
-        self.totalOpenEditions = (18 as UInt64)
+        self.totalOpenEditions = (10 as UInt64)
         self.CollectionPublicPath = /public/NFTbloctoXtinglesOpenEditionV3
         self.CollectionStoragePath = /storage/NFTbloctoXtinglesOpenEditionV3
 
