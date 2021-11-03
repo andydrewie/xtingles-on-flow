@@ -1,6 +1,9 @@
 import {
    testSuiteAuction
 } from './auction';
+import {
+   testSuiteAuction as testSuiteAuctionV2
+} from './auctionV2';
 import { testSuiteCollectible } from "./collectible"
 import { testSuiteEdition } from "./edition"
 import {
@@ -12,12 +15,13 @@ import {
 } from "./openedition";
 
 describe('sequentially run tests', () => {
-   testSuiteMarketPlace();
+  /* testSuiteMarketPlace();
 
    testSuiteCollectible();
 
-   testSuiteEdition(); 
-   testSuiteAuction();
+   testSuiteEdition(); */
+ //  testSuiteAuction();
+   testSuiteAuctionV2();
 
-  testSuiteOpenEdition();
+ // testSuiteOpenEdition();
 })
