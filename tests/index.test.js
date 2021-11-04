@@ -14,14 +14,18 @@ import {
    testSuiteOpenEdition
 } from "./openedition";
 
+import {
+   testSuiteOpenEdition as testSuiteOpenEditionV3
+} from "./openeditionV3";
+
 describe('sequentially run tests', () => {
-  testSuiteMarketPlace();
+  /*testSuiteMarketPlace();
 
    testSuiteCollectible();
 
    testSuiteEdition(); 
- //  testSuiteAuction();
-   testSuiteAuctionV2();
-
+  testSuiteAuction();
+   testSuiteAuctionV2();*/
+   testSuiteOpenEditionV3();
  // testSuiteOpenEdition();
 })
