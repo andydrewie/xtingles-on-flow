@@ -343,6 +343,8 @@ pub contract AuctionV2 {
             if (
                 //Auction time left is less than remainLengthToExtend
                 self.timeRemaining() < Fix64(self.remainLengthToExtend) 
+                //This is not the first bid in the reserve auction
+                && (self.auctionStartBidTime == 0.0 || (self.auctionStartBidTime > 0.0 && self.numberOfBids > 1))
             ) {
                 self.auctionLength = self.auctionLength + self.extendedLength
                 emit Extend(auctionID: self.auctionID, auctionLengthFrom: self.auctionLength - self.extendedLength, auctionLengthTo: self.auctionLength)
