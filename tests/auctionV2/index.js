@@ -11,15 +11,15 @@ import { testSuiteSendNFT } from './sendNFT';
 import { testSuiteReclaimSendNFT  } from './reclaimSendNFT';
 
 export const testSuiteAuction = () => describe("Auction", () => {
-  //testSuiteCreateAuction();
-  // testSuiteAddNFT();
-   testSuiteBidAuction();
-  /* testSuiteSendBidTokens(); 
+  testSuiteCreateAuction();
+  testSuiteAddNFT();
+  testSuiteBidAuction();
+  testSuiteSendBidTokens(); 
   testSuiteCancelAuction();
   testSuiteExtendAuction();
   testSuitSettleAuction(); 
   testSuitePayCommission();
   testSuiteAuctionStatus();
   testSuiteSendNFT();
-  testSuiteReclaimSendNFT(); */
+  testSuiteReclaimSendNFT(); 
 });

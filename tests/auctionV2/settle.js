@@ -26,7 +26,7 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
     createAuctionTransactionWithNFT = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CreateAuctionWithNFT.cdc`
+        `../../transactions/emulator/auctionV2/CreateAuctionWithNFT.cdc`
       ),
       "utf8"
     );
@@ -34,7 +34,7 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
     placeBidTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/Bid.cdc`
+        `../../transactions/emulator/auctionV2/Bid.cdc`
       ),
       "utf8"
     );
@@ -50,7 +50,7 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
     cancelAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CancelAuction.cdc`
+        `../../transactions/emulator/auctionV2/CancelAuction.cdc`
       ),
       "utf8"
     );
@@ -58,7 +58,7 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
     settleAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/SettleAuction.cdc`
+        `../../transactions/emulator/auctionV2/SettleAuction.cdc`
       ),
       "utf8"
     );
@@ -82,7 +82,7 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
     createAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CreateAuction.cdc`
+        `../../transactions/emulator/auctionV2/CreateAuction.cdc`
       ),
       "utf8"
     );
@@ -90,7 +90,7 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
     checkAuctionStatusScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/auction/CheckAuctionStatus.cdc`
+        `../../scripts/emulator/auctionV2/CheckAuctionStatus.cdc`
       ),
       "utf8"
     );
@@ -134,7 +134,7 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
     await deployContractByName({ to: admin, name: "NonFungibleToken" });
     await deployContractByName({ to: admin, name: "FUSD" });
     await deployContractByName({ to: admin, name: "Collectible", addressMap });
-    await deployContractByName({ to: admin, name: "Auction", addressMap });
+    await deployContractByName({ to: admin, name: "AuctionV2", addressMap });
 
     // Setup FUSD Vault for the admin account
     await sendTransaction({
@@ -219,6 +219,8 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
     try {
       const admin = await getAccountAddress("admin");
 
+      const auctionId = 11;
+
       const auctionParameters = [
         // Min bid increment in percent
         ["10.00", t.UFix64],
@@ -230,6 +232,8 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
         ["120.00", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
+        // Start bid time
+        ["0.00", t.UFix64],
         // Initial price
         ["50.00", t.UFix64],
         // Platform vault address
@@ -247,7 +251,7 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
       const result = await sendTransaction({
         code: settleAuctionTransaction,
         args: [
-          [1, t.UInt64]
+          [auctionId, t.UInt64]
         ],
         signers: [admin],
       });
@@ -275,8 +279,10 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
         ["120.00", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
+        // Start bid time
+        ["0.00", t.UFix64],
         // Initial price
-        ["50.00", t.UFix64],
+        ["50.00", t.UFix64],        
         // Platform vault address
         ["0x01cf0e2f2f715450", t.Address]
       ];
@@ -316,7 +322,7 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
       const result = await sendTransaction({
         code: settleAuctionTransaction,
         args: [
-          [1, t.UInt64]
+          [auctionId, t.UInt64]
         ],
         signers: [admin],
       });
@@ -345,6 +351,8 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
         ["120.00", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+        // Start bid time
+        ["0.00", t.UFix64],
         // Initial price
         ["50.00", t.UFix64],
         // Platform vault address
@@ -395,7 +403,7 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
       const result = await sendTransaction({
         code: settleAuctionTransaction,
         args: [
-          [1, t.UInt64]
+          [auctionId, t.UInt64]
         ],
         signers: [admin],
       });
@@ -423,6 +431,8 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
         ["120.00", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+        // Start bid time
+        ["0.00", t.UFix64],
         // Initial price
         ["50.00", t.UFix64],
         // Platform vault address
@@ -502,6 +512,8 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
         ["120.00", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+        // Start bid time
+        ["0.00", t.UFix64],
         // Initial price
         ["50.00", t.UFix64],
         // Platform vault address
@@ -556,10 +568,10 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
       expect(setlleEvents.length).toEqual(2);
 
       // 1. Burn NFT
-      expect(setlleEvents[0].type).toEqual(`A.${admin.substr(2)}.Auction.BurnNFT`);
+      expect(setlleEvents[0].type).toEqual(`A.${admin.substr(2)}.AuctionV2.BurnNFT`);
 
       // 2. Auction settle
-      expect(setlleEvents[1].type).toEqual(`A.${admin.substr(2)}.Auction.Settled`);
+      expect(setlleEvents[1].type).toEqual(`A.${admin.substr(2)}.AuctionV2.Settled`);
 
     } catch (e) {
       error = e;
@@ -585,6 +597,8 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
         ["0.01", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+        // Start bid time
+        ["0.00", t.UFix64],
         // Initial price
         ["50.00", t.UFix64],
         // Platform vault address
@@ -668,9 +682,9 @@ export const testSuitSettleAuction = () => describe("Auction settle", () => {
 
       const { leader } = auction;
 
-      const earnedAuctionEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.Auction.Earned`);
+      const earnedAuctionEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.Earned`);
       const collectibelDepositEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.Collectible.Deposit`);
-      const settleAuctionEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.Auction.Settled`);
+      const settleAuctionEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.Settled`);
 
       // Deposit collectible to winner. In case of finished auction is leader
       expect(collectibelDepositEvents[0].data.to).toEqual(leader);

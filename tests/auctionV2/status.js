@@ -29,7 +29,7 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
     createAuctionTransactionWithNFT = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CreateAuctionWithNFT.cdc`
+        `../../transactions/emulator/auctionV2/CreateAuctionWithNFT.cdc`
       ),
       "utf8"
     );
@@ -37,7 +37,7 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
     placeBidTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/Bid.cdc`
+        `../../transactions/emulator/auctionV2/Bid.cdc`
       ),
       "utf8"
     );
@@ -53,7 +53,7 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
     cancelAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CancelAuction.cdc`
+        `../../transactions/emulator/auctionV2/CancelAuction.cdc`
       ),
       "utf8"
     );
@@ -61,7 +61,7 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
     settleAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/SettleAuction.cdc`
+        `../../transactions/emulator/auctionV2/SettleAuction.cdc`
       ),
       "utf8"
     );
@@ -85,7 +85,7 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
     createAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CreateAuction.cdc`
+        `../../transactions/emulator/auctionV2/CreateAuction.cdc`
       ),
       "utf8"
     );
@@ -93,7 +93,7 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
     checkAuctionStatusScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/auction/CheckAuctionStatus.cdc`
+        `../../scripts/emulator/auctionV2/CheckAuctionStatus.cdc`
       ),
       "utf8"
     );
@@ -101,7 +101,7 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
     checkAuctionStatusesScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/auction/CheckAuctionStatuses.cdc`
+        `../../scripts/emulator/auctionV2/CheckAuctionStatuses.cdc`
       ),
       "utf8"
     );
@@ -109,7 +109,7 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
     getAuctionTimeLeft = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/auction/GetAuctionTimeLeft.cdc`
+        `../../scripts/emulator/auctionV2/GetAuctionTimeLeft.cdc`
       ),
       "utf8"
     );
@@ -153,7 +153,7 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
     await deployContractByName({ to: admin, name: "NonFungibleToken" });
     await deployContractByName({ to: admin, name: "FUSD" });
     await deployContractByName({ to: admin, name: "Collectible", addressMap });
-    await deployContractByName({ to: admin, name: "Auction", addressMap });
+    await deployContractByName({ to: admin, name: "AuctionV2", addressMap });
 
     // Setup FUSD Vault for the admin account
     await sendTransaction({
@@ -241,6 +241,8 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
                 ["120.00", t.UFix64],
                 // Start time
                 [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
+                // Start bid time
+                ["0.00", t.UFix64],
                 // Initial price
                 ["50.00", t.UFix64],
                 // Platform vault address
@@ -288,6 +290,8 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
               ["120.00", t.UFix64],
               // Start time
               [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
+              // Start bid time
+              ["0.00", t.UFix64],
               // Initial price
               ["50.00", t.UFix64],
               // Platform vault address
@@ -335,6 +339,8 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
               ["120.00", t.UFix64],
               // Start time
               [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
+              // Start bid time
+              ["0.00", t.UFix64],
               // Initial price
               ["50.00", t.UFix64],
               // Platform vault address
@@ -403,6 +409,8 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
               ["120.00", t.UFix64],
               // Start time
               [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+              // Start bid time
+              ["0.00", t.UFix64],
               // Initial price
               ["50.00", t.UFix64],
               // Platform vault address
@@ -461,4 +469,82 @@ export const testSuiteAuctionStatus = () => describe("Auction status", () => {
       } 
       expect(error).toEqual(undefined);
     });   
+
+    test("getTimeLeft return 0 if thу reserve auction is without bids", async () => {
+      let error;
+      try {
+          const admin = await getAccountAddress("admin");
+
+          const auctionParameters = [
+              // Min bid increment in percent
+              ["10.00", t.UFix64],
+              // Initial auction length  
+              ["1.00", t.UFix64],
+              // Time until finish, when auction could be extended
+              ["120.00", t.UFix64],
+              // Time lenght to extend auction
+              ["120.00", t.UFix64],          
+              // Start time
+              ["0.00", t.UFix64],
+              // Start bid time
+              [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+              // Initial price
+              ["50.00", t.UFix64],
+              // Platform vault address
+              ["0x01cf0e2f2f715450", t.Address]
+          ];
+      
+          const createdAuction = await sendTransaction({
+              code: createAuctionTransaction.replace('RoyaltyVariable', commission),
+              args: [
+                ...auctionParameters
+              ],
+              signers: [admin],
+          });
+
+          const { events } = createdAuction;
+
+          await new Promise((r) => setTimeout(r, 5000));
+
+          // Sample transaction to change last block time
+          await sendTransaction({
+            code: tickTransaction,
+            args: [],
+            signers: [admin],
+          });
+
+          // Sample transaction to change last block time
+          await sendTransaction({
+            code: tickTransaction,
+            args: [],
+            signers: [admin],
+          });
+
+          const timeLeft = await executeScript({
+              code: getAuctionTimeLeft,
+              args: [
+                  [admin, t.Address],
+                  // Auction id does not exist
+                  [events[0].data.auctionID, t.UInt64],
+              ]
+          });
+
+          const auctionStatus = await executeScript({
+            code: checkAuctionStatusScript,
+            args: [
+                [admin, t.Address],
+                // Auction id does not exist
+                [events[0].data.auctionID, t.UInt64],
+            ]
+          });
+
+          expect(parseFloat(timeLeft, 10)).toEqual(0);
+          expect(auctionStatus.expired).toBe(false);
+          expect(parseFloat(auctionStatus.startTime, 10)).toEqual(0);
+          expect(parseFloat(auctionStatus.endTime, 10)).toEqual(0);
+      } catch (e) {           
+          error = e;
+      } 
+      expect(error).toEqual(undefined);
+    });
 })

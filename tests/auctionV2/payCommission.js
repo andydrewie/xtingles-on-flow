@@ -26,7 +26,7 @@ export const testSuitePayCommission = () => describe("Auction pay commissions", 
         createAuctionTransactionWithNFT = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/auction/CreateAuctionWithNFT.cdc`
+                `../../transactions/emulator/auctionV2/CreateAuctionWithNFT.cdc`
             ),
             "utf8"
         );
@@ -34,7 +34,7 @@ export const testSuitePayCommission = () => describe("Auction pay commissions", 
         placeBidTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/auction/Bid.cdc`
+                `../../transactions/emulator/auctionV2/Bid.cdc`
             ),
             "utf8"
         );
@@ -50,7 +50,7 @@ export const testSuitePayCommission = () => describe("Auction pay commissions", 
         cancelAuctionTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/auction/CancelAuction.cdc`
+                `../../transactions/emulator/auctionV2/CancelAuction.cdc`
             ),
             "utf8"
         );
@@ -58,7 +58,7 @@ export const testSuitePayCommission = () => describe("Auction pay commissions", 
         settleAuctionTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/auction/SettleAuction.cdc`
+                `../../transactions/emulator/auctionV2/SettleAuction.cdc`
             ),
             "utf8"
         );
@@ -82,7 +82,7 @@ export const testSuitePayCommission = () => describe("Auction pay commissions", 
         createAuctionTransaction = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/auction/CreateAuction.cdc`
+                `../../transactions/emulator/auctionV2/CreateAuction.cdc`
             ),
             "utf8"
         );
@@ -90,7 +90,7 @@ export const testSuitePayCommission = () => describe("Auction pay commissions", 
         checkAuctionStatusScript = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../scripts/emulator/auction/CheckAuctionStatus.cdc`
+                `../../scripts/emulator/auctionV2/CheckAuctionStatus.cdc`
             ),
             "utf8"
         );
@@ -129,7 +129,7 @@ export const testSuitePayCommission = () => describe("Auction pay commissions", 
         await deployContractByName({ to: admin, name: "NonFungibleToken" });
         await deployContractByName({ to: admin, name: "FUSD" });
         await deployContractByName({ to: admin, name: "Collectible", addressMap });
-        await deployContractByName({ to: admin, name: "Auction", addressMap });
+        await deployContractByName({ to: admin, name: "AuctionV2", addressMap });
 
         // Setup FUSD Vault for the admin account
         await sendTransaction({
@@ -234,6 +234,8 @@ export const testSuitePayCommission = () => describe("Auction pay commissions", 
                 ["0.01", t.UFix64],
                 // Start time
                 [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+                // Start bid time
+                ["0.00", t.UFix64],   
                 // Initial price
                 ["50.00", t.UFix64],
                 // Platform vault address
@@ -315,7 +317,7 @@ export const testSuitePayCommission = () => describe("Auction pay commissions", 
                 ]
             });
 
-            const earnedAuctionEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.Auction.Earned`);
+            const earnedAuctionEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.Earned`);
 
             // Count of earned events is 2, because in commission object we have 2 recipient of commission
             expect(earnedAuctionEvents.length).toBe(2);
@@ -360,6 +362,8 @@ export const testSuitePayCommission = () => describe("Auction pay commissions", 
                 ["0.01", t.UFix64],
                 // Start time
                 [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+                // Start bid time
+                ["0.00", t.UFix64],  
                 // Initial price
                 ["50.00", t.UFix64],
                 // Platform vault address
@@ -448,7 +452,7 @@ export const testSuitePayCommission = () => describe("Auction pay commissions", 
                 ]
             });
 
-            const earnedAuctionEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.Auction.Earned`);
+            const earnedAuctionEvents = setlleEvents.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.Earned`);
 
             // Count of earned events is 2, because in commission object we have 2 recipient of commission
             expect(earnedAuctionEvents.length).toBe(2);

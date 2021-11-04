@@ -22,7 +22,7 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
     createAuctionTransactionWithNFT = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CreateAuctionWithNFT.cdc`
+        `../../transactions/emulator/auctionV2/CreateAuctionWithNFT.cdc`
       ),
       "utf8"    
     );
@@ -30,7 +30,7 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
     placeBidTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/Bid.cdc`
+        `../../transactions/emulator/auctionV2/Bid.cdc`
       ),
       "utf8"    
     );  
@@ -46,7 +46,7 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
     cancelAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CancelAuction.cdc`
+        `../../transactions/emulator/auctionV2/CancelAuction.cdc`
       ),
       "utf8"    
     );
@@ -113,7 +113,7 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
     await deployContractByName({ to: admin, name: "NonFungibleToken" });    
     await deployContractByName({ to: admin, name: "FUSD" }); 
     await deployContractByName({ to: admin, name: "Collectible", addressMap });
-    await deployContractByName({ to: admin, name: "Auction", addressMap });
+    await deployContractByName({ to: admin, name: "AuctionV2", addressMap });
 
     // Setup FUSD Vault for the admin account
     await sendTransaction({
@@ -190,6 +190,8 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
             ["120.00", t.UFix64],               
             // Start time
             [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+            // Start bid time
+            ["0.00", t.UFix64],
             // Initial price
             ["50.00", t.UFix64],
             // Platform vault address
@@ -289,7 +291,7 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
           expect(parseInt(secondBidEvents[2].data.amount, 10)).toEqual(50);
 
           // 4. Bid return to the previous bidder
-          expect(secondBidEvents[3].type).toEqual(`A.${admin.substr(2)}.Auction.SendBidTokens`);
+          expect(secondBidEvents[3].type).toEqual(`A.${admin.substr(2)}.AuctionV2.SendBidTokens`);
           expect(secondBidEvents[3].data.to).toEqual(second);
           expect(parseInt(secondBidEvents[3].data.amount, 10)).toEqual(50);
 
@@ -320,6 +322,8 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
             ["120.00", t.UFix64],               
             // Start time
             [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+            // Start bid time
+            ["0.00", t.UFix64],
             // Initial price
             ["50.00", t.UFix64],
             // Platform vault address
@@ -428,7 +432,7 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
           expect(parseInt(secondBidEvents[2].data.amount, 10)).toEqual(50);
 
           // 4. Bid return to the previous bidder
-          expect(secondBidEvents[3].type).toEqual(`A.${admin.substr(2)}.Auction.FailSendBidTokens`);
+          expect(secondBidEvents[3].type).toEqual(`A.${admin.substr(2)}.AuctionV2.FailSendBidTokens`);
           expect(secondBidEvents[3].data.to).toEqual(admin);
           expect(parseInt(secondBidEvents[3].data.amount, 10)).toEqual(50);
 
@@ -459,6 +463,8 @@ export const testSuiteSendBidTokens = () => describe("Auction send bid tokens (r
             ["120.00", t.UFix64],               
             // Start time
             [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+            // Start bid time
+            ["0.00", t.UFix64],
             // Initial price
             [bidAmount.toFixed(2), t.UFix64],
             // Platform vault address

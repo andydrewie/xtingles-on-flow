@@ -24,7 +24,7 @@ export const testSuiteExtendAuction = () => describe("Auction extend", () => {
     createAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CreateAuction.cdc`
+        `../../transactions/emulator/auctionV2/CreateAuction.cdc`
       ),
       "utf8"    
     );
@@ -32,7 +32,7 @@ export const testSuiteExtendAuction = () => describe("Auction extend", () => {
     createAuctionTransactionWithNFT = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CreateAuctionWithNFT.cdc`
+        `../../transactions/emulator/auctionV2/CreateAuctionWithNFT.cdc`
       ),
       "utf8"    
     );
@@ -40,7 +40,7 @@ export const testSuiteExtendAuction = () => describe("Auction extend", () => {
     checkAuctionStatusScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/auction/CheckAuctionStatus.cdc`
+        `../../scripts/emulator/auctionV2/CheckAuctionStatus.cdc`
       ),
       "utf8"    
     );
@@ -48,7 +48,7 @@ export const testSuiteExtendAuction = () => describe("Auction extend", () => {
     placeBidTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/Bid.cdc`
+        `../../transactions/emulator/auctionV2/Bid.cdc`
       ),
       "utf8"    
     );  
@@ -64,7 +64,7 @@ export const testSuiteExtendAuction = () => describe("Auction extend", () => {
     cancelAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CancelAuction.cdc`
+        `../../transactions/emulator/auctionV2/CancelAuction.cdc`
       ),
       "utf8"    
     );
@@ -124,7 +124,7 @@ export const testSuiteExtendAuction = () => describe("Auction extend", () => {
     await deployContractByName({ to: admin, name: "NonFungibleToken" });    
     await deployContractByName({ to: admin, name: "FUSD" }); 
     await deployContractByName({ to: admin, name: "Collectible", addressMap });
-    await deployContractByName({ to: admin, name: "Auction", addressMap });
+    await deployContractByName({ to: admin, name: "AuctionV2", addressMap });
 
       // Setup FUSD Vault for the admin account
       await sendTransaction({
@@ -200,6 +200,8 @@ export const testSuiteExtendAuction = () => describe("Auction extend", () => {
             [extendedLength.toFixed(2), t.UFix64],               
             // Start time
             [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+            // Start bid time
+            ["0.00", t.UFix64],
             // Initial price
             ["50.00", t.UFix64],
             // Platform vault address
@@ -288,6 +290,8 @@ export const testSuiteExtendAuction = () => describe("Auction extend", () => {
             [extendedLength.toFixed(2), t.UFix64],               
             // Start time
             [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+            // Start bid time
+            ["0.00", t.UFix64],
             // Initial price
             ["50.00", t.UFix64],
             // Platform vault address
@@ -352,6 +356,213 @@ export const testSuiteExtendAuction = () => describe("Auction extend", () => {
         });
 
         expect(parseInt(auctionBeforeBid.currentLength, 10) + extendedLength).toEqual(parseInt(auctionAfterBid.currentLength, 10));
+      } catch(e) {
+        error = e;     
+      }      
+        expect(error).toEqual(undefined);
+  });
+
+  test("no extend auction after bid because of the 1st bid in the reserve auction", async () => { 
+    let error;
+    try {
+        const admin = await getAccountAddress("admin");  
+        const extendedLength = 120;
+
+        const auctionParameters = [
+            // Min bid increment in percent
+            ["10.00", t.UFix64],  
+            // Initial auction length  
+            ["100.00", t.UFix64],               
+            // Time until finish, when auction could be extended
+            ["120.00", t.UFix64],  
+            // Time lenght to extend auction
+            [extendedLength.toFixed(2), t.UFix64],  
+            // Start time
+            ["0.00", t.UFix64],             
+            // Start bid time
+            [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],           
+            // Initial price
+            ["50.00", t.UFix64],
+            // Platform vault address
+            ["0x01cf0e2f2f715450", t.Address]   
+        ];
+
+        const createdAuctionWithNFT = await sendTransaction({
+            code: createAuctionTransactionWithNFT.replace('RoyaltyVariable', commission),
+            args: [
+              ...auctionParameters,
+              // Link to NFT
+              ["xxx", t.String],
+              // name
+              ["xxx", t.String],
+              // author
+              ["xxx", t.String],
+              // description
+              ["xxx", t.String],
+              // Number of copy in one edition
+              [1, t.UInt64],
+            ], 
+            signers: [admin],
+        }); 
+
+        const { events } = createdAuctionWithNFT;
+
+        const auctionId = events[0].data.auctionID;
+
+        await new Promise((r) => setTimeout(r, 3000));
+        
+        // Write the last block to change time
+        await sendTransaction({
+            code: tickTransaction,
+            args: [], 
+            signers: [admin],
+        }); 
+
+        const auctionBeforeBid = await executeScript({
+            code: checkAuctionStatusScript,
+            args: [
+              [admin, t.Address],
+              [events[0].data.auctionID, t.UInt64],
+            ] 
+        });
+
+        await sendTransaction({
+            code: placeBidTransaction,
+            args: [      
+              [auctionId, t.UInt64],
+              ["50.00", t.UFix64],
+              [admin, t.Address],   
+            ], 
+            signers: [admin],
+        });   
+
+        const auctionAfterBid = await executeScript({
+            code: checkAuctionStatusScript,
+            args: [
+              [admin, t.Address],
+              [events[0].data.auctionID, t.UInt64],
+            ] 
+        });
+
+        expect(parseInt(auctionBeforeBid.currentLength, 10)).toEqual(parseInt(auctionAfterBid.currentLength, 10));
+      } catch(e) {
+        error = e;     
+      }      
+        expect(error).toEqual(undefined);
+  });
+
+  test("extend auction after bid during the second bid in the reserve auction, because time until finish less than remainLengthToExtend ", async () => { 
+    let error;
+    try {
+        const admin = await getAccountAddress("admin");  
+        const extendedLength = 120;
+
+        const auctionParameters = [
+            // Min bid increment in percent
+            ["10.00", t.UFix64],  
+            // Initial auction length  
+            ["100.00", t.UFix64],               
+            // Time until finish, when auction could be extended
+            ["120.00", t.UFix64],  
+            // Time lenght to extend auction
+            [extendedLength.toFixed(2), t.UFix64],  
+            // Start time
+            ["0.00", t.UFix64],             
+            // Start bid time
+            [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],           
+            // Initial price
+            ["50.00", t.UFix64],
+            // Platform vault address
+            ["0x01cf0e2f2f715450", t.Address]   
+        ];
+
+        const createdAuctionWithNFT = await sendTransaction({
+            code: createAuctionTransactionWithNFT.replace('RoyaltyVariable', commission),
+            args: [
+              ...auctionParameters,
+              // Link to NFT
+              ["xxx", t.String],
+              // name
+              ["xxx", t.String],
+              // author
+              ["xxx", t.String],
+              // description
+              ["xxx", t.String],
+              // Number of copy in one edition
+              [1, t.UInt64],
+            ], 
+            signers: [admin],
+        }); 
+
+        const { events } = createdAuctionWithNFT;
+
+        const auctionId = events[0].data.auctionID;
+
+        await new Promise((r) => setTimeout(r, 3000));
+        
+        // Write the last block to change time
+        await sendTransaction({
+            code: tickTransaction,
+            args: [], 
+            signers: [admin],
+        }); 
+
+        const auctionBeforeBid = await executeScript({
+            code: checkAuctionStatusScript,
+            args: [
+              [admin, t.Address],
+              [events[0].data.auctionID, t.UInt64],
+            ] 
+        });
+
+        await sendTransaction({
+            code: placeBidTransaction,
+            args: [      
+              [auctionId, t.UInt64],
+              ["50.00", t.UFix64],
+              [admin, t.Address],   
+            ], 
+            signers: [admin],
+        });   
+
+        const auctionAfter1stBid = await executeScript({
+            code: checkAuctionStatusScript,
+            args: [
+              [admin, t.Address],
+              [events[0].data.auctionID, t.UInt64],
+            ] 
+        });
+
+        expect(parseInt(auctionBeforeBid.currentLength, 10)).toEqual(parseInt(auctionAfter1stBid.currentLength, 10));
+
+        await new Promise((r) => setTimeout(r, 3000));
+        
+        // Write the last block to change time
+        await sendTransaction({
+            code: tickTransaction,
+            args: [], 
+            signers: [admin],
+        }); 
+
+        await sendTransaction({
+          code: placeBidTransaction,
+          args: [      
+            [auctionId, t.UInt64],
+            ["60.00", t.UFix64],
+            [admin, t.Address],   
+          ], 
+          signers: [admin],
+        });   
+
+        const auctionAfter2stBid = await executeScript({
+          code: checkAuctionStatusScript,
+          args: [
+            [admin, t.Address],
+            [events[0].data.auctionID, t.UInt64],
+          ] 
+        });
+
+        expect(parseInt(auctionBeforeBid.currentLength, 10) + extendedLength).toEqual(parseInt(auctionAfter2stBid.currentLength, 10));
       } catch(e) {
         error = e;     
       }      

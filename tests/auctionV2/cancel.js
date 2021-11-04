@@ -23,7 +23,7 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
     createAuctionTransactionWithNFT = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CreateAuctionWithNFT.cdc`
+        `../../transactions/emulator/auctionV2/CreateAuctionWithNFT.cdc`
       ),
       "utf8"
     );
@@ -31,7 +31,7 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
     placeBidTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/Bid.cdc`
+        `../../transactions/emulator/auctionV2/Bid.cdc`
       ),
       "utf8"
     );
@@ -47,7 +47,7 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
     cancelAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CancelAuction.cdc`
+        `../../transactions/emulator/auctionV2/CancelAuction.cdc`
       ),
       "utf8"
     );
@@ -71,7 +71,7 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
     createAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/CreateAuction.cdc`
+        `../../transactions/emulator/auctionV2/CreateAuction.cdc`
       ),
       "utf8"
     );
@@ -79,7 +79,7 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
     checkAuctionStatusScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/auction/CheckAuctionStatus.cdc`
+        `../../scripts/emulator/auctionV2/CheckAuctionStatus.cdc`
       ),
       "utf8"
     );
@@ -87,7 +87,7 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
     settleAuctionTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/auction/SettleAuction.cdc`
+        `../../transactions/emulator/auctionV2/SettleAuction.cdc`
       ),
       "utf8"
     );
@@ -130,7 +130,7 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
     await deployContractByName({ to: admin, name: "NonFungibleToken" });
     await deployContractByName({ to: admin, name: "FUSD" });
     await deployContractByName({ to: admin, name: "Collectible", addressMap });
-    await deployContractByName({ to: admin, name: "Auction", addressMap });
+    await deployContractByName({ to: admin, name: "AuctionV2", addressMap });
 
     // Setup FUSD Vault for the admin account
     await sendTransaction({
@@ -222,6 +222,8 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
         ["120.00", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
+        // Start bid time
+        ["0.00", t.UFix64],
         // Initial price
         ["50.00", t.UFix64],
         // Platform vault address
@@ -280,6 +282,8 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
         ["120.00", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+        // Start bid time
+        ["0.00", t.UFix64],
         // Initial price
         ["50.00", t.UFix64],
         // Platform vault address
@@ -358,6 +362,8 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
         ["120.00", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
+        // Start bid time
+        ["0.00", t.UFix64],
         // Initial price
         ["50.00", t.UFix64],
         // Platform vault address
@@ -404,7 +410,7 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
 
       // The only one event
       expect(cancelEvents.length).toEqual(1);
-      expect(cancelEvents[0].type).toEqual(`A.${admin.substr(2)}.Auction.Canceled`);
+      expect(cancelEvents[0].type).toEqual(`A.${admin.substr(2)}.AuctionV2.Canceled`);
       expect(cancelEvents[0].data.auctionID).toEqual(auctionId);
       expect(auctionBeforeCancel).toMatchObject({ cancelled: false });
       expect(auctionAfterCancel).toMatchObject({ cancelled: true });
@@ -430,6 +436,8 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
         ["120.00", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1000).toFixed(2), t.UFix64],
+        // Start bid time
+        ["0.00", t.UFix64],
         // Initial price
         ["50.00", t.UFix64],
         // Platform vault address
@@ -496,9 +504,9 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
 
       // Only two events
       expect(cancelEvents.length).toEqual(2);
-      expect(cancelEvents[0].type).toEqual(`A.${admin.substr(2)}.Auction.BurnNFT`);
+      expect(cancelEvents[0].type).toEqual(`A.${admin.substr(2)}.AuctionV2.BurnNFT`);
       expect(cancelEvents[0].data.auctionID).toEqual(auctionId);
-      expect(cancelEvents[1].type).toEqual(`A.${admin.substr(2)}.Auction.Canceled`);
+      expect(cancelEvents[1].type).toEqual(`A.${admin.substr(2)}.AuctionV2.Canceled`);
       expect(auctionBeforeCancel).toMatchObject({ cancelled: false });
       expect(auctionAfterCancel).toMatchObject({ cancelled: true });
     } catch (e) {
@@ -524,6 +532,8 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
         ["120.00", t.UFix64],
         // Start time
         [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+        // Start bid time
+        ["0.00", t.UFix64],
         // Initial price
         ["50.00", t.UFix64],
         // Platform vault address
@@ -617,15 +627,15 @@ export const testSuiteCancelAuction = () => describe("Auction cancel", () => {
       expect(parseInt(cancelEvents[1].data.amount, 10)).toEqual(50);
 
       // 3. Return tokens to the previous bidder
-      expect(cancelEvents[2].type).toEqual(`A.${admin.substr(2)}.Auction.SendBidTokens`);
+      expect(cancelEvents[2].type).toEqual(`A.${admin.substr(2)}.AuctionV2.SendBidTokens`);
       expect(cancelEvents[2].data.auctionID).toEqual(auctionId);
 
       // 4. Burn NFT
-      expect(cancelEvents[3].type).toEqual(`A.${admin.substr(2)}.Auction.BurnNFT`);
+      expect(cancelEvents[3].type).toEqual(`A.${admin.substr(2)}.AuctionV2.BurnNFT`);
       expect(cancelEvents[3].data.auctionID).toEqual(auctionId);
 
       // 5. Auction cancel
-      expect(cancelEvents[4].type).toEqual(`A.${admin.substr(2)}.Auction.Canceled`);
+      expect(cancelEvents[4].type).toEqual(`A.${admin.substr(2)}.AuctionV2.Canceled`);
 
       expect(auctionBeforeCancel).toMatchObject({ cancelled: false });
       expect(auctionAfterCancel).toMatchObject({ cancelled: true });

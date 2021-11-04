@@ -10,7 +10,7 @@ transaction(
 
     prepare(acct: AuthAccount) {
 
-        self.client = acct.borrow<&Auction.AuctionCollection>(from:AuctionV2.CollectionStoragePath) ?? panic("could not load admin storage for auction")
+        self.client = acct.borrow<&AuctionV2.AuctionCollection>(from:AuctionV2.CollectionStoragePath) ?? panic("could not load admin storage for auction")
     }
 
     execute {    

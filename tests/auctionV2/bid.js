@@ -846,7 +846,7 @@ export const testSuiteBidAuction = () => describe("Auction bid", () => {
 
       const { events: sucessfullBidEvents } = result;
 
-      const bidEvent = sucessfullBidEvents.filter(event => event.type === `A.${admin.substr(2)}.Auction.Bid`)
+      const bidEvent = sucessfullBidEvents.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.Bid`)
 
       expect(result.errorMessage).toEqual('')
 
@@ -856,6 +856,98 @@ export const testSuiteBidAuction = () => describe("Auction bid", () => {
       })
 
       expect(parseFloat(bidEvent[0].data.bidPrice, 10)).toEqual(50)
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toEqual(undefined);
+  });
+
+  test("check events for the first bid in the reserve auction", async () => {
+    let error;
+    try {
+      const admin = await getAccountAddress("admin");   
+
+      const auctionParameters = [
+        ["10.00", t.UFix64],
+
+        // Auction length  
+        ["1000.00", t.UFix64],
+
+        ["1300.00", t.UFix64],
+        ["1300.00", t.UFix64],
+
+        // Start time
+        ["0.00", t.UFix64],
+
+        // Start bid time
+        [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],    
+
+        ["50.00", t.UFix64],
+        ["0x01cf0e2f2f715450", t.Address]
+      ];
+
+      const createdAuctionWithNFT = await sendTransaction({
+        code: createAuctionTransactionWithNFT.replace('RoyaltyVariable', commission),
+        args: [
+          ...auctionParameters,
+          ["xxx", t.String],
+          ["xxx", t.String],
+          ["xxx", t.String],
+          ["xxx", t.String],
+          [1, t.UInt64],
+        ],
+        signers: [admin],
+      });
+
+      const { events } = createdAuctionWithNFT;
+
+      const auctionId = events[0].data.auctionID;
+
+      await new Promise((r) => setTimeout(r, 3000));
+
+      await sendTransaction({
+        code: tickTransaction,
+        args: [],
+        signers: [admin],
+      });
+
+      const result = await sendTransaction({
+        code: placeBidTransaction,
+        args: [
+          [auctionId, t.UInt64],
+          ["50.00", t.UFix64],
+          [admin, t.Address],
+        ],
+        signers: [admin],
+      });
+
+      const { events: sucessfullBidEvents } = result;
+
+      const bidEvent = sucessfullBidEvents.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.Bid`)
+
+      expect(result.errorMessage).toEqual('')
+
+      expect(bidEvent[0].data).toMatchObject({
+        auctionID: auctionId,
+        bidderAddress: admin
+      })
+      
+      expect(parseFloat(bidEvent[0].data.bidPrice, 10)).toEqual(50)
+
+      // Set start auction time event
+      const setStartTimeEvent = sucessfullBidEvents.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.SetStartTime`)
+     
+      expect(setStartTimeEvent[0].data).toMatchObject({
+        auctionID: auctionId,
+      })
+
+      expect(parseFloat(setStartTimeEvent[0].data.startAuctionTime, 10)).toBeGreaterThan(0)
+
+      // There is no extend event, because is the 1st bid in the reserve auction
+      const extendEvent = sucessfullBidEvents.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.Extend`)
+
+      expect(extendEvent.length).toEqual(0)
+
     } catch (e) {
       error = e;
     }
@@ -943,7 +1035,7 @@ export const testSuiteBidAuction = () => describe("Auction bid", () => {
         signers: [second],
       });
 
-      const bidEvent = resultSecondBid.events.filter(event => event.type === `A.${admin.substr(2)}.Auction.Bid`);
+      const bidEvent = resultSecondBid.events.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.Bid`);
 
       expect(bidEvent.length).toBe(1);
 
@@ -1034,7 +1126,7 @@ export const testSuiteBidAuction = () => describe("Auction bid", () => {
         signers: [second],
       });
 
-      const bidEvent = resultSecondBid.events.filter(event => event.type === `A.${admin.substr(2)}.Auction.Bid`);
+      const bidEvent = resultSecondBid.events.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.Bid`);
 
       expect(bidEvent.length).toBe(1);
 
@@ -1126,7 +1218,7 @@ export const testSuiteBidAuction = () => describe("Auction bid", () => {
         signers: [third],
       });
 
-      const bidEvent = resultSecondBid.events.filter(event => event.type === `A.${admin.substr(2)}.Auction.Bid`);
+      const bidEvent = resultSecondBid.events.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.Bid`);
 
       expect(bidEvent.length).toBe(1);
 
@@ -1218,7 +1310,7 @@ export const testSuiteBidAuction = () => describe("Auction bid", () => {
         signers: [third],
       });
 
-      const bidEvent = resultSecondBid.events.filter(event => event.type === `A.${admin.substr(2)}.Auction.Bid`);
+      const bidEvent = resultSecondBid.events.filter(event => event.type === `A.${admin.substr(2)}.AuctionV2.Bid`);
 
       expect(bidEvent.length).toBe(1);
 
