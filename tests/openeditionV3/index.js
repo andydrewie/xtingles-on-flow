@@ -7,11 +7,11 @@ import { testSuiteSettleOpenEdition } from "./settle";
 import { testSuiteOpenEditionPrice } from "./price";
 
 export const testSuiteOpenEdition = () => describe("Open Edition", () => {
- // testSuiteCreateOpenEdition();
+  testSuiteCreateOpenEdition();
   testSuiteOpenEditionStatus();
- /* testSuiteCancelOpenEdition(); */
- // testSuitePurchaseOpenEdition();
- /* testSuiteCommissionPaymentsOpenEdition();
+  testSuiteCancelOpenEdition();
+  testSuitePurchaseOpenEdition();
+  testSuiteCommissionPaymentsOpenEdition();
   testSuiteSettleOpenEdition();
-  testSuiteOpenEditionPrice(); */
+  testSuiteOpenEditionPrice();
 });
