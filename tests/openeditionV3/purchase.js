@@ -768,4 +768,96 @@ export const testSuitePurchaseOpenEdition = () => describe("Open Edition purchas
         } 
         expect(error).toEqual(undefined);   
     }); 
+
+    test("multipurchase check events during succesfull case", async () => { 
+        let error;
+        try {
+            const admin = await getAccountAddress("admin");    
+            const second = await getAccountAddress("second");    
+            const third = await getAccountAddress("third");    
+            
+            const price = 1;
+            const auctionId = 11;
+            const purchasedAmount = 3;
+    
+            const openEditionParameters = [
+                // Link to IPFS
+                ["https://www.ya.ru", t.String],
+                // Name
+                ["Great NFT!", t.String],
+                // Author
+                ["Brad Pitt", t.String],
+                // Description
+                ["Awesome", t.String],
+                // Initial price
+                [price.toFixed(2), t.UFix64],
+                // Start time
+                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+                // Initial auction length  
+                ["1000.00", t.UFix64],
+                // Platftom address
+                [admin, t.Address],
+                // Max value
+                [100, t.UInt64]
+            ];     
+            
+            const commission = `{
+                Address(${third}) : Edition.CommissionStructure(
+                    firstSalePercent: 1.00,
+                    secondSalePercent: 2.00,
+                    description: "xxx"
+                ),
+                Address(${admin}) : Edition.CommissionStructure(
+                    firstSalePercent: 99.00,
+                    secondSalePercent: 7.00,
+                    description: "xxx"
+                )
+            }`;
+            
+            await sendTransaction({
+                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
+                args: openEditionParameters, 
+                signers: [admin],
+            }); 
+    
+            await new Promise((r) => setTimeout(r, 3000));
+    
+            // The transaction to change add block with the last timestamp
+            await sendTransaction({
+                code: tickTransaction,
+                args: [], 
+                signers: [admin],
+            }); 
+            
+            const result = await sendTransaction({
+                code: multiPurchaseTransaction,
+                args: [
+                    // Platftom address
+                    [admin, t.Address],
+                    // Open edtion id
+                    [auctionId, t.UInt64],
+                    [purchasedAmount, t.UInt64]
+                ], 
+                signers: [second],
+            }); 
+    
+            const { events } = result;
+    
+            const sentNFTevents = events.filter(event => event.type === `A.${admin.substr(2)}.Collectible.Deposit`);
+            const openEditionEarnedEvents = events.filter(event => event.type === `A.${admin.substr(2)}.OpenEditionV3.Earned`);
+            const openEditionPurchaseEvents = events.filter(event => event.type === `A.${admin.substr(2)}.OpenEditionV3.Purchase`);
+    
+            // NFT sent to buyer events
+            expect(sentNFTevents.length).toEqual(purchasedAmount);    
+            
+            // Purchase events
+            expect(openEditionPurchaseEvents.length).toEqual(purchasedAmount);
+    
+        } catch(e) {
+            error = e;
+        } 
+    
+        expect(error).toEqual(undefined);  
+    });    
 });
+
