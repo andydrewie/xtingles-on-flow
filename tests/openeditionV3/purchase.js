@@ -638,7 +638,6 @@ export const testSuitePurchaseOpenEdition = () => describe("Open Edition purchas
 
         expect(error).toEqual(undefined);  
     });    
-
      
     test("purchase throws error, because open edition exceedes max value", async () => { 
         let error;
@@ -703,5 +702,70 @@ export const testSuitePurchaseOpenEdition = () => describe("Open Edition purchas
             error = e;
         } 
         expect(error).toMatch(/Number of minted nfts have reached max value/);  
+    }); 
+
+    test("purchase succedes any amount, because open edition max value is 0", async () => { 
+        let error;
+        try {
+            const admin = await getAccountAddress("admin");    
+            const second = await getAccountAddress("second");    
+            
+            const price = 1;
+            const auctionId = 11;
+
+            const openEditionParameters = [
+                // Link to IPFS
+                ["https://www.ya.ru", t.String],
+                // Name
+                ["Great NFT!", t.String],
+                // Author
+                ["Brad Pitt", t.String],
+                // Description
+                ["Awesome", t.String],
+                // Initial price
+                [price.toFixed(2), t.UFix64],
+                // Start time
+                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+                // Initial auction length  
+                ["1000.00", t.UFix64],
+                // Platftom address
+                [admin, t.Address],
+                // Max value
+                [0, t.UInt64]
+            ];            
+            
+            await sendTransaction({
+                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
+                args: openEditionParameters, 
+                signers: [admin],
+            }); 
+
+            await new Promise((r) => setTimeout(r, 3000));
+
+            // The transaction to change add block with the last timestamp
+            await sendTransaction({
+                code: tickTransaction,
+                args: [], 
+                signers: [admin],
+            }); 
+
+
+            await sendTransaction({
+                code: multiPurchaseTransaction,
+                args: [
+                    // Platftom address
+                    [admin, t.Address],
+                    // Open edtion id
+                    [auctionId, t.UInt64],
+                    [3, t.UInt64]
+                ], 
+                signers: [second],
+            }); 
+
+           
+        } catch(e) {
+            error = e;
+        } 
+        expect(error).toEqual(undefined);   
     }); 
 });
