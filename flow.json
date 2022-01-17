@@ -40,7 +40,9 @@
 		"AuthChecker": "./contracts/AuthChecker.cdc",
 		"OpenEditionV2": "./contracts/OpenEditionV2.cdc",
 		"AuctionV2": "./contracts/AuctionV2.cdc",
-		"OpenEditionV3": "./contracts/OpenEditionV3.cdc"
+		"OpenEditionV3": "./contracts/OpenEditionV3.cdc",
+		"Pack": "./contracts/Pack.cdc",
+		"PackLimitedEdition": "./contracts/PackLimitedEdition.cdc"
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -152,7 +154,10 @@
 				"Collectible",		
 				"Auction",
 				"Edition",			
-				"MarketPlace"				
+				"MarketPlace",
+				"AuthChecker",
+				"AuctionV2",
+				"OpenEditionV3"				
 			]
 		}
 	}
