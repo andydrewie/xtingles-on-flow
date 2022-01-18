@@ -323,3 +323,12 @@ OpenEditionV3
  id: UInt64 - open edition id
 
 flow transactions send ./transactions/testnet/CancelOpenEditionV3.cdc --args-json '[{"type": "UInt64","value": "21"}]' --signer testnet-account --network=testnet
+
+  price: UFix64,
+  startTime: UFix64,
+  saleLength: UFix64,
+  platformAddress: Address,
+  numberOfMaxPack: UInt64
+
+
+flow transactions send ./transactions/emulator/packlimitededition/CreatePackLimitedEdition.cdc --args-json '[{"type": "UFix64","value": "1.00"}, {"type": "UFix64","value": "1635703841.00"}, {"type": "UFix64","value": "300000.00"}, {"type": "Address","value": "0x01cf0e2f2f715450"}, {"type": "UInt64","value": "200"}]' --signer testnet-account --network=emulator

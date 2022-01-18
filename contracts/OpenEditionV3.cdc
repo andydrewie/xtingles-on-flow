@@ -1,9 +1,9 @@
-import FungibleToken from 0xf233dcee88fe0abe
-import FlowToken from 0x1654653399040a61
-import Collectible from 0xf5b0eb433389ac3f
-import NonFungibleToken from 0x1d7e57aa55817448
-import Edition from 0xf5b0eb433389ac3f
-import FUSD from 0x3c5959b568896393
+import FungibleToken from "./FungibleToken.cdc"
+import FlowToken from "./FlowToken.cdc"
+import Collectible from "./Collectible.cdc"
+import NonFungibleToken from "./NonFungibleToken.cdc"
+import Edition from "./Edition.cdc"
+import FUSD from "./FUSD.cdc"
 
 pub contract OpenEditionV3 {
 

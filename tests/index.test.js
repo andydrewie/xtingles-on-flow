@@ -18,14 +18,21 @@ import {
    testSuiteOpenEdition as testSuiteOpenEditionV3
 } from "./openeditionV3";
 
+import {
+   testSuitePackLimitedEdition as testSuitePackLimitedEdition
+} from "./packlimitededition";
+
 describe('sequentially run tests', () => {
-  testSuiteMarketPlace();
+   //testSuiteMarketPlace();
 
    testSuiteCollectible();
 
-   testSuiteEdition(); 
-  //testSuiteAuction();
+  /* testSuiteEdition(); 
+   testSuiteAuction();
    testSuiteAuctionV2();
    testSuiteOpenEditionV3();
- // testSuiteOpenEdition();
+   testSuiteOpenEdition();  */
+ // testSuitePackLimitedEdition();
+
+
 })
