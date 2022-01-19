@@ -5,11 +5,11 @@ import * as t from "@onflow/types";
 import { sendTransaction, mintFlow, getAccountAddress, init, emulator, deployContractByName, executeScript } from "flow-js-testing";
 
 export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Edition create", () => {
-    let createOpenEditionTransaction,        
+    let createPackLimitedEditionTransaction,        
         setupFUSDTransaction,    
         mintFUSDTransaction,
-        createOpenEditionWithFakePlatformVault,
-        createOpenEditionWithoutCommissionInfo,
+        createPackLimitedEditionWithFakePlatformVault,
+        createPackLimitedEditionWithoutCommissionInfo,
         tickTransaction,
         commission;
 
@@ -17,7 +17,7 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
         jest.setTimeout(90000);
         init(path.resolve(__dirname, "../"));
 
-        createOpenEditionTransaction = fs.readFileSync(
+        createPackLimitedEditionTransaction = fs.readFileSync(
             path.join(
                 __dirname,
                 `../../transactions/emulator/packlimitededition/CreatePackLimitedEdition.cdc`
@@ -25,21 +25,21 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
             "utf8"
         );   
 
-        /*createOpenEditionWithFakePlatformVault = fs.readFileSync(
+        createPackLimitedEditionWithFakePlatformVault = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/openeditionV3/CreateOpenEditionWithFakePlatformVault.cdc`
+                `../../transactions/emulator/packlimitededition/CreatePackLimitedEditionWithFakePlatformVault.cdc`
             ),
             "utf8"
         );   
 
-        createOpenEditionWithoutCommissionInfo = fs.readFileSync(
+        createPackLimitedEditionWithoutCommissionInfo = fs.readFileSync(
             path.join(
                 __dirname,
-                `../../transactions/emulator/openeditionV3/CreateOpenEditionWithoutCommissionInfo.cdc`
+                `../../transactions/emulator/packlimitededition/CreatePackLimitedEditionWithoutCommissionInfo.cdc`
             ),
             "utf8"
-        );   */
+        );
 
         setupFUSDTransaction = fs.readFileSync(
             path.join(
@@ -99,6 +99,7 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
             FUSD: admin,
             Pack: admin,
             Edition: admin,
+            PackLimitedEdition: admin,            
         };
 
         await deployContractByName({ to: admin, name: "Edition" });
@@ -164,7 +165,7 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
         done();
     });
 
-    test("throw error, when open edition price is 0.00", async () => { 
+    test("throw error, when pack limited edition price is 0.00", async () => { 
         let error;
         try {
             const admin = await getAccountAddress("admin");
@@ -183,7 +184,7 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
             ];            
             
             const result  = await sendTransaction({
-                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
+                code: createPackLimitedEditionTransaction.replace('RoyaltyVariable', commission),
                 args: limitedEditionParameters, 
                 signers: [admin],
             }); 
@@ -195,22 +196,14 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
         expect(error).toMatch(/Price should be more than 0.00/);  
     });
 
-    /*test("throw error, when open edition price is more than 999999.99", async () => { 
+    test("throw error, when pack limited edition price is more than 999999.99", async () => { 
         let error;
         try {
             const admin = await getAccountAddress("admin");
 
             const extraPrice = 1000000;
 
-            const openEditionParameters = [
-                // Link to IPFS
-                ["https://www.ya.ru", t.String],
-                // Name
-                ["Great NFT!", t.String],
-                // Author
-                ["Brad Pitt", t.String],
-                // Description
-                ["Awesome", t.String],
+            const limitedEditionParameters = [
                 // Price
                 ["1000000.00", t.UFix64],
                 // Start time
@@ -224,8 +217,8 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
             ];            
             
             const result  = await sendTransaction({
-                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
+                code: createPackLimitedEditionTransaction.replace('RoyaltyVariable', commission),
+                args: limitedEditionParameters, 
                 signers: [admin],
             }); 
 
@@ -234,61 +227,14 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
             error = e;
         } 
         expect(error).toMatch(/Price should be less than 1 000 000.00/);  
-    });
-
-    test("throw error, when open edition length is 0.00", async () => { 
-        let error;
-        try {
-            const admin = await getAccountAddress("admin");
-
-            const openEditionParameters = [
-                // Link to IPFS
-                ["https://www.ya.ru", t.String],
-                // Name
-                ["Great NFT!", t.String],
-                // Author
-                ["Brad Pitt", t.String],
-                // Description
-                ["Awesome", t.String],
-                // Initial price
-                ["10.00", t.UFix64],
-                // Start time
-                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
-                // Initial auction length  
-                ["0.00", t.UFix64],
-                // Platftom address
-                [admin, t.Address],
-                // Max value
-                [100, t.UInt64],
-            ];            
-            
-            const result  = await sendTransaction({
-                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
-                signers: [admin],
-            }); 
-
-            expect(result).toEqual('')
-        } catch(e) {
-            error = e;
-        } 
-        expect(error).toMatch(/Sale lenght should be more than 0.00/);  
-    });
+    });   
 
     test("throw error, when start time is in the past", async () => { 
         let error;
         try {
             const admin = await getAccountAddress("admin");
 
-            const openEditionParameters = [
-                // Link to IPFS
-                ["https://www.ya.ru", t.String],
-                // Name
-                ["Great NFT!", t.String],
-                // Author
-                ["Brad Pitt", t.String],
-                // Description
-                ["Awesome", t.String],
+            const limitedEditionParameters = [
                 // Initial price
                 ["10.00", t.UFix64],
                 // Start time
@@ -302,8 +248,8 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
             ];            
             
             const result  = await sendTransaction({
-                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
+                code: createPackLimitedEditionTransaction.replace('RoyaltyVariable', commission),
+                args: limitedEditionParameters, 
                 signers: [admin],
             }); 
 
@@ -319,15 +265,7 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
         try {
             const admin = await getAccountAddress("admin");
 
-            const openEditionParameters = [
-                // Link to IPFS
-                ["https://www.ya.ru", t.String],
-                // Name
-                ["Great NFT!", t.String],
-                // Author
-                ["Brad Pitt", t.String],
-                // Description
-                ["Awesome", t.String],
+            const limitedEditionParameters = [
                 // Initial price
                 ["10.00", t.UFix64],
                 // Start time
@@ -341,8 +279,8 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
             ];            
             
             const result  = await sendTransaction({
-                code: createOpenEditionWithFakePlatformVault.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
+                code: createPackLimitedEditionWithFakePlatformVault.replace('RoyaltyVariable', commission),
+                args: limitedEditionParameters, 
                 signers: [admin],
             }); 
 
@@ -358,15 +296,7 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
         try {
             const admin = await getAccountAddress("admin");
 
-            const openEditionParameters = [
-                // Link to IPFS
-                ["https://www.ya.ru", t.String],
-                // Name
-                ["Great NFT!", t.String],
-                // Author
-                ["Brad Pitt", t.String],
-                // Description
-                ["Awesome", t.String],
+            const limitedEditionParameters = [
                 // Initial price
                 ["10.00", t.UFix64],
                 // Start time
@@ -380,8 +310,8 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
             ];            
             
             const result  = await sendTransaction({
-                code: createOpenEditionWithoutCommissionInfo.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
+                code: createPackLimitedEditionWithoutCommissionInfo.replace('RoyaltyVariable', commission),
+                args: limitedEditionParameters, 
                 signers: [admin],
             }); 
 
@@ -392,21 +322,81 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
         expect(error).toMatch(/Edition doesn't exist/);  
     });
 
-    test("successfull case of creation open edition when maxValue is 100", async () => { 
+    test("throw error, when pack limited edition max number is 0", async () => { 
         let error;
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
 
-            const openEditionParameters = [
-                // Link to IPFS
-                ["https://www.ya.ru", t.String],
-                // Name
-                ["Great NFT!", t.String],
-                // Author
-                ["Brad Pitt", t.String],
-                // Description
-                ["Awesome", t.String],
+            const limitedEditionParameters = [
+                [price.toFixed(2), t.UFix64],
+                // Start time
+                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+                // Initial auction length  
+                ["1000.00", t.UFix64],
+                // Platftom address
+                [admin, t.Address],
+                // Max value
+                [0, t.UInt64],
+            ];            
+            
+            const result  = await sendTransaction({
+                code: createPackLimitedEditionWithoutCommissionInfo.replace('RoyaltyVariable', commission),
+                args: limitedEditionParameters, 
+                signers: [admin],
+            }); 
+
+            expect(result).toEqual('')
+        } catch(e) {
+            error = e;
+        } 
+        expect(error).toMatch(/Max amount of packs should be more than 0/);   
+    });
+
+    test("there is no error, when limited edition length is 0.00", async () => { 
+        let error;
+        try {
+            const admin = await getAccountAddress("admin");
+
+            const price = 10;
+
+            const limitedEditionParameters = [
+                // Initial price
+                [price.toFixed(2), t.UFix64],
+                // Start time
+                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+                // Initial auction length  
+                ["0.00", t.UFix64],
+                // Platftom address
+                [admin, t.Address],
+                // Max value
+                [100, t.UInt64],
+            ];            
+            
+            const result  = await sendTransaction({
+                code: createPackLimitedEditionTransaction.replace('RoyaltyVariable', commission),
+                args: limitedEditionParameters, 
+                signers: [admin],
+            }); 
+
+            const { events } = result;
+
+            const limitedEditionCreateEvents = events.filter(event => event.type === `A.${admin.substr(2)}.PackLimitedEdition.Created`);
+            expect(result.errorMessage).toEqual('');
+            expect(limitedEditionCreateEvents.length).toEqual(1);
+        } catch(e) {
+            error = e;
+        } 
+        expect(error).toEqual(undefined);  
+    });
+
+    test("successfull case of creation pack limited edition when maxValue is 100", async () => { 
+        let error;
+        try {
+            const admin = await getAccountAddress("admin");
+            const price = 10;
+
+            const limitedEditionParameters = [
                 // Initial price
                 [price.toFixed(2), t.UFix64],
                 // Start time
@@ -420,67 +410,21 @@ export const testSuiteCreatePackLimitedEdition = () => describe("Pack Limited Ed
             ];            
             
             const result  = await sendTransaction({
-                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
+                code: createPackLimitedEditionTransaction.replace('RoyaltyVariable', commission),
+                args: limitedEditionParameters, 
                 signers: [admin],
             }); 
 
             const { events } = result;
 
-            const openEditionCreateEvents = events.filter(event => event.type === `A.${admin.substr(2)}.OpenEditionV3.Created`);
+            const limitedEditionCreateEvents = events.filter(event => event.type === `A.${admin.substr(2)}.PackLimitedEdition.Created`);
             expect(result.errorMessage).toEqual('');
-            expect(openEditionCreateEvents.length).toEqual(1);
-            expect(parseFloat(openEditionCreateEvents[0].data.price, 10)).toEqual(price);
+            expect(limitedEditionCreateEvents.length).toEqual(1);
+            expect(parseFloat(limitedEditionCreateEvents[0].data.price, 10)).toEqual(price);
 
         } catch(e) {
             error = e;
         } 
         expect(error).toEqual(undefined);  
-    });
-
-    test("successfull case of creation open edition when maxValue is 0", async () => { 
-        let error;
-        try {
-            const admin = await getAccountAddress("admin");
-            const price = 10;
-
-            const openEditionParameters = [
-                // Link to IPFS
-                ["https://www.ya.ru", t.String],
-                // Name
-                ["Great NFT!", t.String],
-                // Author
-                ["Brad Pitt", t.String],
-                // Description
-                ["Awesome", t.String],
-                // Initial price
-                [price.toFixed(2), t.UFix64],
-                // Start time
-                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
-                // Initial auction length  
-                ["1000.00", t.UFix64],
-                // Platftom address
-                [admin, t.Address],
-                // Max value
-                [0, t.UInt64],
-            ];            
-            
-            const result  = await sendTransaction({
-                code: createOpenEditionTransaction.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
-                signers: [admin],
-            }); 
-
-            const { events } = result;
-
-            const openEditionCreateEvents = events.filter(event => event.type === `A.${admin.substr(2)}.OpenEditionV3.Created`);
-            expect(result.errorMessage).toEqual('');
-            expect(openEditionCreateEvents.length).toEqual(1);
-            expect(parseFloat(openEditionCreateEvents[0].data.price, 10)).toEqual(price);
-
-        } catch(e) {
-            error = e;
-        } 
-        expect(error).toEqual(undefined);  
-    });*/
+    }); 
 });

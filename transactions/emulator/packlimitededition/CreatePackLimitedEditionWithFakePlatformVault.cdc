@@ -10,41 +10,31 @@ transaction(
     numberOfMaxPack: UInt64
 ) {
 
-    let openEditionCollectionRef: &PackLimitedEdition.LimitedEditionCollection
+    let limitedEditionCollectionRef: &PackLimitedEdition.LimitedEditionCollection
     let platformCap: Capability<&FUSD.Vault{FungibleToken.Receiver}>
     let royaltyCollectionRef: &Edition.EditionCollection
  
     prepare(acct: AuthAccount) {
 
         self.royaltyCollectionRef = acct.borrow<&Edition.EditionCollection>(from: Edition.CollectionStoragePath)
-            ?? panic("could not borrow edition reference")            
+            ?? panic("could not borrow minter reference")            
 
-        self.openEditionCollectionRef = acct.borrow<&PackLimitedEdition.LimitedEditionCollection>(from: PackLimitedEdition.CollectionStoragePath)
+        self.limitedEditionCollectionRef = acct.borrow<&PackLimitedEdition.LimitedEditionCollection>(from: PackLimitedEdition.CollectionStoragePath)
             ?? panic("could not borrow limited edition collection reference")  
-
-        let platform = getAccount(platformAddress)
+        
+        // Fake platform address, which is non-existen
+        let platform = getAccount(Address(0x01cf0e2f2f715452))
 
         self.platformCap = platform.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
     }
 
     execute {    
         let editionNumber = self.royaltyCollectionRef.createEdition(
-            royalty: {
-                Address(0x01cf0e2f2f715450) : Edition.CommissionStructure(
-                    firstSalePercent: 80.00,
-                    secondSalePercent: 2.00,
-                    description: "Author"
-                ),
-                Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
-                    firstSalePercent: 20.00,
-                    secondSalePercent: 7.00,
-                    description: "Third party"
-                )
-            },
+            royalty: RoyaltyVariable, 
             maxEdition: numberOfMaxPack
         )   
 
-        self.openEditionCollectionRef.createLimitedEdition(
+        self.limitedEditionCollectionRef.createLimitedEdition(
             price: price,
             startTime: startTime,
             saleLength: saleLength, 

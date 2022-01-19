@@ -317,6 +317,7 @@ pub contract PackLimitedEdition {
                 price > 0.00 : "Price should be more than 0.00"
                 price <= 999999.99 : "Price should be less than 1 000 000.00"
                 platformVaultCap.check() : "Platform vault should be reachable"
+                numberOfMaxPack > (0 as UInt64) : "Max amount of packs should be more than 0"
             }     
 
             let editionRef = PackLimitedEdition.account.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath).borrow()! 
