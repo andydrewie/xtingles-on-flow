@@ -81,6 +81,7 @@ export const testSuitePackLimitedPrice = () => describe("Pack LImited Edition pr
             FUSD: admin,
             Pack: admin,
             Edition: admin,
+            PackLimitedEdition: admin, 
         };
 
         await deployContractByName({ to: admin, name: "Edition" });
@@ -158,9 +159,7 @@ export const testSuitePackLimitedPrice = () => describe("Pack LImited Edition pr
                   [1, t.UInt64]
                 ]
             }); 
-
-            console.log(status)
-            
+              
             expect(status).toEqual(null)
         } catch(e) {
             error = e;
@@ -201,8 +200,6 @@ export const testSuitePackLimitedPrice = () => describe("Pack LImited Edition pr
                   [auctionId, t.UInt64]  
                 ]
             });    
-
-            console.log(limitedEditionPrice)
             
             expect(parseFloat(limitedEditionPrice, 10)).toEqual(initialPrice);              
 

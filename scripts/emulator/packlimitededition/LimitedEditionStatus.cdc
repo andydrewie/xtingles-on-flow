@@ -1,11 +1,11 @@
 import PackLimitedEdition from 0x01cf0e2f2f715450
 
-pub fun main(address:Address, id: UInt64): UFix64?? {
+pub fun main(address:Address, id: UInt64): PackLimitedEdition.LimitedEditionStatus? {
     let acct = getAccount(address)
 
     let acctOpenEditionRef = acct.getCapability<&AnyResource{PackLimitedEdition.LimitedEditionCollectionPublic}>(PackLimitedEdition.CollectionPublicPath)
         .borrow()
-        ?? panic("Could not borrow open edition reference")
+        ?? panic("Could not borrow limited edition reference")
 
-    return acctOpenEditionRef.getPrice(id)
+    return acctOpenEditionRef.getLimitedEditionStatus(id)
 }

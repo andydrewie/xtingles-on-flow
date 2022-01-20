@@ -20,6 +20,7 @@ pub contract PackLimitedEdition {
         pub let completed: Bool
         pub let expired: Bool
         pub let cancelled: Bool
+        pub let numberOfMinted: UInt64
      
         init(
             id:UInt64, 
@@ -30,7 +31,8 @@ pub contract PackLimitedEdition {
             endTime: Fix64,
             completed: Bool,
             expired:Bool, 
-            cancelled: Bool
+            cancelled: Bool,
+            numberOfMinted: UInt64, 
         ) {
             self.id = id
             self.price = price         
@@ -41,6 +43,7 @@ pub contract PackLimitedEdition {
             self.completed = completed
             self.expired = expired
             self.cancelled = cancelled
+            self.numberOfMinted = numberOfMinted
         }
     }
 
@@ -102,7 +105,7 @@ pub contract PackLimitedEdition {
             self.startTime = startTime
             self.saleLength = saleLength
             self.editionNumber = editionNumber
-            self.numberOfMintedPack = numberOfMaxPack
+            self.numberOfMintedPack = 0
             self.LimitedEditionID = PackLimitedEdition.totalLimitedEditions
             self.completed = false
             self.cancelled = false
@@ -110,7 +113,7 @@ pub contract PackLimitedEdition {
             self.numberOfMaxPack = numberOfMaxPack
         }        
 
-        pub fun settleLimitedEdition(clientEdition: &Edition.EditionCollection)  {
+        pub fun settleLimitedEdition()  {
 
             pre {
                 !self.cancelled : "The limited edition was cancelled"
@@ -119,10 +122,7 @@ pub contract PackLimitedEdition {
             }
          
             self.completed = true 
-
-            // Write final amount of copies for this NFT
-            clientEdition.changeMaxEdition(id: self.editionNumber, maxEdition: self.numberOfMaxPack)
-                      
+                     
             emit Settled(id: self.LimitedEditionID, price: self.price, amountMintedPack: self.numberOfMintedPack)
         }
   
@@ -197,9 +197,9 @@ pub contract PackLimitedEdition {
             minterCap: Capability<&Pack.PackMinter>
         ) {
             pre {              
-                self.startTime < getCurrentBlock().timestamp : "The limited Edition has not started yet"
-                !self.isExpired() : "The limited Edition time expired"     
-                !self.cancelled : "The limited Edition was cancelled"
+                self.startTime < getCurrentBlock().timestamp : "The limited edition has not started yet"
+                !self.isExpired() : "The limited edition time expired"     
+                !self.cancelled : "The limited edition was cancelled"
                 buyerTokens.balance == self.price: "Not exact amount tokens to buy the pack"       
                 self.numberOfMintedPack < self.numberOfMaxPack: "Number of minted packs have reached max value"              
             }
@@ -248,19 +248,17 @@ pub contract PackLimitedEdition {
                 endTime: Fix64(self.startTime + self.saleLength),            
                 completed: self.completed,
                 expired: self.isExpired(),
-                cancelled: self.cancelled    
+                cancelled: self.cancelled,
+                numberOfMinted: self.numberOfMintedPack   
             )
         }
 
-        pub fun cancelLimitedEdition(clientEdition: &Edition.EditionCollection) {
+        pub fun cancelLimitedEdition() {
             pre {
                !self.completed : "The limited edition has already settled"              
                !self.cancelled : "The limited edition has been cancelled earlier" 
-            }    
-             
-            // Write final amount of copies for this NFT
-            clientEdition.changeMaxEdition(id: self.editionNumber, maxEdition: self.numberOfMaxPack)  
-            
+            }
+
             self.cancelled = true
 
             emit Canceled(id: self.LimitedEditionID, amountMintedPack: self.numberOfMintedPack)
@@ -386,23 +384,23 @@ pub contract PackLimitedEdition {
 
         // settleLimitedEdition sends the auction item to the highest bidder
         // and deposits the FungibleTokens into the auction owner's account
-        pub fun settleLimitedEdition(id: UInt64, clientEdition: &Edition.EditionCollection) {
+        pub fun settleLimitedEdition(id: UInt64) {
             pre {
                 self.LimitedEditionsItems[id] != nil:
                     "Limited Edition does not exist"
             }
             
             let itemRef = &self.LimitedEditionsItems[id] as &LimitedEditionItem
-            itemRef.settleLimitedEdition(clientEdition: clientEdition)
+            itemRef.settleLimitedEdition()
         }
 
-        pub fun cancelLimitedEdition(id: UInt64, clientEdition: &Edition.EditionCollection) {
+        pub fun cancelLimitedEdition(id: UInt64) {
             pre {
                 self.LimitedEditionsItems[id] != nil:
                     "Limited Edition does not exist"
             }
             let itemRef = &self.LimitedEditionsItems[id] as &LimitedEditionItem     
-            itemRef.cancelLimitedEdition(clientEdition: clientEdition)
+            itemRef.cancelLimitedEdition()
         }
 
         // purchase sends the buyer's tokens to the buyer's tokens vault      
