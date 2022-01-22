@@ -22,6 +22,10 @@ import {
    testSuitePackLimitedEdition as testSuitePackLimitedEdition
 } from "./packlimitededition";
 
+import {
+   testSuitePack
+} from "./pack";
+
 describe('sequentially run tests', () => {
    //testSuiteMarketPlace();
 
@@ -29,10 +33,10 @@ describe('sequentially run tests', () => {
 
   /* testSuiteEdition(); 
    testSuiteAuction();
-   testSuiteAuctionV2();
-   testSuiteOpenEditionV3();
-   testSuiteOpenEdition();  */
+   testSuiteAuctionV2(); */
+  // testSuiteOpenEditionV3();
+   //testSuiteOpenEdition();  
    testSuitePackLimitedEdition();
-
+  /* testSuitePack();*/
 
 })

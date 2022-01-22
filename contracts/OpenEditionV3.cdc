@@ -205,7 +205,7 @@ pub contract OpenEditionV3 {
                 !self.isExpired() : "The open edition time expired"     
                 !self.cancelled : "Open edition was cancelled"
                 buyerTokens.balance == self.price: "Not exact amount tokens to buy the NFT"       
-                (self.numberOfMintedNFT < self.numberOfMaxNFT) || self.numberOfMaxNFT == 0: "Number of minted nfts have reached max value"              
+                (self.numberOfMintedNFT < self.numberOfMaxNFT) || self.numberOfMaxNFT == (0 as UInt64): "Number of minted nfts have reached max value"              
             }
 
             // Get minter reference to create NFT
@@ -244,7 +244,7 @@ pub contract OpenEditionV3 {
             )     
 
             // Set end of purchases, when amount of purchased nfts attained max value
-            if (self.numberOfMaxNFT == self.numberOfMintedNFT && self.numberOfMintedNFT > 0)  {
+            if (self.numberOfMaxNFT == self.numberOfMintedNFT && self.numberOfMintedNFT > (0 as UInt64))  {
                 self.saleLength = getCurrentBlock().timestamp - self.startTime;
             }
 

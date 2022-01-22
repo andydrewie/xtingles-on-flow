@@ -7,14 +7,13 @@ import { sendTransaction, executeScript, mintFlow, getAccountAddress, init, emul
 // Common number for all copies of the item
 const editionNumber = 1;
 
-export const testSuiteCollectible = () => describe("Collectible", () => {
-  let mintCollectibleTransaction,
-    checkCollectibleScript,
-    checkCollectibleStorageScript,
-    getNFTIdsScript,
-    checkEditionNumberNFTScript,
-    transferCollectibleTransaction,
-    initializeNFTStorageTransaction,
+export const testSuitePack = () => describe("Pack", () => {
+  let mintPackTransaction,
+    checkPackStorageScript,
+    getPackIdsScript,
+    checkEditionNumberPackScript,
+    transferPackTransaction,
+    initializePackStorageTransaction,
     createEditionTransaction,
     setupFUSDTransaction,
     mintFUSDTransaction;
@@ -23,58 +22,50 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
     jest.setTimeout(120000);
     init(path.resolve(__dirname, "../"));
 
-    mintCollectibleTransaction = fs.readFileSync(
+    mintPackTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/MintCollectible.cdc`
+        `../../transactions/emulator/pack/MintPack.cdc`
       ),
       "utf8"
     );
 
-    getNFTIdsScript = fs.readFileSync(
+    getPackIdsScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/GetNFTIds.cdc`
+        `../../scripts/emulator/pack/GetPackIds.cdc`
       ),
       "utf8"
     );
 
-    checkCollectibleScript = fs.readFileSync(
+    checkPackStorageScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/CheckCollectible.cdc`
+        `../../scripts/emulator/pack/CheckPackStorage.cdc`
       ),
       "utf8"
     );
 
-    checkCollectibleStorageScript = fs.readFileSync(
+    checkEditionNumberPackScript = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/CheckCollectibleStorage.cdc`
+        `../../scripts/emulator/pack/CheckEditionNumberPack.cdc`
       ),
       "utf8"
     );
 
-    checkEditionNumberNFTScript = fs.readFileSync(
+    transferPackTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../scripts/emulator/CheckEditionNumberNFT.cdc`
+        `../../transactions/emulator/pack/TransferPack.cdc`
       ),
       "utf8"
     );
 
-    transferCollectibleTransaction = fs.readFileSync(
+    initializePackStorageTransaction = fs.readFileSync(
       path.join(
         __dirname,
-        `../../transactions/emulator/TransferNFT.cdc`
-      ),
-      "utf8"
-    );
-
-    initializeNFTStorageTransaction = fs.readFileSync(
-      path.join(
-        __dirname,
-        `../../transactions/emulator/InitializeNFTStorage.cdc`
+        `../../transactions/emulator/pack/InitializePackStorage.cdc`
       ),
       "utf8"
     );
@@ -121,8 +112,7 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
     await deployContractByName({ to: admin, name: "NonFungibleToken" });
     await deployContractByName({ to: admin, name: "Edition" });
     await deployContractByName({ to: admin, name: "FUSD" });
-    await deployContractByName({ to: admin, name: "Collectible", addressMap });
-
+    await deployContractByName({ to: admin, name: "Pack", addressMap });
 
     // Setup FUSD Vault
     await sendTransaction({
@@ -206,7 +196,7 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
     try {
       const admin = await getAccountAddress("admin");
       const result = await executeScript({
-        code: checkCollectibleStorageScript,
+        code: checkPackStorageScript,
         args: [
           [admin, t.Address]
         ]
@@ -225,18 +215,8 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
       const admin = await getAccountAddress("admin");
       const nonExistentEditionNumber = 100;
       const result = await sendTransaction({
-        code: mintCollectibleTransaction,
+        code: mintPackTransaction,
         args: [
-          // Link to IPFS file
-          ["https://www.ya.ru", t.String],
-          // Name  
-          ["Great NFT!", t.String],
-          // Author's name
-          ["Brad Pitt", t.String],
-          // Description
-          ["Awesome", t.String],
-          // Number of copy
-          [1, t.UInt64],
           // Common number for all copies of the item
           [nonExistentEditionNumber, t.UInt64],
         ],
@@ -254,18 +234,8 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
     try {
       const admin = await getAccountAddress("admin");
       const result = await sendTransaction({
-        code: mintCollectibleTransaction,
-        args: [
-          // Link to IPFS file
-          ["https://www.ya.ru", t.String],
-          // Name  
-          ["Great NFT!", t.String],
-          // Author's name
-          ["Brad Pitt", t.String],
-          // Description
-          ["Awesome", t.String],
-          // Number of copy
-          [1, t.UInt64],
+        code: mintPackTransaction,
+        args: [        
           // Common number for all copies of the item
           [editionNumber, t.UInt64],
         ],
@@ -273,8 +243,8 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
       });
       const { events } = result;
 
-      expect(events[0].type).toEqual(`A.${admin.substr(2)}.Collectible.Created`);
-      expect(events[1].type).toEqual(`A.${admin.substr(2)}.Collectible.Deposit`);
+      expect(events[0].type).toEqual(`A.${admin.substr(2)}.Pack.Created`);
+      expect(events[1].type).toEqual(`A.${admin.substr(2)}.Pack.Deposit`);
       expect(events[1].data).toEqual({ id: 1, to: admin });
     } catch (e) {
       error = e;
@@ -288,27 +258,17 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
       const admin = await getAccountAddress("admin");
 
       const resultBefore = await executeScript({
-        code: getNFTIdsScript,
+        code: getPackIdsScript,
         args: [
           [admin, t.Address]
         ]
       });
   
       const mintedNFT = await sendTransaction({
-        code: mintCollectibleTransaction,
+        code: mintPackTransaction,
         args: [
-            // Link to IPFS file
-            ["https://www.ya.ru", t.String],
-            // Name  
-            ["Great NFT!", t.String],
-            // Author's name
-            ["Brad Pitt", t.String],
-            // Description
-            ["Awesome", t.String],
-            // Number of copy
-            [1, t.UInt64],
-            // Common number for all copies of the item
-            [editionNumber, t.UInt64],
+          // Common number for all copies of the item
+          [editionNumber, t.UInt64],
         ],
         signers: [admin],
       });
@@ -316,7 +276,7 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
       const { events } = mintedNFT;
   
       const resultAfter = await executeScript({
-        code: getNFTIdsScript,
+        code: getPackIdsScript,
         args: [
           [admin, t.Address]
         ]
@@ -331,80 +291,17 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
       error = e;
     }
 
-    expect(error).toEqual(undefined);
-  
+    expect(error).toEqual(undefined);  
   });
 
-  test("getCollectible function returns NFT in the storage", async () => {
-    let error;
-    try {
-      const admin = await getAccountAddress("admin");
-      await sendTransaction({
-        code: mintCollectibleTransaction,
-        args: [
-          // Link to IPFS file
-          ["https://www.ya.ru", t.String],
-          // Name  
-          ["Great NFT!", t.String],
-          // Author's name
-          ["Brad Pitt", t.String],
-          // Description
-          ["Awesome", t.String],
-          // Number of copy
-          [1, t.UInt64],
-          // Common number for all copies of the item
-          [editionNumber, t.UInt64],
-        ],
-        signers: [admin],
-      });
-
-      const result = await executeScript({
-        code: checkCollectibleScript,
-        args: [
-          [admin, t.Address]
-        ]
-      });
-
-      expect(result.length).toBe(1);
-
-      expect(result[0].metadata).toMatchObject(
-        {
-          // Link to IPFS file
-          "link": "https://www.ya.ru",
-          // Name 
-          "name": "Great NFT!",
-          // Author name
-          "author": "Brad Pitt",
-          // Description
-          "description": "Awesome",
-          // Number of copy
-          "edition": 1,
-        })
-      } catch(e) {
-        error = e;
-      }
-   
-      expect(error).toEqual(undefined);
-  });
-
-  test("getEditionNumber returns nil, when NFT does not exist on the account", async () => {
+  test("getEditionNumber returns nil, when pack does not exist on the account", async () => {
     let error;
     try {
       const admin = await getAccountAddress("admin");  
 
       await sendTransaction({
-        code: mintCollectibleTransaction,
+        code: mintPackTransaction,
         args: [
-            // Link to IPFS file
-            ["https://www.ya.ru", t.String],
-            // Name  
-            ["Great NFT!", t.String],
-            // Author's name
-            ["Brad Pitt", t.String],
-            // Description
-            ["Awesome", t.String],
-            // Number of copy
-            [1, t.UInt64],
             // Common number for all copies of the item
             [editionNumber, t.UInt64],
         ],
@@ -412,11 +309,11 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
       });
 
       const result = await executeScript({
-        code: checkEditionNumberNFTScript,
+        code: checkEditionNumberPackScript,
         args: [
           // NFT's owner address
           [admin, t.Address],
-          // Non-existent NFT id
+          // Non-existent pack id
           [100, t.UInt64],
         ]
       });
@@ -434,18 +331,8 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
     const admin = await getAccountAddress("admin");
 
     await sendTransaction({
-      code: mintCollectibleTransaction,
+      code: mintPackTransaction,
       args: [
-          // Link to IPFS file
-          ["https://www.ya.ru", t.String],
-          // Name  
-          ["Great NFT!", t.String],
-          // Author's name
-          ["Brad Pitt", t.String],
-          // Description
-          ["Awesome", t.String],
-          // Number of copy
-          [1, t.UInt64],
           // Common number for all copies of the item
           [editionNumber, t.UInt64],
       ],
@@ -453,7 +340,7 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
     });
 
     const result = await executeScript({
-      code: checkEditionNumberNFTScript,
+      code: checkEditionNumberPackScript,
       args: [
         // NFT's owner address
         [admin, t.Address],
@@ -470,22 +357,14 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
       expect(error).toEqual(undefined);   
   });
 
-  test("transfer collectible check events", async () => {
+  test("throw error, because withdraw pack from account", async () => {
+    let error;
+    try {
     const admin = await getAccountAddress("admin");
 
     await sendTransaction({
-      code: mintCollectibleTransaction,
+      code: mintPackTransaction,
       args: [
-        // Link to IPFS file
-        ["https://www.ya.ru", t.String],
-        // Name  
-        ["Great NFT!", t.String],
-        // Author's name
-        ["Brad Pitt", t.String],
-        // Description
-        ["Awesome", t.String],
-        // Number of copy
-        [1, t.UInt64],
         // Common number for all copies of the item
         [editionNumber, t.UInt64],
       ],
@@ -494,31 +373,28 @@ export const testSuiteCollectible = () => describe("Collectible", () => {
 
     const second = await getAccountAddress("second");
 
-    // Create resource to store NFT on the second account
+    // Create resource to store pack on the second account
     await sendTransaction({
-      code: initializeNFTStorageTransaction,
+      code: initializePackStorageTransaction,
       args: [],
       signers: [second],
     });
 
-    // Transfer NFT from the admin to the second account
-    const result = await sendTransaction({
-      code: transferCollectibleTransaction,
+    // Transfer pack from the admin to the second account
+    await sendTransaction({
+      code: transferPackTransaction,
       args: [
         // Recepient
         [second, t.Address],
-        // NFT id
+        // Pack id
         [1, t.UInt64]
       ],
       signers: [admin],
     });
 
-    const { events } = result;
-
-    expect(events[0].type).toEqual(`A.${admin.substr(2)}.Collectible.Withdraw`);
-    expect(events[0].data).toEqual({ id: 1, from: admin });
-
-    expect(events[1].type).toEqual(`A.${admin.substr(2)}.Collectible.Deposit`);
-    expect(events[1].data).toEqual({ id: 1, to: second });
+  } catch(e) {
+    error = e;
+  }
+  expect(error).toMatch(/The pack is non transferable from account/);  
   });
 });

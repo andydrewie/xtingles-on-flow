@@ -53,7 +53,7 @@ pub contract PackLimitedEdition {
     // Events
     pub event LimitedEditionCollectionCreated()
     pub event Created(id: UInt64, price: UFix64, startTime: UFix64, numberOfMaxPack: UInt64)
-    pub event Purchase(LimitedEditionId: UInt64, buyer: Address, price: UFix64, NFTid: UInt64, edition: UInt64, purchaseTime: UFix64)
+    pub event Purchase(limitedEditionID: UInt64, buyer: Address, price: UFix64, NFTid: UInt64, edition: UInt64, purchaseTime: UFix64)
     pub event Earned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
     pub event FailEarned(nftID: UInt64, amount: UFix64, owner: Address, type: String)
     pub event Settled(id: UInt64, price: UFix64, amountMintedPack: UInt64)
@@ -66,7 +66,7 @@ pub contract PackLimitedEdition {
         priv var numberOfMintedPack: UInt64
 
         // The id of this individual Limited Edition
-        pub let LimitedEditionID: UInt64
+        pub let limitedEditionID: UInt64
 
         // The current price
         pub let price: UFix64
@@ -106,7 +106,7 @@ pub contract PackLimitedEdition {
             self.saleLength = saleLength
             self.editionNumber = editionNumber
             self.numberOfMintedPack = 0
-            self.LimitedEditionID = PackLimitedEdition.totalLimitedEditions
+            self.limitedEditionID = PackLimitedEdition.totalLimitedEditions
             self.completed = false
             self.cancelled = false
             self.platformVaultCap = platformVaultCap
@@ -123,7 +123,7 @@ pub contract PackLimitedEdition {
          
             self.completed = true 
                      
-            emit Settled(id: self.LimitedEditionID, price: self.price, amountMintedPack: self.numberOfMintedPack)
+            emit Settled(id: self.limitedEditionID, price: self.price, amountMintedPack: self.numberOfMintedPack)
         }
   
         //this can be negative if is expired
@@ -234,13 +234,13 @@ pub contract PackLimitedEdition {
             }
 
             // Purchase event
-            emit Purchase(LimitedEditionId: self.LimitedEditionID, buyer: buyerCollectionCap.borrow()!.owner!.address, price: self.price, NFTid: packId, edition: self.numberOfMintedPack, purchaseTime: getCurrentBlock().timestamp)
+            emit Purchase(limitedEditionID: self.limitedEditionID, buyer: buyerCollectionCap.borrow()!.owner!.address, price: self.price, NFTid: packId, edition: self.numberOfMintedPack, purchaseTime: getCurrentBlock().timestamp)
         }
 
         pub fun getLimitedEditionStatus() : LimitedEditionStatus {         
 
             return LimitedEditionStatus(
-                id: self.LimitedEditionID,
+                id: self.limitedEditionID,
                 price: self.price,             
                 active: !self.completed && !self.isExpired(),
                 timeRemaining: self.timeRemaining(),           
@@ -261,7 +261,7 @@ pub contract PackLimitedEdition {
 
             self.cancelled = true
 
-            emit Canceled(id: self.LimitedEditionID, amountMintedPack: self.numberOfMintedPack)
+            emit Canceled(id: self.limitedEditionID, amountMintedPack: self.numberOfMintedPack)
         }
 
         destroy() {
@@ -335,7 +335,7 @@ pub contract PackLimitedEdition {
                 numberOfMaxPack: numberOfMaxPack
             )
 
-            let id = item.LimitedEditionID
+            let id = item.limitedEditionID
 
             // update the auction items dictionary with the new resources
             let oldItem <- self.LimitedEditionsItems[id] <- item

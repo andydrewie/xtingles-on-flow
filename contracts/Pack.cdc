@@ -57,8 +57,12 @@ pub contract Pack: NonFungibleToken {
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
         // withdraw
-        // Removes an NFT from the collection and moves it to the caller
+        // Forbid to withdraw pack from account
         pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
+            pre {
+                withdrawID == (0 as UInt64): ""
+            }
+
             let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
 
             emit Withdraw(id: token.id, from: self.owner?.address)

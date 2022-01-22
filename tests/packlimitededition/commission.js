@@ -249,6 +249,8 @@ export const testSuiteCommissionPaymentsLimitedEdition = () => describe("Limited
             console.log(earnedEvents);
 
             console.log(failEarnedEvents);
+
+            console.log(third);
             
             // Earned events. All tokens are sent to platform vault
             expect(earnedEvents.length).toEqual(1);

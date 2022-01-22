@@ -14,13 +14,13 @@ transaction(
             .borrow()
             ?? panic("Could not borrow receiver reference")        
         
-        self.minterRef = acct.borrow<&Pack.NFTMinter>(from: Pack.MinterStoragePath)
+        self.minterRef = acct.borrow<&Pack.PackMinter>(from: Pack.MinterStoragePath)
             ?? panic("could not borrow minter reference")       
     }
 
     execute {
               
-        let newPack <- self.minterRef.mintNFT(editionNumber: editionNumber)
+        let newPack <- self.minterRef.mintPack(editionNumber: editionNumber)
     
         self.receiverRef.deposit(token: <- newPack)
 
