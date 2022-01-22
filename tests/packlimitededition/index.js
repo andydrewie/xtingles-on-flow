@@ -7,11 +7,11 @@ import { testSuiteLimitedEditionStatus } from './status';
 import { testSuiteCommissionPaymentsLimitedEdition } from './commission';
 
 export const testSuitePackLimitedEdition = () => describe("Pack limited edition", () => {
- /* testSuiteCreatePackLimitedEdition();
+  testSuiteCreatePackLimitedEdition();
   testSuitePackLimitedPrice();
   testSuitePurchaseLimitedEdition();
   testSuiteCancelLimitedEdition();
   testSuiteSettleLimitedEdition();
-  testSuiteLimitedEditionStatus(); */
+  testSuiteLimitedEditionStatus();
   testSuiteCommissionPaymentsLimitedEdition();
 });

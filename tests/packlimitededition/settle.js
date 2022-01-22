@@ -12,7 +12,8 @@ export const testSuiteSettleLimitedEdition = () => describe("Limited Edition set
         cancelTransaction,
         limitedEditionStatusScript,    
         settleTransaction, 
-        commission;
+        commission,
+        multiPurchaseTransaction;
 
     beforeAll(async () => {
         jest.setTimeout(90000);
@@ -70,6 +71,14 @@ export const testSuiteSettleLimitedEdition = () => describe("Limited Edition set
             path.join(
                 __dirname,
                 `../../scripts/emulator/packlimitededition/LimitedEditionStatus.cdc`
+            ),
+            "utf8"
+        );
+
+        multiPurchaseTransaction = fs.readFileSync(
+            path.join(
+                __dirname,
+                `../../transactions/emulator/packlimitededition/MultiPurchaseLimitedEdition.cdc`
             ),
             "utf8"
         );
@@ -427,6 +436,205 @@ export const testSuiteSettleLimitedEdition = () => describe("Limited Edition set
             error = e;
         } 
 
+        expect(error).toEqual(undefined);  
+    });
+
+    test("throw error, when limited edition lenght is 0 and packs are not purchased", async () => { 
+        let error;
+        try {
+            const admin = await getAccountAddress("admin");    
+            const second = await getAccountAddress("second");    
+            const third = await getAccountAddress("third");    
+            
+            const price = 1;
+            const auctionId = 11;
+            const purchasedAmount = 3;
+    
+            const limitedEditionParameters = [             
+                [price.toFixed(2), t.UFix64],
+                // Start time
+                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+                // Initial auction length  
+                ["0.00", t.UFix64],
+                // Platftom address
+                [admin, t.Address],
+                // Max value
+                [5, t.UInt64]
+            ];     
+            
+            const commission = `{
+                Address(${third}) : Edition.CommissionStructure(
+                    firstSalePercent: 1.00,
+                    secondSalePercent: 2.00,
+                    description: "xxx"
+                ),
+                Address(${admin}) : Edition.CommissionStructure(
+                    firstSalePercent: 99.00,
+                    secondSalePercent: 7.00,
+                    description: "xxx"
+                )
+            }`;
+            
+            await sendTransaction({
+                code: createLimitedEditionTransaction.replace('RoyaltyVariable', commission),
+                args: limitedEditionParameters, 
+                signers: [admin],
+            }); 
+    
+            await new Promise((r) => setTimeout(r, 3000));
+    
+            // The transaction to change add block with the last timestamp
+            await sendTransaction({
+                code: tickTransaction,
+                args: [], 
+                signers: [admin],
+            }); 
+            
+            const result = await sendTransaction({
+                code: multiPurchaseTransaction,
+                args: [
+                    // Platftom address
+                    [admin, t.Address],
+                    // Open edtion id
+                    [auctionId, t.UInt64],
+                    [purchasedAmount, t.UInt64]
+                ], 
+                signers: [second],
+            }); 
+
+            await new Promise((r) => setTimeout(r, 3000));
+
+            // The transaction to change add block with the last timestamp
+            await sendTransaction({
+                code: tickTransaction,
+                args: [], 
+                signers: [admin],
+            }); 
+
+            // Settle
+            await sendTransaction({
+                code: settleTransaction,
+                args: [[auctionId, t.UInt64]], 
+                signers: [admin],
+            });               
+    
+        } catch(e) {
+            error = e;
+        } 
+    
+        expect(error).toMatch(/The limited edition time has not expired yet/);  
+    });
+
+    test("settle check events in successfull case, when limited edition lenght is 0 and all packs are purchased", async () => { 
+        let error;
+        try {
+            const admin = await getAccountAddress("admin");    
+            const second = await getAccountAddress("second");    
+            const third = await getAccountAddress("third");    
+            
+            const price = 1;
+            const auctionId = 11;
+            const purchasedAmount = 5;
+    
+            const limitedEditionParameters = [             
+                [price.toFixed(2), t.UFix64],
+                // Start time
+                [(new Date().getTime() / 1000 + 1).toFixed(2), t.UFix64],
+                // Initial auction length  
+                ["0.00", t.UFix64],
+                // Platftom address
+                [admin, t.Address],
+                // Max value
+                [5, t.UInt64]
+            ];     
+            
+            const commission = `{
+                Address(${third}) : Edition.CommissionStructure(
+                    firstSalePercent: 1.00,
+                    secondSalePercent: 2.00,
+                    description: "xxx"
+                ),
+                Address(${admin}) : Edition.CommissionStructure(
+                    firstSalePercent: 99.00,
+                    secondSalePercent: 7.00,
+                    description: "xxx"
+                )
+            }`;
+            
+            await sendTransaction({
+                code: createLimitedEditionTransaction.replace('RoyaltyVariable', commission),
+                args: limitedEditionParameters, 
+                signers: [admin],
+            }); 
+    
+            await new Promise((r) => setTimeout(r, 3000));
+    
+            // The transaction to change add block with the last timestamp
+            await sendTransaction({
+                code: tickTransaction,
+                args: [], 
+                signers: [admin],
+            }); 
+            
+            await sendTransaction({
+                code: multiPurchaseTransaction,
+                args: [
+                    // Platftom address
+                    [admin, t.Address],
+                    // Open edtion id
+                    [auctionId, t.UInt64],
+                    [purchasedAmount, t.UInt64]
+                ], 
+                signers: [second],
+            }); 
+
+            await new Promise((r) => setTimeout(r, 3000));
+
+            // The transaction to change add block with the last timestamp
+            await sendTransaction({
+                code: tickTransaction,
+                args: [], 
+                signers: [admin],
+            }); 
+
+            const statusBefore = await executeScript({
+                code: limitedEditionStatusScript,
+                args: [
+                  [admin, t.Address],     
+                  [auctionId, t.UInt64]  
+                ]
+            });
+
+            // Settle
+            const result = await sendTransaction({
+                code: settleTransaction,
+                args: [[auctionId, t.UInt64]], 
+                signers: [admin],
+            }); 
+         
+            const statusAfter = await executeScript({
+                code: limitedEditionStatusScript,
+                args: [
+                  [admin, t.Address],     
+                  [auctionId, t.UInt64]  
+                ]
+            });
+            
+            const { events } = result;
+  
+            // Settle event
+            expect(events[0].type).toEqual(`A.${admin.substr(2)}.PackLimitedEdition.Settled`);
+            expect(parseFloat(events[0].data.price, 10)).toEqual(price);
+            
+            expect(statusBefore.completed).toBe(false);
+            expect(statusAfter.completed).toBe(true);
+
+            expect(result.errorMessage).toEqual('')   
+    
+        } catch(e) {
+            error = e;
+        } 
+    
         expect(error).toEqual(undefined);  
     });
 });

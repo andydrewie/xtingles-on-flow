@@ -574,8 +574,8 @@ export const testSuitePurchaseLimitedEdition = () => describe("Limited Edition p
             expect(sentNFTevents[0].data.to).toEqual(second);
         
             // Commission payments events
-           // expect(limitedEditionEarnedEvents[0].data.owner).toEqual(third);
-           // expect(limitedEditionEarnedEvents[1].data.owner).toEqual(admin);
+            expect(limitedEditionEarnedEvents[0].data.owner).toEqual(third);
+            expect(limitedEditionEarnedEvents[1].data.owner).toEqual(admin);
 
             // Purchase events
             expect(limitedEditionPurchaseEvents[0].data.buyer).toEqual(second);

@@ -172,7 +172,7 @@ export const testSuiteCommissionPaymentsLimitedEdition = () => describe("Limited
             const platformPercent = 99;
             const auctionId = 11;
 
-            const openEditionParameters = [
+            const limitedEditionParameters = [
                 // Initial price
                 [price.toFixed(2), t.UFix64],
                 // Start time
@@ -200,7 +200,7 @@ export const testSuiteCommissionPaymentsLimitedEdition = () => describe("Limited
             
             await sendTransaction({
                 code: createLimitedEditionTransaction.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
+                args: limitedEditionParameters, 
                 signers: [admin],
             }); 
 
@@ -283,7 +283,7 @@ export const testSuiteCommissionPaymentsLimitedEdition = () => describe("Limited
             const platformPercent = 99;
             const auctionId = 11;
 
-            const openEditionParameters = [
+            const limitedEditionParameters = [
                 // Initial price
                 [price.toFixed(2), t.UFix64],
                 // Start time
@@ -311,7 +311,7 @@ export const testSuiteCommissionPaymentsLimitedEdition = () => describe("Limited
             
             await sendTransaction({
                 code: createLimitedEditionTransaction.replace('RoyaltyVariable', commission),
-                args: openEditionParameters, 
+                args: limitedEditionParameters, 
                 signers: [admin],
             }); 
 
