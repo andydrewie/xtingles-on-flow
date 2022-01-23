@@ -1,8 +1,8 @@
-import FungibleToken from 0xf233dcee88fe0abe
-import FUSD from 0x3c5959b568896393
-import Collectible from 0xf5b0eb433389ac3f
-import NonFungibleToken from 0x1d7e57aa55817448
-import Edition from 0xf5b0eb433389ac3f
+import FungibleToken from "./FungibleToken.cdc"
+import FUSD from "./FUSD.cdc"
+import Collectible from "./Collectible.cdc"
+import NonFungibleToken from "./NonFungibleToken.cdc"
+import Edition from "./Edition.cdc"
 
 pub contract AuctionV2 {
 

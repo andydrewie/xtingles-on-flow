@@ -18,14 +18,25 @@ import {
    testSuiteOpenEdition as testSuiteOpenEditionV3
 } from "./openeditionV3";
 
+import {
+   testSuitePackLimitedEdition as testSuitePackLimitedEdition
+} from "./packlimitededition";
+
+import {
+   testSuitePack
+} from "./pack";
+
 describe('sequentially run tests', () => {
-  testSuiteMarketPlace();
+   //testSuiteMarketPlace();
 
-   testSuiteCollectible();
+  // testSuiteCollectible();
 
-   testSuiteEdition(); 
-  //testSuiteAuction();
-   testSuiteAuctionV2();
-   testSuiteOpenEditionV3();
- // testSuiteOpenEdition();
+  /* testSuiteEdition(); 
+   testSuiteAuction();
+   testSuiteAuctionV2(); */
+  // testSuiteOpenEditionV3();
+   //testSuiteOpenEdition();  
+   testSuitePackLimitedEdition();
+  /* testSuitePack();*/
+
 })

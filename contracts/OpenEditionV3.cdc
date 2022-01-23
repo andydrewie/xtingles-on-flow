@@ -1,9 +1,9 @@
-import FungibleToken from 0xf233dcee88fe0abe
-import FlowToken from 0x1654653399040a61
-import Collectible from 0xf5b0eb433389ac3f
-import NonFungibleToken from 0x1d7e57aa55817448
-import Edition from 0xf5b0eb433389ac3f
-import FUSD from 0x3c5959b568896393
+import FungibleToken from "./FungibleToken.cdc"
+import FlowToken from "./FlowToken.cdc"
+import Collectible from "./Collectible.cdc"
+import NonFungibleToken from "./NonFungibleToken.cdc"
+import Edition from "./Edition.cdc"
+import FUSD from "./FUSD.cdc"
 
 pub contract OpenEditionV3 {
 
@@ -205,7 +205,7 @@ pub contract OpenEditionV3 {
                 !self.isExpired() : "The open edition time expired"     
                 !self.cancelled : "Open edition was cancelled"
                 buyerTokens.balance == self.price: "Not exact amount tokens to buy the NFT"       
-                (self.numberOfMintedNFT < self.numberOfMaxNFT) || self.numberOfMaxNFT == 0: "Number of minted nfts have reached max value"              
+                (self.numberOfMintedNFT < self.numberOfMaxNFT) || self.numberOfMaxNFT == (0 as UInt64): "Number of minted nfts have reached max value"              
             }
 
             // Get minter reference to create NFT
@@ -244,7 +244,7 @@ pub contract OpenEditionV3 {
             )     
 
             // Set end of purchases, when amount of purchased nfts attained max value
-            if (self.numberOfMaxNFT == self.numberOfMintedNFT && self.numberOfMintedNFT > 0)  {
+            if (self.numberOfMaxNFT == self.numberOfMintedNFT && self.numberOfMintedNFT > (0 as UInt64))  {
                 self.saleLength = getCurrentBlock().timestamp - self.startTime;
             }
 
