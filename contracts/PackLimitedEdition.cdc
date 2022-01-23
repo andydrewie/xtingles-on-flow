@@ -1,8 +1,4 @@
 import FungibleToken from "./FungibleToken.cdc"
-<<<<<<< HEAD
-=======
-import FlowToken from "./FlowToken.cdc"
->>>>>>> master
 import Pack from "./Pack.cdc"
 import NonFungibleToken from "./NonFungibleToken.cdc"
 import Edition from "./Edition.cdc"
