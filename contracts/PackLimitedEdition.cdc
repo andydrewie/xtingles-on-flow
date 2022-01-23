@@ -169,7 +169,7 @@ pub contract PackLimitedEdition {
 
                     let account = getAccount(key) 
 
-                    let vaultCap = account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)    
+                    let vaultCap = account.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)   
 
                     // vaultCap was checked during creation of commission info on Edition contract, therefore this is extra check
                     // if vault capability is not avaliable, the rest tokens will sent to platform vault                     

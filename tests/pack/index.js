@@ -16,7 +16,9 @@ export const testSuitePack = () => describe("Pack", () => {
     initializePackStorageTransaction,
     createEditionTransaction,
     setupFUSDTransaction,
-    mintFUSDTransaction;
+    mintFUSDTransaction,
+    unpackTransaction,
+    tickTransaction;
 
   beforeAll(async () => {
     jest.setTimeout(120000);
@@ -93,6 +95,22 @@ export const testSuitePack = () => describe("Pack", () => {
         ),
         "utf8"
     );
+
+    unpackTransaction = fs.readFileSync(
+      path.join(
+        __dirname,
+        `../../transactions/emulator/pack/Unpack.cdc`
+      ),
+      "utf8"
+    );
+
+    tickTransaction = fs.readFileSync(
+      path.join(
+          __dirname,
+          `../../transactions/emulator/Tick.cdc`
+      ),
+      "utf8"
+    );  
   });
 
   beforeEach(async (done) => {
@@ -396,5 +414,81 @@ export const testSuitePack = () => describe("Pack", () => {
     error = e;
   }
   expect(error).toMatch(/The pack is non transferable from account/);  
+  });
+
+
+  test("check unpack event", async () => {
+    let error;
+    try {
+      const admin = await getAccountAddress("admin");
+  
+      const mintedNFT = await sendTransaction({
+        code: mintPackTransaction,
+        args: [
+          // Common number for all copies of the item
+          [editionNumber, t.UInt64],
+        ],
+        signers: [admin],
+      });
+  
+      const { events } = mintedNFT;
+  
+      const checkPackBefore = await executeScript({
+        code: getPackIdsScript,
+        args: [
+          [admin, t.Address]
+        ]
+      });
+
+      // The transaction to change add block with the last timestamp
+      await sendTransaction({
+        code: tickTransaction,
+        args: [], 
+        signers: [admin],
+      }); 
+
+      await new Promise((r) => setTimeout(r, 3000));
+
+      // The transaction to change add block with the last timestamp
+      await sendTransaction({
+          code: tickTransaction,
+          args: [], 
+          signers: [admin],
+      });       
+   
+      const unpackResult = await sendTransaction({
+        code: unpackTransaction,
+        args: [
+          // Unpack pack with current id
+          [events[1].data.id, t.UInt64],
+        ],
+        signers: [admin],
+      });
+
+      const checkPackAfter = await executeScript({
+        code: getPackIdsScript,
+        args: [
+          [admin, t.Address]
+        ]
+      });
+
+      const { events: unpackEvents } = unpackResult;
+
+      // Check previously minted and transfer NFT
+      expect(checkPackBefore).toEqual([events[1].data.id]);
+
+      // Unpack event
+      expect(unpackEvents[0].type).toEqual(`A.${admin.substr(2)}.Pack.Unpack`);
+      expect(unpackEvents[0].data.from).toEqual(admin);
+      expect(unpackEvents[0].data.id).toEqual(events[1].data.id);
+
+      // Check pack after unpack
+      expect(checkPackAfter).toEqual([]);
+
+    } catch(e) {
+      error = e;
+    }
+
+    expect(error).toEqual(undefined);  
   });
 });
