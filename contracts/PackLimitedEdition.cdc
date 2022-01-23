@@ -1,5 +1,4 @@
 import FungibleToken from "./FungibleToken.cdc"
-import FlowToken from "./FlowToken.cdc"
 import Pack from "./Pack.cdc"
 import NonFungibleToken from "./NonFungibleToken.cdc"
 import Edition from "./Edition.cdc"
@@ -440,7 +439,7 @@ pub contract PackLimitedEdition {
     }
 
     init() {
-        self.totalLimitedEditions = (10 as UInt64)
+        self.totalLimitedEditions = (1 as UInt64)
         self.CollectionPublicPath = /public/NFTbloctoXtinglesPackLimitedEdition
         self.CollectionStoragePath = /storage/NFTbloctoXtinglesPackLimitedEdition
 
