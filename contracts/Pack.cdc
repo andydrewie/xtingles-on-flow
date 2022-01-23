@@ -60,7 +60,7 @@ pub contract Pack: NonFungibleToken {
         // Forbid to withdraw pack from account
         pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
             pre {
-                withdrawID == (0 as UInt64): ""
+                withdrawID == (0 as UInt64): "The pack is non transferable from account"
             }
 
             let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")

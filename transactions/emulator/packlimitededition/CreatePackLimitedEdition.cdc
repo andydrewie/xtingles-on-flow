@@ -29,18 +29,7 @@ transaction(
 
     execute {    
         let editionNumber = self.royaltyCollectionRef.createEdition(
-            royalty: {
-                Address(0x01cf0e2f2f715450) : Edition.CommissionStructure(
-                    firstSalePercent: 80.00,
-                    secondSalePercent: 2.00,
-                    description: "Author"
-                ),
-                Address(0x179b6b1cb6755e31) : Edition.CommissionStructure(
-                    firstSalePercent: 20.00,
-                    secondSalePercent: 7.00,
-                    description: "Third party"
-                )
-            },
+            royalty: RoyaltyVariable,
             maxEdition: numberOfMaxPack
         )   
 
