@@ -205,7 +205,7 @@ export const testSuiteSettleLimitedEdition = () => describe("Limited Edition set
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -261,7 +261,7 @@ export const testSuiteSettleLimitedEdition = () => describe("Limited Edition set
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -318,7 +318,7 @@ export const testSuiteSettleLimitedEdition = () => describe("Limited Edition set
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -368,7 +368,7 @@ export const testSuiteSettleLimitedEdition = () => describe("Limited Edition set
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -447,7 +447,7 @@ export const testSuiteSettleLimitedEdition = () => describe("Limited Edition set
             const third = await getAccountAddress("third");    
             
             const price = 1;
-            const auctionId = 11;
+            const auctionId = 2;
             const purchasedAmount = 3;
     
             const limitedEditionParameters = [             
@@ -533,7 +533,7 @@ export const testSuiteSettleLimitedEdition = () => describe("Limited Edition set
             const third = await getAccountAddress("third");    
             
             const price = 1;
-            const auctionId = 11;
+            const auctionId = 2;
             const purchasedAmount = 5;
     
             const limitedEditionParameters = [             

@@ -332,3 +332,51 @@ flow transactions send ./transactions/testnet/CancelOpenEditionV3.cdc --args-jso
 
 
 flow transactions send ./transactions/emulator/packlimitededition/CreatePackLimitedEdition.cdc --args-json '[{"type": "UFix64","value": "1.00"}, {"type": "UFix64","value": "1635703841.00"}, {"type": "UFix64","value": "300000.00"}, {"type": "Address","value": "0x01cf0e2f2f715450"}, {"type": "UInt64","value": "200"}]' --signer testnet-account --network=emulator
+
+
+PackLimitedEdition
+
+1. Create
+ flow transactions send ./transactions/testnet/CreatePackLimitedEdition.cdc --args-json '[{"type": "UFix64","value": "0.05"}, {"type": "UFix64","value": "1642950621.00"}, {"type": "UFix64","value": "300000.00"}, {"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "UInt64","value": "5"}]' --signer testnet-account --network=testnet
+
+2. status: 
+  --arg Address:"0xfc747df8f5e61fcb" - (account's address, where purchase collection is stored)
+  --arg UInt64:2 - (limited edition id)
+
+  flow scripts execute ./scripts/testnet/PackLimitedEditionStatus.cdc --arg Address:"0x2695ea898b04f0c0" --arg UInt64:2 --network=testnet
+
+
+3. purchase: 
+
+    // open edition owner address   
+    openEditionAddress: Address,
+    // open edition id
+    id: UInt64,    
+ 
+   flow transactions send ./transactions/testnet/MultiPurchasePackLimitedEdition.cdc --args-json '[{"type": "Address","value": "0x2695ea898b04f0c0"}, {"type": "UInt64","value": "2"}, {"type": "UInt64","value": "2"}]' --signer testnet-xtingles-3 --network=testnet  --gas-limit=9999
+
+4. settle: 
+  after open edition time is expired or number of minted nfts , limited edition should be settled. settle is set final amount of the all sold copies.
+  only owner of the auction can settle
+
+  id: UInt64 - auction id
+
+  flow transactions send ./transactions/testnet/SettleLimitedEdition.cdc --args-json '[{"type": "UInt64","value": "2"}]' --signer  testnet-account --network=testnet
+
+5. cancel: 
+ limited edition can be cancelled.  cancel is set final amount of the all sold copies and sale will be over until finish time. only owner of the auction can cancel
+
+ id: UInt64 - limited edition id
+
+flow transactions send ./transactions/testnet/CancelPackLimitedEdition.cdc --args-json '[{"type": "UInt64","value": "2"}]' --signer testnet-account --network=testnet
+
+6.  Check packs on the account: 
+    
+    --arg Address:"0xf9e164b413a74d51" - (account's address)
+
+    flow scripts execute ./scripts/testnet/GetPackIds.cdc --arg Address:"0x0bd2b85a9b5947ef" --network=testnet
+
+7. Unpack (burn pack):
+   packId: UInt64, - (pack id)
+  
+   flow transactions send ./transactions/testnet/Unpack.cdc --args-json '[{"type": "UInt64","value": "1"}]' --signer testnet-xtingles-3 --network=testnet
