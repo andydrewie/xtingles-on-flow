@@ -138,13 +138,6 @@
 		"testnet": {
 			"staging-account": [	
 				"Edition",
-				"Collectible",			
-				"MarketPlace",
-				"OpenEditionV2",
-				"Auction", 
-				"AuthChecker",
-				"AuctionV2",
-				"OpenEditionV3",
 				"Pack",
                 "PackLimitedEdition"	
 			]

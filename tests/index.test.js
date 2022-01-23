@@ -35,8 +35,7 @@ describe('sequentially run tests', () => {
    testSuiteAuction();
    testSuiteAuctionV2(); */
   // testSuiteOpenEditionV3();
-   //testSuiteOpenEdition();  
-   testSuitePackLimitedEdition()
-   testSuitePack();
-
+   //testSuiteOpenEdition();  */
+  testSuitePackLimitedEdition();
+  testSuitePack();
 })

@@ -197,7 +197,7 @@ export const testSuiteLimitedEditionStatus = () => describe("Limited Edition sta
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
-            const auctionId = '11';
+            const auctionId = '2';
 
             const limitedEditionParameters = [
                 // Initial price
@@ -228,7 +228,7 @@ export const testSuiteLimitedEditionStatus = () => describe("Limited Edition sta
             const status = statuses[auctionId];   
   
             expect(status).toMatchObject({
-                id: 11,
+                id: 2,
                 price: '10.00000000',
                 active: true,
                 completed: false,
@@ -268,7 +268,7 @@ export const testSuiteLimitedEditionStatus = () => describe("Limited Edition sta
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -316,7 +316,7 @@ export const testSuiteLimitedEditionStatus = () => describe("Limited Edition sta
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -368,7 +368,7 @@ export const testSuiteLimitedEditionStatus = () => describe("Limited Edition sta
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -429,7 +429,7 @@ export const testSuiteLimitedEditionStatus = () => describe("Limited Edition sta
             const second = await getAccountAddress("second");    
             
             const price = 1;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -525,7 +525,7 @@ export const testSuiteLimitedEditionStatus = () => describe("Limited Edition sta
             const third = await getAccountAddress("third");    
             
             const price = 1;
-            const auctionId = 11;
+            const auctionId = 2;
             const purchasedAmount = 3;
     
             const limitedEditionParameters = [             

@@ -167,12 +167,12 @@ export const testSuitePackLimitedPrice = () => describe("Pack LImited Edition pr
         expect(error).toEqual(undefined);  
     });
 
-    test("getPrice return price Open Edition", async () => { 
+    test("getPrice return price Limited Edition", async () => { 
         let error;
         try {
             const admin = await getAccountAddress("admin");
             const initialPrice = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price

@@ -232,7 +232,7 @@ export const testSuitePurchaseLimitedEdition = () => describe("Limited Edition p
             const second = await getAccountAddress("second");    
             
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -278,7 +278,7 @@ export const testSuitePurchaseLimitedEdition = () => describe("Limited Edition p
             const second = await getAccountAddress("second");    
             
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -324,7 +324,7 @@ export const testSuitePurchaseLimitedEdition = () => describe("Limited Edition p
             const second = await getAccountAddress("second");    
             
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -379,7 +379,7 @@ export const testSuitePurchaseLimitedEdition = () => describe("Limited Edition p
             const second = await getAccountAddress("second");    
             
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 [price.toFixed(2), t.UFix64],
@@ -431,7 +431,7 @@ export const testSuitePurchaseLimitedEdition = () => describe("Limited Edition p
             error = e;
         } 
         expect(error).toMatch(/The limited edition was cancelled/);  
-    }); 
+    });
 
     test("purchase throws error, because purchase balance is less than price", async () => { 
         let error;
@@ -441,7 +441,7 @@ export const testSuitePurchaseLimitedEdition = () => describe("Limited Edition p
             const third = await getAccountAddress("third");    
             
             const price = 15;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 [price.toFixed(2), t.UFix64],
@@ -511,7 +511,7 @@ export const testSuitePurchaseLimitedEdition = () => describe("Limited Edition p
             const third = await getAccountAddress("third");    
             
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [            
                 [price.toFixed(2), t.UFix64],
@@ -596,7 +596,7 @@ export const testSuitePurchaseLimitedEdition = () => describe("Limited Edition p
             const second = await getAccountAddress("second");    
             
             const price = 1;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 [price.toFixed(2), t.UFix64],
@@ -653,7 +653,7 @@ export const testSuitePurchaseLimitedEdition = () => describe("Limited Edition p
             const third = await getAccountAddress("third");    
             
             const price = 1;
-            const auctionId = 11;
+            const auctionId = 2;
             const purchasedAmount = 3;
     
             const limitedEditionParameters = [             

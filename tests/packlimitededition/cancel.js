@@ -196,7 +196,7 @@ export const testSuiteCancelLimitedEdition = () => describe("Limited Edition can
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -244,7 +244,7 @@ export const testSuiteCancelLimitedEdition = () => describe("Limited Edition can
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
@@ -308,7 +308,7 @@ export const testSuiteCancelLimitedEdition = () => describe("Limited Edition can
         try {
             const admin = await getAccountAddress("admin");
             const price = 10;
-            const auctionId = 11;
+            const auctionId = 2;
 
             const limitedEditionParameters = [
                 // Initial price
