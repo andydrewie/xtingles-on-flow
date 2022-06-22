@@ -373,8 +373,8 @@ pub contract OpenEditionV3 {
             let priceList: {UInt64: OpenEditionStatus} = {}
 
             for id in self.openEditionsItems.keys {
-                let itemRef = &self.openEditionsItems[id] as? &OpenEditionItem
-                priceList[id] = itemRef.getOpenEditionStatus()
+                let itemRef = &self.openEditionsItems[id] as? &OpenEditionItem?
+                priceList[id] = itemRef!.getOpenEditionStatus()
             }
             
             return priceList
@@ -386,8 +386,8 @@ pub contract OpenEditionV3 {
             }
 
             // Get the auction item resources
-            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
-            return itemRef.getOpenEditionStatus()
+            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem?
+            return itemRef!.getOpenEditionStatus()
         }
 
         pub fun getPrice(_ id:UInt64): UFix64?  {
@@ -396,8 +396,8 @@ pub contract OpenEditionV3 {
             }
 
             // Get the open edition item resources
-            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
-            return itemRef.getPrice()
+            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem?
+            return itemRef!.getPrice()
         }
 
         // settleOpenEdition sends the auction item to the highest bidder
@@ -408,8 +408,8 @@ pub contract OpenEditionV3 {
                     "Open Edition does not exist"
             }
             
-            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
-            itemRef.settleOpenEdition(clientEdition: clientEdition)
+            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem?
+            itemRef!.settleOpenEdition(clientEdition: clientEdition)
         }
 
         pub fun cancelOpenEdition(id: UInt64, clientEdition: &Edition.EditionCollection) {
@@ -417,8 +417,8 @@ pub contract OpenEditionV3 {
                 self.openEditionsItems[id] != nil:
                     "Open Edition does not exist"
             }
-            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem     
-            itemRef.cancelOpenEdition(clientEdition: clientEdition)
+            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem?   
+            itemRef!.cancelOpenEdition(clientEdition: clientEdition)
             emit Canceled(id: id)
         }
 
@@ -434,9 +434,9 @@ pub contract OpenEditionV3 {
             }          
 
             // Get the auction item resources
-            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem
+            let itemRef = &self.openEditionsItems[id] as &OpenEditionItem?
             
-            itemRef.purchase(
+            itemRef!.purchase(
                 buyerTokens: <- buyerTokens,
                 buyerCollectionCap: collectionCap,
                 minterCap: self.minterCap

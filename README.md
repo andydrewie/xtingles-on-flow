@@ -214,7 +214,7 @@ Edition.
     // Recipient of NFT
     // NFT id
 
-    flow scripts execute ./scripts/blocto/CheckCollectibles.cdc --arg Address:"0x01547a7e742007d9" --arg Address:"0x01547a7e742007d9" --network=testnet
+    flow scripts execute ./scripts/blocto/CheckCollectibles.cdc --arg Address:"0x1bc62b2c04dfd147" --arg Address:"0x1bc62b2c04dfd147" --network=testnet
 
     // Script to display NFT info in storage
     // The first argument is owner address
@@ -222,7 +222,7 @@ Edition.
 
 
 
-    flow scripts execute ./scripts/blocto/CheckCollectibles.cdc --arg Address:"0x01547a7e742007d9" --network=testnet
+    flow scripts execute ./scripts/blocto/CheckCollectible.cdc --arg Address:"0x1654653399040a61" --network=mainnet
 
 
       flow transactions send ./transactions/checkLogin.cdc --args-json '[{"type": "String","value": "xxx"}]' --signer testnet-xtingles-1 --network=mainnet
@@ -261,7 +261,7 @@ flow transactions send ./transactions/RemoveCapability.cdc --signer testnet-xtin
 AuctionV2
 
   1. Create
-  flow transactions send ./transactions/testnet/CreateAuctionV2.cdc --args-json '[ {"type": "UFix64","value": "5.0"}, {"type": "UFix64","value": "60000.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1635108918.00"},
+  flow transactions send ./transactions/testnet/CreateAuctionV2.cdc --args-json '[ {"type": "UFix64","value": "5.0"}, {"type": "UFix64","value": "60000.00"}, {"type": "UFix64","value": "1200.00"}, {"type": "UFix64","value": "20.00"}, {"type": "UFix64","value": "1655866274.00"},
 {"type": "UFix64","value": "0.00"}, {"type": "UFix64","value": "20.0"}, {"type": "Address","value": "0x0bd2b85a9b5947ef"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}, {"type": "String","value": "xxx"}]' --signer dev-account --network=testnet
 
   2. Status 

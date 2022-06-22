@@ -54,7 +54,7 @@ transaction(
             // Number of copy. In case auction it is always 1    
             edition: 1,
             // Reserve for the future metadata
-            properties: {}   
+            properties: nil  
         ) 
 
         self.editionCap = acct.getCapability<&{Edition.EditionCollectionPublic}>(Edition.CollectionPublicPath)
