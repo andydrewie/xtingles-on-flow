@@ -47,10 +47,7 @@
 	"networks": {
 		"emulator": "127.0.0.1:3569",
 		"mainnet": "access.mainnet.nodes.onflow.org:9000",
-		"testnet": {
-			"host": "access.testnet.nodes.onflow.org:9000",
-			"chain": "flow-testnet"
-		}
+		"testnet": "access.devnet.nodes.onflow.org:9000"
 	},
 	"accounts": {
 		"emulator-account": {
@@ -137,9 +134,12 @@
 	"deployments": {
 		"testnet": {
 			"staging-account": [	
-				"Edition",
-				"Pack",
-                "PackLimitedEdition"	
+				"Collectible",		
+		    	"Edition",	
+	     		"OpenEditionV3",
+				"AuctionV2",
+				"MarketPlace",
+				"AuthChecker"
 			]
 		},
 		"emulator": {
@@ -152,9 +152,7 @@
 				"MarketPlace",
 				"AuthChecker",
 				"AuctionV2",
-				"OpenEditionV3",
-				"Pack",
-                "PackLimitedEdition"			
+				"OpenEditionV3"		
 			]
 		}
 	}
